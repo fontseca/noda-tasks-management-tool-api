@@ -1,0 +1,35 @@
+version: '3.8'
+
+volumes:
+  db_data:
+
+services:
+  server:
+    container_name: noda_server
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: .
+        target: /home/noda/app
+    command: sleep infinity
+    network_mode: service:db
+    environment:
+      DB_USER: "noda"
+      DB_NAME: "noda"
+      DB_USER_PASSWORD: "noda"
+  db:
+    container_name: noda_db
+    image: postgres:16rc1-alpine3.18
+    restart: unless-stopped
+    ports:
+    - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file: .env

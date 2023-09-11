@@ -1,0 +1,18 @@
+{
+	"name": "Noda API",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "server",
+	"workspaceFolder": "/home/noda/app",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go",
+				"eamodio.gitlens",
+				"cweijan.vscode-postgresql-client2",
+				"uniquevision.vscode-plpgsql-lsp",
+				"tooltitudeteam.tooltitude",
+				"christian-kohler.path-intellisense"
+			]
+		}
+	}
+}
