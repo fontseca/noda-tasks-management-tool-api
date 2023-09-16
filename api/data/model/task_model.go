@@ -26,8 +26,8 @@ type Task struct {
 	RemindAt       *time.Time         `json:"remind_at"`
 	CompletedAt    *time.Time         `json:"completed_at"`
 	ArchivedAt     *time.Time         `json:"archived_at"`
-	CreatedAt      *time.Time         `json:"created_at"`
-	UpdatedAt      *time.Time         `json:"updated_at"`
+	CreatedAt      time.Time          `json:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at"`
 }
 
 func (t *Task) String() string {

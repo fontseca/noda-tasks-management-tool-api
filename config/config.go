@@ -33,7 +33,7 @@ func (db *Database) Conn() string {
 }
 
 func (db *Database) LogSuccess() {
-	log.Printf("Connection established to database \033[0;32m`%s'\033[0m as user \033[0;34m`%s'\033[0m...\n", db.Name, db.User.Name)
+	log.Printf("Connection established to database \033[0;32m`%s'\033[0m as user \033[0;34m`%s'\033[0m ...\n", db.Name, db.User.Name)
 }
 
 func GetDatabaseConfig() *Database {

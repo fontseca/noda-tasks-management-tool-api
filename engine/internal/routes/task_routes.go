@@ -2,19 +2,27 @@ package routes
 
 import (
 	"noda/api/handler"
+	"noda/engine/internal/injector"
+	"noda/engine/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
 
-func InitializeForTask(router *chi.Mux, taskHandler *handler.TaskHandler) {
-	/* Task routes for the logged in user.  */
-	router.Get("/user/tasks", taskHandler.GetAllFromLoggedInUser)
-	router.Post("/user/tasks", taskHandler.CreateOneForLoggedInUser)
-	router.Get("/user/tasks/{task_id}", taskHandler.GetByIDFromLoggedInUser)
-	router.Patch("/user/tasks/{task_id}", taskHandler.UpdateByIDFromLoggedInUser)
-	router.Delete("/user/tasks/{task_id}", taskHandler.DeleteByIDFromLoggedInUser)
+func InitializeForTask(r *chi.Mux) {
+	s := injector.TaskService()
+	h := handler.NewTaskHandler(s)
 
-	/* General routes tasks.  */
-	router.Get("/tasks", taskHandler.GetAll)
-	router.Get("/tasks/{task_id}", taskHandler.GetByID)
+	/* For logged in user.  */
+
+	r.Get("/user/tasks", middleware.WithBearerAuthorization(h.RetrieveTasksFromUser))
+	r.Post("/user/tasks", nil)
+	r.Get("/user/tasks/{task_id}", nil)
+	r.Patch("/user/tasks/{task_id}", nil)
+	r.Delete("/user/tasks/{task_id}", nil)
+
+	/* For administrators (only for development purpose).  */
+
+	r.Get("/tasks", h.RetrieveAll)
+	r.Post("/tasks", nil)
+	r.Get("/tasks/{task_id}", h.RetrieveTaskByID)
 }

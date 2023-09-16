@@ -8,7 +8,7 @@ import (
 )
 
 type TaskService struct {
-	repository *repository.TaskRepository
+	r *repository.TaskRepository
 }
 
 func NewTaskService(repository *repository.TaskRepository) *TaskService {
@@ -16,9 +16,13 @@ func NewTaskService(repository *repository.TaskRepository) *TaskService {
 }
 
 func (s *TaskService) GetByID(id uuid.UUID) (*model.Task, error) {
-	return s.repository.GetByID(id)
+	return s.r.SelectByID(id)
+}
+
+func (s *TaskService) GetByUserID(userID uuid.UUID) (*[]*model.Task, error) {
+	return s.r.SelectByOwnerID(userID)
 }
 
 func (s *TaskService) GetAll() (*[]*model.Task, error) {
-	return s.repository.GetAll()
+	return s.r.SelectAll()
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"noda/api/data/types"
 	"noda/api/service"
 	"noda/failure"
 
@@ -14,22 +15,21 @@ import (
 )
 
 type TaskHandler struct {
-	service *service.TaskService
+	s *service.TaskService
 }
 
 func NewTaskHandler(service *service.TaskService) *TaskHandler {
 	return &TaskHandler{service}
 }
 
-func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) RetrieveTaskByID(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "task_id"))
 	if err != nil {
-		failure.Emit(w, http.StatusBadRequest,
-			"failure with `task_id'", err.Error())
+		failure.Emit(w, http.StatusBadRequest, "failure with \"task_id\"", err)
 		return
 	}
 
-	task, err := h.service.GetByID(id)
+	task, err := h.s.GetByID(id)
 	if err != nil {
 		switch {
 		default:
@@ -38,7 +38,7 @@ func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 			return
 		case errors.Is(err, failure.ErrNotFound):
 			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find task with ID `%s'", id))
+				"record not found", fmt.Sprintf("could not find any task with ID %q", id))
 			return
 		}
 	}
@@ -53,8 +53,8 @@ func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (h *TaskHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.service.GetAll()
+func (h *TaskHandler) RetrieveAll(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.s.GetAll()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -69,12 +69,20 @@ func (h *TaskHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (h *TaskHandler) CreateOneForLoggedInUser(w http.ResponseWriter, r *http.Request) {}
+func (h *TaskHandler) RetrieveTasksFromUser(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(types.ContextKey{}).(uuid.UUID)
+	tasks, err := h.s.GetByUserID(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-func (h *TaskHandler) GetAllFromLoggedInUser(w http.ResponseWriter, r *http.Request) {}
+	res, err := json.Marshal(*tasks)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-func (h *TaskHandler) GetByIDFromLoggedInUser(w http.ResponseWriter, r *http.Request) {}
-
-func (h *TaskHandler) UpdateByIDFromLoggedInUser(w http.ResponseWriter, r *http.Request) {}
-
-func (h *TaskHandler) DeleteByIDFromLoggedInUser(w http.ResponseWriter, r *http.Request) {}
+	w.Write(res)
+}

@@ -1,39 +1,59 @@
 package engine
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"noda/api/handler"
-	"noda/api/repository"
-	"noda/api/service"
 	"noda/config"
 	"noda/database"
+	noda_middleware "noda/engine/internal/middleware"
+	"noda/engine/internal/routes"
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Run() {
-	db := database.ConnectAndGet()
+	database.Connect()
+	db := database.Get()
 	defer db.Close()
-	hdls := getServiceHandlers(db)
-	r := initializeRouter(hdls)
-	startService(r)
-}
 
-func getServiceHandlers(db *sql.DB) *serviceHandlers {
-	return &serviceHandlers{
-		TaskHandler: getTaskHandler(db),
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Use(middleware.SetHeader("Content-Type", "application/json"))
+	router.Use(middleware.AllowContentType("application/json"))
+	router.Use(middleware.SetHeader("Access-Control-Allow-Origin", "*"))
+	router.Use(middleware.SetHeader("Access-Control-Allow-Methods", "GET"))
+	router.Use(middleware.SetHeader("Access-Control-Allow-Headers", "*"))
+	router.Use(middleware.SetHeader("Access-Control-Allow-Credentials", "true"))
+	router.Use(noda_middleware.LetOptionsPassThrough)
+	router.NotFound(noda_middleware.NotFound)
+
+	routes.InitializeForAuthentication(router)
+	routes.InitializeForUser(router)
+	routes.InitializeForTask(router)
+
+	config := config.GetServerConfig()
+	server := http.Server{
+		WriteTimeout:      config.WriteTimeout,
+		ReadTimeout:       config.ReadTimeout,
+		ReadHeaderTimeout: config.ReadHeaderTimeout,
+		IdleTimeout:       config.IdleTimeout,
+		Handler:           router,
+		ErrorLog:          log.New(os.Stderr, "\033[0;31mfatal: \033[0m", log.LstdFlags),
+		ConnState:         tcpConnStatLogger,
 	}
-}
 
-func getTaskHandler(db *sql.DB) *handler.TaskHandler {
-	taskRepository := repository.NewTaskRepository(db)
-	taskService := service.NewTaskService(taskRepository)
-	return handler.NewTaskHandler(taskService)
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", config.Host, config.Port))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer listener.Close()
+
+	log.Printf("Serving HTTP at \033[0;32m`%s'\033[0m ...", listener.Addr())
+	log.Fatal(server.Serve(listener))
 }
 
 func tcpConnStatLogger(c net.Conn, cs http.ConnState) {
@@ -51,24 +71,4 @@ func tcpConnStatLogger(c net.Conn, cs http.ConnState) {
 		color = "\033[0;31m" /* Red.  */
 	}
 	log.Printf("\033[0;32mTCP connection:\033[0m (me) <--> (%s): %s%s\033[0m\n", c.RemoteAddr(), color, cs)
-}
-
-func startService(r *chi.Mux) {
-	c := config.GetServerConfig()
-	s := http.Server{
-		WriteTimeout:      c.WriteTimeout,
-		ReadTimeout:       c.ReadTimeout,
-		ReadHeaderTimeout: c.ReadHeaderTimeout,
-		IdleTimeout:       c.IdleTimeout,
-		Handler:           r,
-		ErrorLog:          log.New(os.Stderr, "\033[0;31mfatal: \033[0m", log.LstdFlags),
-		ConnState:         tcpConnStatLogger,
-	}
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer l.Close()
-	log.Printf("Serving HTTP at \033[0;32m`%s'\033[0m ...", l.Addr())
-	log.Fatal(s.Serve(l))
 }

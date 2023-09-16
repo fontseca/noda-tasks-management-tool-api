@@ -20,7 +20,7 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{db}
 }
 
-func (r *TaskRepository) GetByID(id uuid.UUID) (*model.Task, error) {
+func (r *TaskRepository) SelectByID(id uuid.UUID) (*model.Task, error) {
 	query := `
 	SELECT "task_id" AS "id",
 	       "group_id",
@@ -65,7 +65,7 @@ func (r *TaskRepository) GetByID(id uuid.UUID) (*model.Task, error) {
 	return &task, err
 }
 
-func (r *TaskRepository) GetAll() (*[]*model.Task, error) {
+func (r *TaskRepository) SelectAll() (*[]*model.Task, error) {
 	query := `
 	SELECT "task_id" AS "id",
 	       "group_id",
@@ -99,10 +99,53 @@ func (r *TaskRepository) GetAll() (*[]*model.Task, error) {
 	}
 	defer rows.Close()
 
-	var tasks []*model.Task
+	tasks := []*model.Task{}
 	if err = sqlscan.ScanAll(&tasks, rows); err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	return &tasks, nil
+}
+
+func (r *TaskRepository) SelectByOwnerID(userID uuid.UUID) (*[]*model.Task, error) {
+	query := `
+	SELECT "task_id" AS "id",
+	       "group_id",
+	       "owner_id",
+	       "list_id",
+	       "position_in_list",
+	       "title",
+	       "headline",
+	       "description",
+	       "priority",
+	       "status",
+	       "is_pinned",
+	       "is_archived",
+	       "due_date",
+	       "remind_at",
+	       "completed_at",
+	       "archived_at",
+	       "created_at",
+	       "updated_at"
+	  FROM "task"
+	 WHERE "owner_id" = $1;`
+	rows, err := r.db.Query(query, userID.String())
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := []*model.Task{}
+	if err = sqlscan.ScanAll(&tasks, rows); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &tasks, err
 }
