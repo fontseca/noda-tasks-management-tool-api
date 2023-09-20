@@ -24,7 +24,7 @@ type User struct {
 func (u *User) String() string {
 	bytes, err := json.MarshalIndent(u, "", "  ")
 	if err != nil {
-		log.Printf("could not convert person object into string: %s", err)
+		log.Printf("could not convert user object into string: %s", err)
 		return ""
 	}
 	return string(bytes)

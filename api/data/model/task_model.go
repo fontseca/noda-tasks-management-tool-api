@@ -33,7 +33,7 @@ type Task struct {
 func (t *Task) String() string {
 	bytes, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
-		log.Printf("could not convert person object into string: %s", err)
+		log.Printf("could not convert task object into string: %s", err)
 		return ""
 	}
 	return string(bytes)
