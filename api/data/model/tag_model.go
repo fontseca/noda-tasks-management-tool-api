@@ -1,0 +1,28 @@
+package model
+
+import (
+	"encoding/json"
+	"log"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type Tag struct {
+	ID          uuid.UUID `json:"tag_id"`
+	OwnerID     uuid.UUID `json:"owner_id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Color       string    `json:"color"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func (t *Tag) String() string {
+	bytes, err := json.MarshalIndent(t, "", "  ")
+	if err != nil {
+		log.Printf("could not convert tag object into string: %s", err)
+		return ""
+	}
+	return string(bytes)
+}

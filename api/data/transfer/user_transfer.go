@@ -39,3 +39,7 @@ type UserCredentials struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
+
+func (u *UserCredentials) Validate() *failure.Aggregation {
+	return validate(u)
+}
