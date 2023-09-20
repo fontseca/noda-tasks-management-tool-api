@@ -17,3 +17,12 @@ type TaskCreation struct {
 func (t *TaskCreation) Validate() *failure.Aggregation {
 	return validate(t)
 }
+
+/* Transfers a task update request.  */
+type TaskUpdate struct {
+	Title       string             `json:"title"`
+	Headline    string             `json:"headline"`
+	Description string             `json:"description"`
+	Priority    types.TaskPriority `json:"priority"`
+	Status      types.TaskStatus   `json:"status"`
+}

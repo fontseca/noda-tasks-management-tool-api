@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-/* Logical steps to follow to complete a task.  */
+/* Represents a logical steps to follow to complete a task.  */
 type Step struct {
 	ID          uuid.UUID  `json:"step_id"`
 	TaskID      uuid.UUID  `json:"task_id"`
