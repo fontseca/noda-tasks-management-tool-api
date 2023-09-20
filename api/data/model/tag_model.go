@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+/* Labels and categorizes enhance organization and searchability.  */
 type Tag struct {
 	ID          uuid.UUID `json:"tag_id"`
 	OwnerID     uuid.UUID `json:"owner_id"`

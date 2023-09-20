@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+/* Organizes tasks under a single unit.  */
 type List struct {
 	ID          uuid.UUID  `json:"list_id"`
 	OwnerId     uuid.UUID  `json:"owner_id"`

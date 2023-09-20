@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+/* Represents system users with their personal information and account details.  */
 type User struct {
 	ID         uuid.UUID `json:"user_id"`
 	FirstName  string    `json:"first_name"`

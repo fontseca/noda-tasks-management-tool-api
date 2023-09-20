@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+/* Manages individual tasks, including titles, descriptions, statuses, etc.  */
 type Task struct {
 	ID             uuid.UUID          `json:"task_id"`
 	GroupID        uuid.UUID          `json:"group_id"`
