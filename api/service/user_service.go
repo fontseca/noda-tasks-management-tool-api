@@ -5,11 +5,13 @@ import (
 	"log"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
+	"noda/api/data/types"
 	"noda/api/repository"
 	"noda/failure"
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -36,7 +38,7 @@ func (s *UserService) Save(next *transfer.UserCreation) (*transfer.User, error) 
 		}
 	}
 	next.Password = string(hashedPassword)
-	user, err := s.r.Inset(next)
+	user, err := s.r.Insert(next)
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +78,35 @@ func assertPasswordIsValid(password, email *string) *failure.Aggregation {
 	return nil
 }
 
+func (s *UserService) Update(userID uuid.UUID, up *transfer.UserUpdate) (bool, error) {
+	return s.r.Update(userID.String(), up)
+}
+
 func (s *UserService) GetByEmail(email string) (*transfer.User, error) {
 	return s.r.SelectByEmail(email)
+}
+
+func (s *UserService) GetByID(id uuid.UUID) (*transfer.User, error) {
+	return s.r.SelectByID(id.String())
 }
 
 func (s *UserService) GetUserWithPasswordByEmail(email string) (*model.User, error) {
 	return s.r.SelectWithPasswordByEmail(email)
 }
 
-func (s *UserService) GetAll() (*[]*transfer.User, error) {
-	return s.r.SelectAll()
+func (s *UserService) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error) {
+	users, err := s.r.SelectAll(pag.RPP, pag.Page)
+	if err != nil {
+		return nil, err
+	}
+	return &types.Result[transfer.User]{
+		Page:      pag.Page,
+		RPP:       pag.RPP,
+		Retrieved: int64(len(*users)),
+		Payload:   users,
+	}, nil
+}
+
+func (s *UserService) DeleteUserByID(id uuid.UUID) (string, error) {
+	return s.r.Delete(id.String())
 }

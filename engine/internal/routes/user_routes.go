@@ -14,11 +14,11 @@ func InitializeForUser(r *chi.Mux) {
 
 	/* For the logged in user.  */
 
-	r.Get("/user", nil)
-	r.Patch("/user", nil)
-	r.Delete("/user", nil)
-	r.Get("/user/settings", nil)
-	r.Post("/user/change_password", nil)
+	r.Get("/me", middleware.WithBearerAuthorization(h.GetLoggedInUser))
+	r.Patch("/me", middleware.WithBearerAuthorization(h.UpdateLoggedInUser))
+	r.Delete("/me", middleware.WithBearerAuthorization(h.RemoveLoggedInUser))
+	r.Get("/me/settings", nil)
+	r.Post("/me/change_password", nil)
 
 	/* For administrators.  */
 

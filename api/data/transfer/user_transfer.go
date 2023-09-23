@@ -21,6 +21,18 @@ func (u *UserCreation) Validate() *failure.Aggregation {
 	return validate(u)
 }
 
+/* Transfers a user update request.  */
+type UserUpdate struct {
+	FirstName  string `json:"first_name"`
+	MiddleName string `json:"middle_name"`
+	LastName   string `json:"last_name"`
+	Surname    string `json:"surname"`
+}
+
+func (u *UserUpdate) Validate() *failure.Aggregation {
+	return validate(u)
+}
+
 /* Transfers a user response without a password.  A raw user.   */
 type User struct {
 	ID         uuid.UUID `json:"user_id"`
