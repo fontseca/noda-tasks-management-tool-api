@@ -51,7 +51,8 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 
 		/* Public claims.  */
 
-		"user_id": user.ID,
+		"user_id":   user.ID,
+		"user_role": user.Role,
 	}
 
 	secret := []byte("secret")
@@ -66,5 +67,6 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 		"jwt": ss,
 		"iat": claims["iat"].(*jwt.NumericDate).String(),
 		"exp": claims["exp"].(*jwt.NumericDate).String(),
+		"jti": claims["jti"],
 	}, nil
 }

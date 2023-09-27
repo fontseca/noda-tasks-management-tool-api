@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"log"
+	"noda/api/data/types"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,16 +11,17 @@ import (
 
 /* Represents system users with their personal information and account details.  */
 type User struct {
-	ID         uuid.UUID `json:"user_id"`
-	FirstName  string    `json:"first_name"`
-	MiddleName string    `json:"middle_name"`
-	LastName   string    `json:"last_name"`
-	Surname    string    `json:"surname"`
-	PictureUrl *string   `json:"picture_url"`
-	Email      string    `json:"email"`
-	Password   string    `json:"password"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         uuid.UUID  `json:"user_id"`
+	Role       types.Role `json:"role"`
+	FirstName  string     `json:"first_name"`
+	MiddleName string     `json:"middle_name"`
+	LastName   string     `json:"last_name"`
+	Surname    string     `json:"surname"`
+	PictureUrl *string    `json:"picture_url"`
+	Email      string     `json:"email"`
+	Password   string     `json:"password"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 func (u *User) String() string {

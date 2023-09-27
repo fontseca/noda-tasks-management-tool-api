@@ -82,16 +82,24 @@ func (s *UserService) Update(userID uuid.UUID, up *transfer.UserUpdate) (bool, e
 	return s.r.Update(userID.String(), up)
 }
 
+func (s *UserService) PromoteToAdmin(userID uuid.UUID) (bool, error) {
+	return s.r.PromoteToAdmin(userID.String())
+}
+
+func (s *UserService) DegradeToNormalUser(userID uuid.UUID) (bool, error) {
+	return s.r.DegradeToNormalUser(userID.String())
+}
+
 func (s *UserService) GetByEmail(email string) (*transfer.User, error) {
-	return s.r.SelectByEmail(email)
+	return s.r.SelectShallowUserByEmail(email)
 }
 
 func (s *UserService) GetByID(id uuid.UUID) (*transfer.User, error) {
-	return s.r.SelectByID(id.String())
+	return s.r.SelectShallowUserByID(id.String())
 }
 
 func (s *UserService) GetUserWithPasswordByEmail(email string) (*model.User, error) {
-	return s.r.SelectWithPasswordByEmail(email)
+	return s.r.SelectRawUserByEmail(email)
 }
 
 func (s *UserService) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error) {

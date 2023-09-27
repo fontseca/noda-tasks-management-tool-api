@@ -2,9 +2,17 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"noda/api/data/transfer"
+	"noda/api/data/types"
 	"noda/api/service"
+	"noda/failure"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -16,16 +24,189 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.s.GetAll()
+	pagination := ParsePagination(w, r)
+	if pagination == nil { /* Errors handled in ParsePagination ocurred.  */
+		return
+	}
+
+	res, err := h.s.GetAll(pagination)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res, err := json.Marshal(*users)
-	if err != nil {
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
 		return
 	}
-	w.Write(res)
+	user, err := h.s.GetByID(userID)
+	if err != nil {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	userWasPromoted, err := h.s.PromoteToAdmin(userID)
+	if err != nil {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	if userWasPromoted {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			path   = fmt.Sprintf("/users/%s", userID)
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
+func (h *UserHandler) DegradeUserToAdmin(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	userWasPromoted, err := h.s.DegradeToNormalUser(userID)
+	if err != nil {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	if userWasPromoted {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			path   = fmt.Sprintf("/users/%s", userID)
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
+func (h *UserHandler) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	user, err := h.s.GetByID(jwtPayload.UserID)
+	if err != nil {
+		switch {
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		}
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) UpdateLoggedInUser(w http.ResponseWriter, r *http.Request) {
+	up := &transfer.UserUpdate{}
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(up); err != nil {
+		// TODO: Catch all different errors
+		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := up.Validate(); err != nil {
+		failure.Emit(w, http.StatusBadRequest, "validations did not succeed", err.Dump())
+		return
+	}
+
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	userWasUpdated, err := h.s.Update(jwtPayload.UserID, up)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+		// switch {
+		// case errors.Is(err, failure.ErrNotFound):
+		// 	failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		// }
+		// return
+	}
+
+	if userWasUpdated {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			self   = r.URL.Path
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, self))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
+func (h *UserHandler) RemoveLoggedInUser(w http.ResponseWriter, r *http.Request) {
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	id, err := h.s.DeleteUserByID(jwtPayload.UserID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(id); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }

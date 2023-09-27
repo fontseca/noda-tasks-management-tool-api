@@ -32,8 +32,8 @@ func Run() {
 	router.NotFound(noda_middleware.NotFound)
 
 	routes.InitializeForAuthentication(router)
-	routes.InitializeForUser(router)
-	routes.InitializeForTask(router)
+	routes.InitializeForUsers(router)
+	routes.InitializeForTasks(router)
 
 	config := config.GetServerConfig()
 	server := http.Server{

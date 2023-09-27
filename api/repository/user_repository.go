@@ -7,6 +7,7 @@ import (
 	"math"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
+	"noda/api/data/types"
 	"noda/failure"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -27,7 +28,6 @@ func (r *UserRepository) Insert(next *transfer.UserCreation) (*transfer.User, er
 	} else if yes {
 		return nil, failure.ErrSameEmail
 	}
-
 	query := `
 	INSERT INTO "user" ("first_name", "middle_name", "last_name", "surname", "email", "password")
 	     VALUES ($1, $2, $3, $4, $5, $6)
@@ -62,7 +62,7 @@ func (r *UserRepository) Insert(next *transfer.UserCreation) (*transfer.User, er
 }
 
 func (r *UserRepository) Update(userID string, up *transfer.UserUpdate) (bool, error) {
-	if actual, err := r.SelectByID(userID); err != nil {
+	if actual, err := r.SelectShallowUserByID(userID); err != nil {
 		return false, err
 	} else if actual.FirstName == up.FirstName &&
 		actual.MiddleName == up.MiddleName &&
@@ -79,6 +79,66 @@ func (r *UserRepository) Update(userID string, up *transfer.UserUpdate) (bool, e
 						"updated_at" = 'now()'
 			WHERE "user_id" = $1;`
 	result, err := r.db.Exec(query, &userID, &up.FirstName, &up.MiddleName, &up.LastName, &up.Surname)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return false, err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return count >= 1, nil
+}
+
+func (r *UserRepository) PromoteToAdmin(userID string) (bool, error) {
+	if actual, err := r.SelectRawUserByID(userID); err != nil {
+		return false, err
+	} else if actual.Role == types.RoleAdmin {
+		return false, nil
+	}
+	query := `
+	UPDATE "user"
+	   SET "role_id" = 1,
+		     "updated_at" = 'now()'
+	 WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return false, err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return count >= 1, nil
+}
+
+func (r *UserRepository) DegradeToNormalUser(userID string) (bool, error) {
+	if actual, err := r.SelectRawUserByID(userID); err != nil {
+		return false, err
+	} else if actual.Role == types.RoleUser {
+		return false, nil
+	}
+	query := `
+	UPDATE "user"
+	   SET "role_id" = 2,
+		     "updated_at" = 'now()'
+	 WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -161,8 +221,8 @@ ORDER BY "created_at" DESC
 	return &users, nil
 }
 
-func (r *UserRepository) SelectByEmail(email string) (*transfer.User, error) {
-	user, err := r.SelectWithPasswordByEmail(email)
+func (r *UserRepository) SelectShallowUserByEmail(email string) (*transfer.User, error) {
+	user, err := r.SelectRawUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +239,7 @@ func (r *UserRepository) SelectByEmail(email string) (*transfer.User, error) {
 	}, nil
 }
 
-func (r *UserRepository) SelectByID(id string) (*transfer.User, error) {
+func (r *UserRepository) SelectShallowUserByID(id string) (*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
 	       "first_name",
@@ -217,9 +277,52 @@ func (r *UserRepository) SelectByID(id string) (*transfer.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) SelectWithPasswordByEmail(email string) (*model.User, error) {
+func (r *UserRepository) SelectRawUserByID(userID string) (*model.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
+	       "first_name",
+	       "middle_name",
+	       "last_name",
+	       "surname",
+	       "picture_url",
+	       "email",
+				 "password",
+	       "created_at",
+	       "updated_at"
+	  FROM "user"
+	 WHERE "user_id" = $1;`
+
+	row, err := r.db.Query(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer row.Close()
+
+	user := model.User{}
+	if err := sqlscan.ScanOne(&user, row); err != nil {
+		switch {
+		default:
+			log.Println(err)
+			return nil, err
+		case sqlscan.NotFound(err):
+			return nil, failure.ErrNotFound
+		}
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) SelectRawUserByEmail(email string) (*model.User, error) {
+	query := `
+	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
 	       "first_name",
 	       "middle_name",
 	       "last_name",
