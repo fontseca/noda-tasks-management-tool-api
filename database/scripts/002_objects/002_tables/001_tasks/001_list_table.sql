@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "list"
   "group_id"    UUID DEFAULT NULL REFERENCES "group" ("group_id"),
   "name"        VARCHAR(50) NOT NULL,
   "description" TEXT DEFAULT NULL,
-  "is_archived" BOOLEAN NOT NULL DEFAULT False,
+  "is_archived" BOOLEAN NOT NULL DEFAULT FALSE,
   "archived_at" TIMESTAMPTZ DEFAULT NULL,
   "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now(),
   "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT now()

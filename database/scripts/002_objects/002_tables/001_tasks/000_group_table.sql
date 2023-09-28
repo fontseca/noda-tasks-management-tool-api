@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "group"
   "owner_id"    UUID NOT NULL REFERENCES "user" ("user_id"),
   "name"        VARCHAR(50) NOT NULL UNIQUE,
   "description" TEXT DEFAULT NULL,
-  "is_archived" BOOLEAN NOT NULL DEFAULT false,
+  "is_archived" BOOLEAN NOT NULL DEFAULT FALSE,
   "archived_at" TIMESTAMPTZ DEFAULT NULL,
   "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now(),
   "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT now()

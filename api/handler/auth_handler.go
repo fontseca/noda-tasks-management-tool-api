@@ -82,6 +82,10 @@ func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 			failure.Emit(w, http.StatusBadRequest,
 				"signing in failed", failure.ErrIncorrectPassord)
 			return
+		case errors.Is(err, failure.ErrUserBlocked):
+			failure.Emit(w, http.StatusForbidden,
+				"authentication refused", "this account has been blocked")
+			return
 		}
 	}
 
