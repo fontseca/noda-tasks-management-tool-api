@@ -23,7 +23,7 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 	return &UserHandler{service}
 }
 
-func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 	pagination := ParsePagination(w, r)
 	if pagination == nil { /* Errors handled in ParsePagination ocurred.  */
 		return
@@ -41,7 +41,25 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Request) {
+	pagination := ParsePagination(w, r)
+	if pagination == nil {
+		return
+	}
+
+	res, err := h.s.GetAllBlocked(pagination)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
 	if err != nil {
 		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
@@ -101,7 +119,7 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (h *UserHandler) DegradeUserToAdmin(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
 	if err != nil {
 		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
@@ -136,7 +154,77 @@ func (h *UserHandler) DegradeUserToAdmin(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (h *UserHandler) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	userWasBlocked, err := h.s.Block(userID)
+	if err != nil {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	if userWasBlocked {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			path   = fmt.Sprintf("/users/%s", userID)
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
+func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	userWasUnblocked, err := h.s.Unblock(userID)
+	if err != nil {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	if userWasUnblocked {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			path   = fmt.Sprintf("/users/%s", userID)
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
+func (h *UserHandler) RetrieveLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
 	user, err := h.s.GetByID(jwtPayload.UserID)
 	if err != nil {

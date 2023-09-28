@@ -17,7 +17,7 @@ func InitializeForUsers(router chi.Router) {
 	router.
 		With(middleware.Authorization).
 		Group(func(r chi.Router) {
-			r.Get("/me", h.GetLoggedInUser)
+			r.Get("/me", h.RetrieveLoggedInUser)
 			r.Patch("/me", h.UpdateLoggedInUser)
 			r.Delete("/me", h.RemoveLoggedInUser)
 			r.Get("/me/settings", nil)
@@ -30,14 +30,14 @@ func InitializeForUsers(router chi.Router) {
 		With(middleware.Authorization).
 		With(middleware.AdminPrivileges).
 		Group(func(r chi.Router) {
-			r.Get("/users", h.GetAllUsers)
-			r.Get("/users/{user_id}", h.GetUserByID)
+			r.Get("/users", h.RetrieveAllUsers)
+			r.Get("/users/{user_id}", h.RetrieveUserByID)
 			r.Get("/users/search", nil)
 			r.Delete("/users/{user_id}", nil)
-			r.Put("/users/{user_id}/block", nil)
-			r.Delete("/users/{user_id}/block", nil)
-			r.Get("/users/blocked", nil)
+			r.Put("/users/{user_id}/block", h.BlockUser)
+			r.Delete("/users/{user_id}/block", h.UnblockUser)
+			r.Get("/users/blocked", h.RetrieveAllBlockedUsers)
 			r.Put("/users/{user_id}/make_admin", h.PromoteUserToAdmin)
-			r.Delete("/users/{user_id}/make_admin", h.DegradeUserToAdmin)
+			r.Delete("/users/{user_id}/make_admin", h.DegradeAdminUser)
 		})
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -42,6 +43,10 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 		}
 	}
 
+	if user.IsBlocked {
+		return nil, failure.ErrUserBlocked
+	}
+
 	claims := jwt.MapClaims{
 		/* Registered claims.  */
 		"iss": "noda",
@@ -50,7 +55,6 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 		"exp": jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 
 		/* Public claims.  */
-
 		"user_id":   user.ID,
 		"user_role": user.Role,
 	}

@@ -13,7 +13,8 @@ INSERT INTO "list" ("owner_id", "name", "description")
 
 -- We can copy a table in this way:
 CREATE TABLE IF NOT EXISTS "list_trash"
-                  AS TABLE "list";
+                  AS TABLE "list"
+              WITH NO DATA;
 
 ALTER TABLE "list_trash"
  ADD COLUMN "trashed_at" TIMESTAMPTZ NOT NULL DEFAULT now(),

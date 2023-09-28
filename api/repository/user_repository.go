@@ -157,6 +157,64 @@ func (r *UserRepository) DegradeToNormalUser(userID string) (bool, error) {
 	return count >= 1, nil
 }
 
+func (r *UserRepository) Block(userID string) (bool, error) {
+	if actual, err := r.SelectRawUserByID(userID); err != nil {
+		return false, err
+	} else if actual.IsBlocked {
+		return false, nil
+	}
+	query := `
+	UPDATE "user"
+	   SET "is_blocked" = TRUE
+	 WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return false, err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return count >= 1, nil
+}
+
+func (r *UserRepository) Unblock(userID string) (bool, error) {
+	if actual, err := r.SelectRawUserByID(userID); err != nil {
+		return false, err
+	} else if !actual.IsBlocked {
+		return false, nil
+	}
+	query := `
+	UPDATE "user"
+	   SET "is_blocked" = FALSE
+	 WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return false, err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return count >= 1, nil
+}
+
 func (r *UserRepository) ExistsUserWithEmail(email string) (bool, error) {
 	// TODO: Create an index on email.
 	query := `
@@ -189,15 +247,60 @@ func (r *UserRepository) SelectAll(limit, page int64) (*[]*transfer.User, error)
 	}
 	query := `
 	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
 	       "first_name",
 	       "middle_name",
 	       "last_name",
 	       "surname",
 	       "picture_url",
 	       "email",
+				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM "user"
+	 WHERE "is_blocked" IS FALSE
+ORDER BY "created_at" DESC
+   LIMIT $1
+	OFFSET ($1 * ($2::BIGINT - 1));`
+	rows, err := r.db.Query(query, &limit, &page)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	users := []*transfer.User{}
+	if err = sqlscan.ScanAll(&users, rows); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &users, nil
+}
+
+func (r *UserRepository) SelectAllBlocked(limit, page int64) (*[]*transfer.User, error) {
+	maxValidBeforeOverflow := (math.MaxInt64 / limit) - 1
+	if page > maxValidBeforeOverflow {
+		page = maxValidBeforeOverflow
+	}
+	query := `
+	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
+	       "first_name",
+	       "middle_name",
+	       "last_name",
+	       "surname",
+	       "picture_url",
+	       "email",
+				 "is_blocked",
+	       "created_at",
+	       "updated_at"
+	  FROM "user"
+	 WHERE "is_blocked" IS TRUE
 ORDER BY "created_at" DESC
    LIMIT $1
 	OFFSET ($1 * ($2::BIGINT - 1));`
@@ -242,12 +345,14 @@ func (r *UserRepository) SelectShallowUserByEmail(email string) (*transfer.User,
 func (r *UserRepository) SelectShallowUserByID(id string) (*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
 	       "first_name",
 	       "middle_name",
 	       "last_name",
 	       "surname",
 	       "picture_url",
 	       "email",
+				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM "user"
@@ -288,6 +393,7 @@ func (r *UserRepository) SelectRawUserByID(userID string) (*model.User, error) {
 	       "picture_url",
 	       "email",
 				 "password",
+				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM "user"
@@ -330,11 +436,11 @@ func (r *UserRepository) SelectRawUserByEmail(email string) (*model.User, error)
 	       "picture_url",
 	       "email",
 				 "password",
+				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM "user"
 	 WHERE lower("email") = lower($1);`
-
 	row, err := r.db.Query(query, &email)
 	if err != nil {
 		var pqerr *pq.Error

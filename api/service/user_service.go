@@ -90,6 +90,14 @@ func (s *UserService) DegradeToNormalUser(userID uuid.UUID) (bool, error) {
 	return s.r.DegradeToNormalUser(userID.String())
 }
 
+func (s *UserService) Block(userID uuid.UUID) (bool, error) {
+	return s.r.Block(userID.String())
+}
+
+func (s *UserService) Unblock(userID uuid.UUID) (bool, error) {
+	return s.r.Unblock(userID.String())
+}
+
 func (s *UserService) GetByEmail(email string) (*transfer.User, error) {
 	return s.r.SelectShallowUserByEmail(email)
 }
@@ -104,6 +112,19 @@ func (s *UserService) GetUserWithPasswordByEmail(email string) (*model.User, err
 
 func (s *UserService) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error) {
 	users, err := s.r.SelectAll(pag.RPP, pag.Page)
+	if err != nil {
+		return nil, err
+	}
+	return &types.Result[transfer.User]{
+		Page:      pag.Page,
+		RPP:       pag.RPP,
+		Retrieved: int64(len(*users)),
+		Payload:   users,
+	}, nil
+}
+
+func (s *UserService) GetAllBlocked(pag *types.Pagination) (*types.Result[transfer.User], error) {
+	users, err := s.r.SelectAllBlocked(pag.RPP, pag.Page)
 	if err != nil {
 		return nil, err
 	}
