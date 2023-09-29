@@ -69,7 +69,6 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		default:
-			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		case errors.Is(err, failure.ErrNotFound):
@@ -94,7 +93,6 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		default:
-			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		case errors.Is(err, failure.ErrNotFound):
@@ -129,7 +127,6 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		default:
-			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		case errors.Is(err, failure.ErrNotFound):
@@ -164,7 +161,6 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		default:
-			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		case errors.Is(err, failure.ErrNotFound):
@@ -199,7 +195,6 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		default:
-			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		case errors.Is(err, failure.ErrNotFound):
@@ -222,6 +217,32 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
 		w.WriteHeader(http.StatusSeeOther)
 	}
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
+	if err != nil {
+		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	if jwtPayload.UserID == userID {
+		failure.Emit(w, http.StatusBadRequest, "failure with delete operation",
+			"cannot perform a self removal")
+		return
+	}
+	if err := h.s.HardDelete(userID); err != nil {
+		switch {
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound,
+				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
+			return
+		}
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *UserHandler) RetrieveLoggedInUser(w http.ResponseWriter, r *http.Request) {
@@ -287,7 +308,7 @@ func (h *UserHandler) UpdateLoggedInUser(w http.ResponseWriter, r *http.Request)
 
 func (h *UserHandler) RemoveLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	id, err := h.s.DeleteUserByID(jwtPayload.UserID)
+	id, err := h.s.SoftDelete(jwtPayload.UserID)
 	if err != nil {
 		log.Println(err)
 		return

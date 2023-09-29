@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS "task"
 (
   "task_id"          UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-  "group_id"         UUID DEFAULT NULL REFERENCES "group" ("group_id"),
-  "owner_id"         UUID NOT NULL REFERENCES "user" ("user_id"),
-  "list_id"          UUID NOT NULL REFERENCES "list" ("list_id"),
+  "group_id"         UUID DEFAULT NULL REFERENCES "group" ("group_id") ON DELETE CASCADE,
+  "owner_id"         UUID NOT NULL REFERENCES "user" ("user_id") ON DELETE CASCADE,
+  "list_id"          UUID NOT NULL REFERENCES "list" ("list_id") ON DELETE CASCADE,
   "position_in_list" pos_t NOT NULL,
   "title"            VARCHAR(100) NOT NULL,
   "headline"         VARCHAR DEFAULT NULL,

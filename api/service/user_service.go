@@ -136,6 +136,10 @@ func (s *UserService) GetAllBlocked(pag *types.Pagination) (*types.Result[transf
 	}, nil
 }
 
-func (s *UserService) DeleteUserByID(id uuid.UUID) (string, error) {
-	return s.r.Delete(id.String())
+func (s *UserService) HardDelete(id uuid.UUID) error {
+	return s.r.HardDelete(id.String())
+}
+
+func (s *UserService) SoftDelete(id uuid.UUID) (string, error) {
+	return s.r.SoftDelete(id.String())
 }
