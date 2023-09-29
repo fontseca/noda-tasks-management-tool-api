@@ -240,6 +240,32 @@ func (r *UserRepository) ExistsUserWithEmail(email string) (bool, error) {
 	return count >= 1, nil
 }
 
+func (r *UserRepository) AssertUserExists(userID string) error {
+	query := `
+	SELECT "user_id"
+	  FROM "user"
+	 WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return err
+	} else if count >= 1 {
+		return nil
+	}
+	return failure.ErrNotFound
+}
+
 func (r *UserRepository) SelectAll(limit, page int64) (*[]*transfer.User, error) {
 	maxValidBeforeOverflow := (math.MaxInt64 / limit) - 1
 	if page > maxValidBeforeOverflow {
@@ -467,7 +493,32 @@ func (r *UserRepository) SelectRawUserByEmail(email string) (*model.User, error)
 	return &user, nil
 }
 
-func (r *UserRepository) Delete(id string) (string, error) {
+func (r *UserRepository) HardDelete(userID string) error {
+	if err := r.AssertUserExists(userID); err != nil {
+		return err
+	}
+	query := `
+	DELETE FROM "user"
+	      WHERE "user_id" = $1;`
+	result, err := r.db.Exec(query, &userID)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return err
+	}
+	if _, err := result.RowsAffected(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepository) SoftDelete(id string) (string, error) {
 	var (
 		query = `
 		DELETE FROM "user"

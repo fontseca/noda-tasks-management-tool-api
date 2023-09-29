@@ -33,7 +33,7 @@ func InitializeForUsers(router chi.Router) {
 			r.Get("/users", h.RetrieveAllUsers)
 			r.Get("/users/{user_id}", h.RetrieveUserByID)
 			r.Get("/users/search", nil)
-			r.Delete("/users/{user_id}", nil)
+			r.Delete("/users/{user_id}", h.DeleteUser)
 			r.Put("/users/{user_id}/block", h.BlockUser)
 			r.Delete("/users/{user_id}/block", h.UnblockUser)
 			r.Get("/users/blocked", h.RetrieveAllBlockedUsers)
