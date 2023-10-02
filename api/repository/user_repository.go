@@ -308,6 +308,87 @@ ORDER BY "created_at" DESC
 	return &users, nil
 }
 
+func (r *UserRepository) SelectAllSettings(limit, page int64, userID string) (*[]*transfer.UserSetting, error) {
+	err := r.AssertUserExists(userID)
+	if err != nil {
+		return nil, err
+	}
+	maxValidBeforeOverflow := (math.MaxInt64 / limit) - 1
+	if page > maxValidBeforeOverflow {
+		page = maxValidBeforeOverflow
+	}
+	query := `
+    SELECT "us"."key",
+           "df"."description",
+           "us"."value",
+           "us"."created_at",
+           "us"."updated_at"
+      FROM "user_setting" "us"
+INNER JOIN "predefined_user_setting" "df"
+        ON "us"."key" = "df"."key"
+     WHERE "us"."user_id" = $1
+  ORDER BY "created_at" DESC
+     LIMIT $2
+	  OFFSET ($2 * ($3::BIGINT - 1));`
+	rows, err := r.db.Query(query, &userID, &limit, &page)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	settings := []*transfer.UserSetting{}
+	if err = sqlscan.ScanAll(&settings, rows); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &settings, nil
+}
+
+func (r *UserRepository) SelectOneSetting(userID, settingKey string) (*transfer.UserSetting, error) {
+	err := r.AssertUserExists(userID)
+	if err != nil {
+		return nil, err
+	}
+	query := `
+    SELECT "us"."key",
+           "df"."description",
+           "us"."value",
+           "us"."created_at",
+           "us"."updated_at"
+      FROM "user_setting" "us"
+INNER JOIN "predefined_user_setting" "df"
+        ON "us"."key" = "df"."key"
+     WHERE "us"."user_id" = $1 AND
+		        "us"."key" = $2;`
+	result, err := r.db.Query(query, &userID, &settingKey)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer result.Close()
+	setting := transfer.UserSetting{}
+	if err = sqlscan.ScanOne(&setting, result); err != nil {
+		if sqlscan.NotFound(err) {
+			return nil, failure.ErrSettingNotFound
+		}
+		log.Println(err)
+		return nil, err
+	}
+	return &setting, nil
+}
+
 func (r *UserRepository) SelectAllBlocked(limit, page int64) (*[]*transfer.User, error) {
 	maxValidBeforeOverflow := (math.MaxInt64 / limit) - 1
 	if page > maxValidBeforeOverflow {

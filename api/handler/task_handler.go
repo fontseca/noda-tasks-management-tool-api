@@ -70,8 +70,8 @@ func (h *TaskHandler) RetrieveAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) RetrieveTasksFromUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(types.ContextKey{}).(uuid.UUID)
-	tasks, err := h.s.GetByUserID(userID)
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	tasks, err := h.s.GetByUserID(jwtPayload.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

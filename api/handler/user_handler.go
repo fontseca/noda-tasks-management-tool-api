@@ -245,7 +245,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *UserHandler) RetrieveLoggedInUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request) {
 	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
 	user, err := h.s.GetByID(jwtPayload.UserID)
 	if err != nil {
@@ -262,7 +262,50 @@ func (h *UserHandler) RetrieveLoggedInUser(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (h *UserHandler) UpdateLoggedInUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http.Request) {
+	pagination := ParsePagination(w, r)
+	if pagination == nil {
+		return
+	}
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	settings, err := h.s.GetUserSettings(pagination, jwtPayload.UserID)
+	if err != nil {
+		switch {
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		}
+		return
+	}
+	if err := json.NewEncoder(w).Encode(settings); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *http.Request) {
+	settingKey := chi.URLParam(r, "setting_key")
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	setting, err := h.s.GetOneSetting(jwtPayload.UserID, settingKey)
+	if err != nil {
+		switch {
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrSettingNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		}
+		return
+	}
+	if err := json.NewEncoder(w).Encode(setting); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserUpdate{}
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -306,7 +349,7 @@ func (h *UserHandler) UpdateLoggedInUser(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (h *UserHandler) RemoveLoggedInUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {
 	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
 	id, err := h.s.SoftDelete(jwtPayload.UserID)
 	if err != nil {

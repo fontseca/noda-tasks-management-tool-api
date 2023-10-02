@@ -17,10 +17,11 @@ func InitializeForUsers(router chi.Router) {
 	router.
 		With(middleware.Authorization).
 		Group(func(r chi.Router) {
-			r.Get("/me", h.RetrieveLoggedInUser)
-			r.Patch("/me", h.UpdateLoggedInUser)
-			r.Delete("/me", h.RemoveLoggedInUser)
-			r.Get("/me/settings", nil)
+			r.Get("/me", h.RetrieveCurrentUser)
+			r.Patch("/me", h.UpdateCurrentUser)
+			r.Delete("/me", h.RemoveCurrentUser)
+			r.Get("/me/settings", h.RetrieveCurrentUserSettings)
+			r.Get("/me/settings/{setting_key}", h.RetrieveOneSettingOfCurrentUser)
 			r.Post("/me/change_password", nil)
 		})
 

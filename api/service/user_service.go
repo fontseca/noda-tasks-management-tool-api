@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"noda/api/data/model"
@@ -134,6 +135,37 @@ func (s *UserService) GetAllBlocked(pag *types.Pagination) (*types.Result[transf
 		Retrieved: int64(len(*users)),
 		Payload:   users,
 	}, nil
+}
+
+func (s *UserService) GetUserSettings(pag *types.Pagination, userID uuid.UUID) (*types.Result[transfer.UserSetting], error) {
+	settings, err := s.r.SelectAllSettings(pag.RPP, pag.Page, userID.String())
+	if err != nil {
+		return nil, err
+	}
+	for _, setting := range *settings {
+		if err := json.Unmarshal(setting.Value.([]byte), &setting.Value); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+	}
+	return &types.Result[transfer.UserSetting]{
+		Page:      pag.Page,
+		RPP:       pag.RPP,
+		Retrieved: int64(len(*settings)),
+		Payload:   settings,
+	}, nil
+}
+
+func (s *UserService) GetOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserSetting, error) {
+	setting, err := s.r.SelectOneSetting(userID.String(), settingKey)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(setting.Value.([]byte), &setting.Value); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return setting, nil
 }
 
 func (s *UserService) HardDelete(id uuid.UUID) error {
