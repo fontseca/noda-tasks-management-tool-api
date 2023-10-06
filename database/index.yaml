@@ -1,0 +1,19 @@
+init:
+  - 'drop_db'
+  - 'roles/admin'
+  - 'roles/noda'
+extensions:
+domains:
+types:
+tables:
+  - 'users/role_table'
+  - 'users/user_table'
+  - 'tasks/group_table'
+  - 'tasks/list_table'
+  - 'tasks/task_table'
+views:
+indexes:
+routines:
+seeds:
+  - 'role_seed'
+  - 'user_seed'

@@ -9,92 +9,54 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/lib/pq"
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
 )
 
 var (
-	db      *sql.DB
-	scripts string
+	db           *sql.DB
+	databasePath string
+	indexPath    string
 )
-
-type DBQueryMapper = uint32
-
-const (
-	DBAll DBQueryMapper = iota
-	DBCreateExtensions
-	DBDrop
-	DBCreate
-	DBInit
-	DBRoles
-	DBObjects
-	DBDomains
-	DBTypes
-	DBEnums
-	DBComposites
-	DBTables
-	DBViews
-	DBIndexes
-	DBFunctions
-	DBProcedures
-	DBSeeds
-)
-
-type FileType = string
-
-const (
-	File      string = "file"
-	Directory string = "directory"
-)
-
-type dbEntry struct {
-	longname string
-	path     string
-	ftype    FileType
-}
-
-type DBDirectoryMap map[DBQueryMapper]*dbEntry
-
-var dbMap DBDirectoryMap
 
 var verbose bool = false
 
 func init() {
-	currentProcessPath, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	root := findRootDirectory(currentProcessPath)
-	scripts = path.Join(root, "database/scripts")
-	init := path.Join(scripts, "000_init")
-	roles := path.Join(scripts, "001_roles")
-	objects := path.Join(scripts, "002_objects")
-	seeds := path.Join(scripts, "003_seeds")
-	dbMap = DBDirectoryMap{
-		DBAll:              {ftype: Directory, longname: "all", path: scripts},
-		DBInit:             {ftype: Directory, longname: "init", path: init},
-		DBDrop:             {ftype: File, longname: "dropdb", path: path.Join(init, "000_drop_db.sql")},
-		DBCreate:           {ftype: File, longname: "createdb", path: path.Join(init, "001_create_db.sql")},
-		DBCreateExtensions: {ftype: File, longname: "ext", path: path.Join(init, "002_extensions.sql")},
-		DBRoles:            {ftype: Directory, longname: "roles", path: roles},
-		DBObjects:          {ftype: Directory, longname: "objects", path: objects},
-		DBDomains:          {ftype: Directory, longname: "objects/domains", path: path.Join(objects, "000_domains")},
-		DBTypes:            {ftype: Directory, longname: "objects/types", path: path.Join(objects, "001_types")},
-		DBEnums:            {ftype: Directory, longname: "objects/types/enumerations", path: path.Join(objects, "001_types", "000_enumerations")},
-		DBComposites:       {ftype: Directory, longname: "objects/types/composites", path: path.Join(objects, "001_types", "001_composites")},
-		DBTables:           {ftype: Directory, longname: "objects/tables", path: path.Join(objects, "002_tables")},
-		DBViews:            {ftype: Directory, longname: "objects/views", path: path.Join(objects, "003_views")},
-		DBIndexes:          {ftype: Directory, longname: "objects/indexes", path: path.Join(objects, "004_indexes")},
-		DBFunctions:        {ftype: Directory, longname: "objects/functions", path: path.Join(objects, "005_functions")},
-		DBProcedures:       {ftype: Directory, longname: "objects/procedures", path: path.Join(objects, "006_procedures")},
-		DBSeeds:            {ftype: Directory, longname: "seeds", path: seeds},
-	}
+	root := findRootDirectory()
+	databasePath = path.Join(root, "database")
+	indexPath = path.Join(databasePath, "index.yaml")
+
+}
+
+type Files []string
+
+type Index struct {
+	Init       Files `yaml:"init"`
+	Extensions Files `yaml:"extensions"`
+	Domains    Files `yaml:"domains"`
+	Types      Files `yaml:"types"`
+	Tables     Files `yaml:"tables"`
+	Views      Files `yaml:"views"`
+	Indexes    Files `yaml:"indexes"`
+	Routines   Files `yaml:"routines"`
+	Seeds      Files `yaml:"seeds"`
 }
 
 func main() {
-	var err error
+	buf, err := os.ReadFile(indexPath)
+	if err != nil {
+		log.Fatalf("could not read %q: %v", indexPath, err)
+	}
+
+	var index Index
+	err = yaml.Unmarshal(buf, &index)
+	if err != nil {
+		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
+	}
+
 	dbRootConf := config.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
 	db, err = sql.Open("postgres", dbRootConf.Conn())
 	if err != nil {
@@ -107,9 +69,7 @@ func main() {
 	}
 	dbRootConf.LogSuccess()
 
-	executeQueryFor(DBDrop)
-	executeQueryFor(DBRoles)
-	executeQueryFor(DBCreate)
+	ExecuteScriptsOf("init", &index.Init)
 
 	if err = db.Close(); err != nil {
 		log.Fatal(err)
@@ -127,54 +87,63 @@ func main() {
 	}
 	dbAdminConf.LogSuccess()
 
-	executeQueryFor(DBCreateExtensions)
-	executeQueryFor(DBObjects)
-	executeQueryFor(DBSeeds)
+	ExecuteScriptsOf("extensions", &index.Extensions)
+	ExecuteScriptsOf("domains", &index.Domains)
+	ExecuteScriptsOf("types", &index.Types)
+	ExecuteScriptsOf("tables", &index.Tables)
+	ExecuteScriptsOf("views", &index.Views)
+	ExecuteScriptsOf("indexes", &index.Indexes)
+	ExecuteScriptsOf("routines", &index.Routines)
+	ExecuteScriptsOf("seeds", &index.Seeds)
 }
 
-func traverseAndExecute(directory string) {
+func ExecuteScriptsOf(directory string, filesWithPrecedence *Files) {
+	length := len(*filesWithPrecedence)
+	executionPrecedenceMatters := length > 0
+	var alreadyExecutedFiles Files = nil
+	if executionPrecedenceMatters {
+		alreadyExecutedFiles = make(Files, length)
+		for _, shallowFileName := range *filesWithPrecedence {
+			ext := filepath.Ext(shallowFileName)
+			if ext != "" {
+				log.Fatalf("please do not provide any extension (%s) for %q",
+					ext, shallowFileName)
+			}
+			absoluteScriptPath := path.Join(databasePath, directory, shallowFileName+".sql")
+			alreadyExecutedFiles = append(alreadyExecutedFiles, absoluteScriptPath)
+			TryExecuteScript(absoluteScriptPath)
+		}
+	}
+	TraverseDirectory(path.Join(databasePath, directory), &alreadyExecutedFiles)
+}
+
+func TraverseDirectory(directory string, alreadyExecutedFiles *Files) {
 	files, err := os.ReadDir(directory)
 	if err != nil {
-		log.Fatal("error reading directory:", err)
+		log.Fatalf("could not open directory %q: %v",
+			directory, err)
 	}
-
 	for _, file := range files {
-		filename := file.Name()
-
-		if !isCorrectDatabaseFileName(filename) {
-			continue
-		}
-
+		absoluteFilePath := path.Join(directory, file.Name())
 		if file.IsDir() {
-			traverseAndExecute(path.Join(directory, filename))
+			TraverseDirectory(absoluteFilePath, alreadyExecutedFiles)
 		} else {
-			logNextFileToExecute(filename)
-			absPath := path.Join(directory, filename)
-			query := readQueryFromFile(absPath)
-			executeQueryOrFatal(query)
+			if filepath.Ext(absoluteFilePath) != ".sql" {
+				continue
+			}
+			if alreadyExecutedFiles != nil &&
+				!slices.Contains[[]string](*alreadyExecutedFiles, absoluteFilePath) {
+				TryExecuteScript(absoluteFilePath)
+			}
 		}
 	}
 }
 
-func executeQueryFor(entiy DBQueryMapper) {
-	entry := dbMap[entiy]
-	switch entry.ftype {
-	default:
-		log.Fatal("file type is unrecognizable")
-	case Directory:
-		traverseAndExecute(entry.path)
-	case File:
-		logNextFileToExecute(path.Base(entry.path))
-		query := readQueryFromFile(entry.path)
-		executeQueryOrFatal(query)
-	}
+func LogNextFileToExecute(filename string) {
+	log.Printf("Attempting to load and execute file: \033[1;32m%s\033[0m ...\n", filename)
 }
 
-func logNextFileToExecute(filename string) {
-	log.Printf("Attempting to read and execute PL/pgSQL file `\033[1;32m%s\033[0m'\n", filename)
-}
-
-func readQueryFromFile(script string) string {
+func ReadQueryFromFile(script string) string {
 	buf, err := os.ReadFile(script)
 	if err != nil {
 		log.Fatal(err)
@@ -182,7 +151,9 @@ func readQueryFromFile(script string) string {
 	return string(buf)
 }
 
-func executeQueryOrFatal(query string) {
+func TryExecuteScript(filename string) {
+	LogNextFileToExecute(filepath.Base(filename))
+	query := ReadQueryFromFile(filename)
 	if _, err := db.Exec(query); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			log.Fatal(failure.PQErrorToString(pqErr))
@@ -204,31 +175,16 @@ func executeQueryOrFatal(query string) {
 	}
 }
 
-func findRootDirectory(startDirectory string) string {
-	for dir := startDirectory; dir != "/"; dir = filepath.Dir(dir) {
+func findRootDirectory() string {
+	currentProcessPath, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for dir := currentProcessPath; dir != "/"; dir = filepath.Dir(dir) {
 		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
 			return dir
 		}
 	}
 	log.Fatal("root directory not found (missed go.mod?)")
 	return ""
-}
-
-func isCorrectDatabaseFileName(filename string) bool {
-	var (
-		dbFilePattern             = `^[0-9]{3}_[a-z_]+.sql$`
-		dbDirectoryPattern        = `^[0-9]{3}_[a-z_]+$`
-		fileRegex, directoryRegex *regexp.Regexp
-		err                       error
-	)
-	if fileRegex, err = regexp.Compile(dbFilePattern); err != nil {
-		log.Fatal(err)
-	}
-	if directoryRegex, err = regexp.Compile(dbDirectoryPattern); err != nil {
-		log.Fatal(err)
-	}
-	if !fileRegex.MatchString(filename) && !directoryRegex.MatchString(filename) {
-		return false
-	}
-	return true
 }
