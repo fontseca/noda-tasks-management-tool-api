@@ -25,7 +25,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *ur) InsertUser(next *transfer.UserCreation) (string, error) {
 	row := r.db.QueryRow("SELECT make_user ($1, $2, $3, $4, $5, $6);",
-		&next.FirstName, &next.MiddleName, &next.LastName, &next.Surname, &next.Email, &next.Password)
+		next.FirstName, next.MiddleName, next.LastName, next.Surname, next.Email, next.Password)
 	var insertedID string
 	if err := row.Scan(&insertedID); err != nil {
 		var pqerr *pq.Error
@@ -45,7 +45,7 @@ func (r *ur) InsertUser(next *transfer.UserCreation) (string, error) {
 
 func (r *ur) UpdateUser(userID string, up *transfer.UserUpdate) (bool, error) {
 	row := r.db.QueryRow("SELECT update_user ($1, $2, $3, $4, $5, NULL, NULL, NULL);",
-		&userID, &up.FirstName, &up.MiddleName, &up.LastName, &up.Surname)
+		userID, up.FirstName, up.MiddleName, up.LastName, up.Surname)
 	var wasUpdated bool
 	if err := row.Scan(&wasUpdated); err != nil {
 		var pqerr *pq.Error
@@ -64,7 +64,7 @@ func (r *ur) UpdateUser(userID string, up *transfer.UserUpdate) (bool, error) {
 }
 
 func (r *ur) PromoteUserToAdmin(userID string) (bool, error) {
-	row := r.db.QueryRow("SELECT promote_user_to_admin ($1);", &userID)
+	row := r.db.QueryRow("SELECT promote_user_to_admin ($1);", userID)
 	var wasPromoted bool
 	if err := row.Scan(&wasPromoted); err != nil {
 		var pqerr *pq.Error
@@ -83,7 +83,7 @@ func (r *ur) PromoteUserToAdmin(userID string) (bool, error) {
 }
 
 func (r *ur) DegradeAdminToNormalUser(userID string) (bool, error) {
-	row := r.db.QueryRow("SELECT degrade_admin_to_user ($1);", &userID)
+	row := r.db.QueryRow("SELECT degrade_admin_to_user ($1);", userID)
 	var wasDegraded bool
 	if err := row.Scan(&wasDegraded); err != nil {
 		var pqerr *pq.Error
@@ -102,7 +102,7 @@ func (r *ur) DegradeAdminToNormalUser(userID string) (bool, error) {
 }
 
 func (r *ur) BlockUser(userID string) (bool, error) {
-	row := r.db.QueryRow("SELECT block_user ($1);", &userID)
+	row := r.db.QueryRow("SELECT block_user ($1);", userID)
 	var wasBlocked bool
 	if err := row.Scan(&wasBlocked); err != nil {
 		var pqerr *pq.Error
@@ -121,7 +121,7 @@ func (r *ur) BlockUser(userID string) (bool, error) {
 }
 
 func (r *ur) UnblockUser(userID string) (bool, error) {
-	row := r.db.QueryRow("SELECT unblock_user ($1);", &userID)
+	row := r.db.QueryRow("SELECT unblock_user ($1);", userID)
 	var wasUnblocked bool
 	if err := row.Scan(&wasUnblocked); err != nil {
 		var pqerr *pq.Error
@@ -139,7 +139,7 @@ func (r *ur) UnblockUser(userID string) (bool, error) {
 	return wasUnblocked, nil
 }
 
-func (r *ur) FetchUsers(page, rpp int64) (*[]*transfer.User, error) {
+func (r *ur) FetchUsers(page, rpp int64) ([]*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
 	       "role_id" AS "role",
@@ -153,8 +153,7 @@ func (r *ur) FetchUsers(page, rpp int64) (*[]*transfer.User, error) {
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_users ($1, $2);`
-	rows, err := r.db.Query(query,
-		page, rpp)
+	rows, err := r.db.Query(query, page, rpp)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -171,12 +170,12 @@ func (r *ur) FetchUsers(page, rpp int64) (*[]*transfer.User, error) {
 		log.Println(err)
 		return nil, err
 	}
-	return &users, nil
+	return users, nil
 }
 
-func (r *ur) FetchUserSettings(userID string, page, rpp int64) (*[]*transfer.UserSetting, error) {
+func (r *ur) FetchUserSettings(userID string, page, rpp int64) ([]*transfer.UserSetting, error) {
 	rows, err := r.db.Query("SELECT * FROM fetch_user_settings ($1, $2, $3);",
-		&userID, page, rpp)
+		userID, page, rpp)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -196,11 +195,12 @@ func (r *ur) FetchUserSettings(userID string, page, rpp int64) (*[]*transfer.Use
 		log.Println(err)
 		return nil, err
 	}
-	return &settings, nil
+	return settings, nil
 }
 
 func (r *ur) FetchOneUserSetting(userID, settingKey string) (*transfer.UserSetting, error) {
-	result, err := r.db.Query("SELECT * FROM fetch_one_user_setting ($1, $2);", &userID, &settingKey)
+	result, err := r.db.Query("SELECT * FROM fetch_one_user_setting ($1, $2);",
+		userID, settingKey)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -237,7 +237,7 @@ func (r *ur) UpdateUserSetting(userID, settingKey string, value any) (bool, erro
 		     "updated_at" = 'now()'
 	 WHERE "user_id" = $1 AND
 	       "key" = $2;`
-	result, err := r.db.Exec(query, &userID, &settingKey, &value)
+	result, err := r.db.Exec(query, userID, settingKey, value)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -256,7 +256,7 @@ func (r *ur) UpdateUserSetting(userID, settingKey string, value any) (bool, erro
 	return count >= 1, nil
 }
 
-func (r *ur) FetchBlockedUsers(limit, page int64) (*[]*transfer.User, error) {
+func (r *ur) FetchBlockedUsers(page, rpp int64) ([]*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
 	       "role_id" AS "role",
@@ -270,8 +270,7 @@ func (r *ur) FetchBlockedUsers(limit, page int64) (*[]*transfer.User, error) {
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_blocked_users ($1, $2);`
-	rows, err := r.db.Query(query,
-		page, limit)
+	rows, err := r.db.Query(query, page, rpp)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -288,7 +287,7 @@ func (r *ur) FetchBlockedUsers(limit, page int64) (*[]*transfer.User, error) {
 		log.Println(err)
 		return nil, err
 	}
-	return &users, nil
+	return users, nil
 }
 
 func (r *ur) FetchUserByID(userID string) (*model.User, error) {
@@ -306,7 +305,7 @@ func (r *ur) FetchUserByID(userID string) (*model.User, error) {
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_id ($1);`
-	row, err := r.db.Query(query, &userID)
+	row, err := r.db.Query(query, userID)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -348,7 +347,7 @@ func (r *ur) FetchUserByEmail(email string) (*model.User, error) {
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_email ($1);`
-	row, err := r.db.Query(query, &email)
+	row, err := r.db.Query(query, email)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -393,7 +392,7 @@ func (r *ur) FetchTransferUserByEmail(email string) (*transfer.User, error) {
 	}, nil
 }
 
-func (r *ur) FetchTransferUserByID(id string) (*transfer.User, error) {
+func (r *ur) FetchTransferUserByID(userID string) (*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
 	       "role_id" AS "role",
@@ -407,7 +406,7 @@ func (r *ur) FetchTransferUserByID(id string) (*transfer.User, error) {
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_id ($1);`
-	row, err := r.db.Query(query, &id)
+	row, err := r.db.Query(query, userID)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
@@ -432,7 +431,7 @@ func (r *ur) FetchTransferUserByID(id string) (*transfer.User, error) {
 
 func (r *ur) HardlyDeleteUser(userID string) error {
 	err := r.db.
-		QueryRow("SELECT delete_user_hardly ($1);", &userID).
+		QueryRow("SELECT delete_user_hardly ($1);", userID).
 		Err()
 	if err != nil {
 		var pqerr *pq.Error
@@ -450,13 +449,13 @@ func (r *ur) HardlyDeleteUser(userID string) error {
 	return nil
 }
 
-func (r *ur) SoftlyDeleteUser(id string) (string, error) {
+func (r *ur) SoftlyDeleteUser(userID string) (string, error) {
 	var (
 		query = `
 		DELETE FROM "user"
 					WHERE "user_id" = $1
 			RETURNING "user_id";`
-		row           = r.db.QueryRow(query, id)
+		row           = r.db.QueryRow(query, userID)
 		deletedUserID = ""
 	)
 	if err := row.Scan(&deletedUserID); err != nil {
