@@ -32,7 +32,7 @@ func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new, err := h.s.SignUp(next)
+	insertedID, err := h.s.SignUp(next)
 	if err != nil {
 		var passwdErrors *failure.Aggregation
 		switch {
@@ -53,7 +53,10 @@ func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(new)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"user_id": insertedID.String(),
+	})
 }
 
 func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {

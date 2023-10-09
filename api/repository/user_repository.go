@@ -230,30 +230,30 @@ func (r *ur) FetchOneUserSetting(userID, settingKey string) (*transfer.UserSetti
 	return &setting, nil
 }
 
-func (r *ur) UpdateUserSetting(userID, settingKey string, value any) (bool, error) {
-	query := `
-	UPDATE "user_setting"
-	   SET "value" = $1,
-		     "updated_at" = 'now()'
-	 WHERE "user_id" = $1 AND
-	       "key" = $2;`
-	result, err := r.db.Exec(query, userID, settingKey, value)
-	if err != nil {
+func (r *ur) UpdateUserSetting(userID, settingKey string, value string) (bool, error) {
+	query := `SELECT update_user_setting ($1, $2, $3);`
+	row := r.db.QueryRow(query, userID, settingKey, value)
+	var wasUpdated bool
+	if err := row.Scan(&wasUpdated); err != nil {
 		var pqerr *pq.Error
 		switch {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
+			switch {
+			case r.gotNonexistentUserError(pqerr):
+				return false, failure.ErrNotFound
+			case r.gotNonexistentPredefinedUserSettingError(pqerr):
+				return false, failure.ErrSettingNotFound
+			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
-	count, err := result.RowsAffected()
-	if err != nil {
-		log.Println(err)
-		return false, err
+	if wasUpdated {
+		return true, nil
 	}
-	return count >= 1, nil
+	return false, nil
 }
 
 func (r *ur) FetchBlockedUsers(page, rpp int64) ([]*transfer.User, error) {

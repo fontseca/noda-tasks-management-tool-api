@@ -157,6 +157,12 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
 		return
 	}
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	if jwtPayload.UserID == userID {
+		failure.Emit(w, http.StatusBadRequest, "failure with block operation",
+			"cannot block yourself")
+		return
+	}
 	userWasBlocked, err := h.s.Block(userID)
 	if err != nil {
 		switch {
@@ -189,6 +195,12 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
 	if err != nil {
 		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
+		return
+	}
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	if jwtPayload.UserID == userID {
+		failure.Emit(w, http.StatusBadRequest, "failure with unblock operation",
+			"cannot unblock yourself")
 		return
 	}
 	userWasUnblocked, err := h.s.Unblock(userID)
@@ -305,6 +317,46 @@ func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *
 	}
 }
 
+func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *http.Request) {
+	settingKey := chi.URLParam(r, "setting_key")
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	up := &transfer.UserSettingUpdate{}
+	if err := decoder.Decode(up); err != nil {
+		// TODO: Catch all different errors
+		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	wasUpdated, err := h.s.UpdateUserSetting(jwtPayload.UserID, settingKey, up)
+	if err != nil {
+		switch {
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrSettingNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		}
+		return
+	}
+	if wasUpdated {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		var (
+			scheme = "http://"
+			host   = r.Host
+			path   = fmt.Sprintf("/me/settings/%s", settingKey)
+		)
+		if r.TLS != nil { /* Running on HTTPS.  */
+			scheme = "https://"
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+		w.WriteHeader(http.StatusSeeOther)
+	}
+}
+
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserUpdate{}
 	decoder := json.NewDecoder(r.Body)
@@ -325,12 +377,11 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 	userWasUpdated, err := h.s.Update(jwtPayload.UserID, up)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		}
 		return
-		// switch {
-		// case errors.Is(err, failure.ErrNotFound):
-		// 	failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		// }
-		// return
 	}
 
 	if userWasUpdated {

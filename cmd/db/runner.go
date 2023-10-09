@@ -69,7 +69,7 @@ func main() {
 	}
 	dbRootConf.LogSuccess()
 
-	ExecuteScriptsOf("init", &index.Init)
+	ExecuteScriptsOf("init", index.Init)
 
 	if err = db.Close(); err != nil {
 		log.Fatal(err)
@@ -87,23 +87,23 @@ func main() {
 	}
 	dbAdminConf.LogSuccess()
 
-	ExecuteScriptsOf("extensions", &index.Extensions)
-	ExecuteScriptsOf("domains", &index.Domains)
-	ExecuteScriptsOf("types", &index.Types)
-	ExecuteScriptsOf("tables", &index.Tables)
-	ExecuteScriptsOf("views", &index.Views)
-	ExecuteScriptsOf("indexes", &index.Indexes)
-	ExecuteScriptsOf("routines", &index.Routines)
-	ExecuteScriptsOf("seeds", &index.Seeds)
+	ExecuteScriptsOf("extensions", index.Extensions)
+	ExecuteScriptsOf("domains", index.Domains)
+	ExecuteScriptsOf("types", index.Types)
+	ExecuteScriptsOf("tables", index.Tables)
+	ExecuteScriptsOf("views", index.Views)
+	ExecuteScriptsOf("indexes", index.Indexes)
+	ExecuteScriptsOf("routines", index.Routines)
+	ExecuteScriptsOf("seeds", index.Seeds)
 }
 
-func ExecuteScriptsOf(directory string, filesWithPrecedence *Files) {
-	length := len(*filesWithPrecedence)
+func ExecuteScriptsOf(directory string, filesWithPrecedence Files) {
+	length := len(filesWithPrecedence)
 	executionPrecedenceMatters := length > 0
 	var alreadyExecutedFiles Files = nil
 	if executionPrecedenceMatters {
 		alreadyExecutedFiles = make(Files, length)
-		for _, shallowFileName := range *filesWithPrecedence {
+		for _, shallowFileName := range filesWithPrecedence {
 			ext := filepath.Ext(shallowFileName)
 			if ext != "" {
 				log.Fatalf("please do not provide any extension (%s) for %q",
@@ -114,10 +114,10 @@ func ExecuteScriptsOf(directory string, filesWithPrecedence *Files) {
 			TryExecuteScript(absoluteScriptPath)
 		}
 	}
-	TraverseDirectory(path.Join(databasePath, directory), &alreadyExecutedFiles)
+	TraverseDirectory(path.Join(databasePath, directory), alreadyExecutedFiles)
 }
 
-func TraverseDirectory(directory string, alreadyExecutedFiles *Files) {
+func TraverseDirectory(directory string, alreadyExecutedFiles Files) {
 	files, err := os.ReadDir(directory)
 	if err != nil {
 		log.Fatalf("could not open directory %q: %v",
@@ -131,8 +131,8 @@ func TraverseDirectory(directory string, alreadyExecutedFiles *Files) {
 			if filepath.Ext(absoluteFilePath) != ".sql" {
 				continue
 			}
-			if alreadyExecutedFiles != nil &&
-				!slices.Contains[[]string](*alreadyExecutedFiles, absoluteFilePath) {
+			if !slices.Contains[[]string](alreadyExecutedFiles, absoluteFilePath) {
+				fmt.Printf("to exec %q (%d)\n", file.Name(), len(alreadyExecutedFiles))
 				TryExecuteScript(absoluteFilePath)
 			}
 		}

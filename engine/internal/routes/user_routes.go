@@ -22,6 +22,7 @@ func InitializeForUsers(router chi.Router) {
 			r.Delete("/me", h.RemoveCurrentUser)
 			r.Get("/me/settings", h.RetrieveCurrentUserSettings)
 			r.Get("/me/settings/{setting_key}", h.RetrieveOneSettingOfCurrentUser)
+			r.Put("/me/settings/{setting_key}", h.UpdateOneSettingForCurrentUser)
 			r.Post("/me/change_password", nil)
 		})
 

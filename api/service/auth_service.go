@@ -23,7 +23,7 @@ func NewAuthenticationService(userService *UserService) *AuthenticationService {
 	}
 }
 
-func (s *AuthenticationService) SignUp(next *transfer.UserCreation) (*transfer.User, error) {
+func (s *AuthenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, error) {
 	return s.userService.Save(next)
 }
 
