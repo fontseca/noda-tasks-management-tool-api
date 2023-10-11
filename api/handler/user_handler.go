@@ -10,6 +10,7 @@ import (
 	"noda/api/data/types"
 	"noda/api/service"
 	"noda/failure"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -35,6 +36,27 @@ func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
+	pagination := ParsePagination(w, r)
+	if pagination == nil {
+		return
+	}
+	sortExpr := ParseSorting(w, r)
+	if strings.Compare(sortExpr, "") == 0 {
+		return
+	}
+	needle := ParseQueryParameter(r, "q", "")
+	res, err := h.s.SearchUsers(pagination, needle, sortExpr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

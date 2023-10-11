@@ -173,6 +173,40 @@ func (r *ur) FetchUsers(page, rpp int64) ([]*transfer.User, error) {
 	return users, nil
 }
 
+func (r *ur) SearchUsers(page, rpp int64, needle, sortExpr string) ([]*transfer.User, error) {
+	query := `
+	SELECT "user_id" AS "id",
+	       "role_id" AS "role",
+	       "first_name",
+	       "middle_name",
+	       "last_name",
+	       "surname",
+	       "picture_url",
+	       "email",
+	       "is_blocked",
+	       "created_at",
+	       "updated_at"
+	  FROM fetch_users ($1, $2, $3, $4);`
+	rows, err := r.db.Query(query, page, rpp, needle, sortExpr)
+	if err != nil {
+		var pqerr *pq.Error
+		switch {
+		default:
+			log.Println(err)
+		case errors.As(err, &pqerr):
+			log.Println(failure.PQErrorToString(pqerr))
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	users := []*transfer.User{}
+	if err = sqlscan.ScanAll(&users, rows); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return users, nil
+}
+
 func (r *ur) FetchUserSettings(userID string, page, rpp int64) ([]*transfer.UserSetting, error) {
 	rows, err := r.db.Query("SELECT * FROM fetch_user_settings ($1, $2, $3);",
 		userID, page, rpp)
