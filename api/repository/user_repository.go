@@ -7,7 +7,6 @@ import (
 	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/failure"
-	"strings"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/lib/pq"
@@ -33,7 +32,7 @@ func (r *ur) InsertUser(next *transfer.UserCreation) (string, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotDuplicatedEmailError(pqerr) {
+			if isDuplicatedEmailError(pqerr) {
 				return "", failure.ErrSameEmail
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -53,7 +52,7 @@ func (r *ur) UpdateUser(userID string, up *transfer.UserUpdate) (bool, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return false, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -72,7 +71,7 @@ func (r *ur) PromoteUserToAdmin(userID string) (bool, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return false, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -91,7 +90,7 @@ func (r *ur) DegradeAdminToNormalUser(userID string) (bool, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return false, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -110,7 +109,7 @@ func (r *ur) BlockUser(userID string) (bool, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return false, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -129,7 +128,7 @@ func (r *ur) UnblockUser(userID string) (bool, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return false, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -216,7 +215,7 @@ func (r *ur) FetchUserSettings(userID string, page, rpp int64) ([]*transfer.User
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return nil, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -244,9 +243,9 @@ func (r *ur) FetchOneUserSetting(userID, settingKey string) (*transfer.UserSetti
 			switch {
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
-			case r.gotNonexistentUserError(pqerr):
+			case isNonexistentUserError(pqerr):
 				return nil, failure.ErrNotFound
-			case r.gotNonexistentPredefinedUserSettingError(pqerr):
+			case isNonexistentPredefinedUserSettingError(pqerr):
 				return nil, failure.ErrSettingNotFound
 			}
 		}
@@ -275,9 +274,9 @@ func (r *ur) UpdateUserSetting(userID, settingKey string, value string) (bool, e
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			switch {
-			case r.gotNonexistentUserError(pqerr):
+			case isNonexistentUserError(pqerr):
 				return false, failure.ErrNotFound
-			case r.gotNonexistentPredefinedUserSettingError(pqerr):
+			case isNonexistentPredefinedUserSettingError(pqerr):
 				return false, failure.ErrSettingNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -346,7 +345,7 @@ func (r *ur) FetchUserByID(userID string) (*model.User, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return nil, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -388,7 +387,7 @@ func (r *ur) FetchUserByEmail(email string) (*model.User, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNotFoundEmailError(pqerr) {
+			if isNotFoundEmailError(pqerr) {
 				return nil, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -447,7 +446,7 @@ func (r *ur) FetchTransferUserByID(userID string) (*transfer.User, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return nil, failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -473,7 +472,7 @@ func (r *ur) HardlyDeleteUser(userID string) error {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			if r.gotNonexistentUserError(pqerr) {
+			if isNonexistentUserError(pqerr) {
 				return failure.ErrNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
@@ -506,24 +505,4 @@ func (r *ur) SoftlyDeleteUser(userID string) (string, error) {
 		}
 	}
 	return deletedUserID, nil
-}
-
-func (r *ur) gotNonexistentUserError(err *pq.Error) bool {
-	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent user with ID")
-}
-
-func (r *ur) gotNonexistentPredefinedUserSettingError(err *pq.Error) bool {
-	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent predefined user setting key")
-}
-
-func (r *ur) gotNotFoundEmailError(err *pq.Error) bool {
-	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent user email")
-}
-
-func (r *ur) gotDuplicatedEmailError(err *pq.Error) bool {
-	return err.Code == "23505" &&
-		strings.Contains(err.Message, "duplicate key value violates unique constraint \"user_email_key\"")
 }
