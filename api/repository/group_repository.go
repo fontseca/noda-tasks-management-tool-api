@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/failure"
 	"time"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/lib/pq"
 )
 
@@ -39,9 +41,81 @@ func (r *gr) InsertGroup(
 			case isNonexistentUserError(pqerr):
 				err = failure.ErrNotFound
 			}
+		} else if isContextDeadlineError(err) {
+			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
+	}
+	return
+}
+
+func (r *gr) FetchGroupByID(ownerID, groupID string) (group *model.Group, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `SELECT * FROM fetch_group_by_id ($1, $2);`
+	result := r.db.QueryRowContext(ctx, query, ownerID, groupID)
+	err = result.Err()
+	if err != nil {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(failure.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				err = failure.ErrNotFound
+			case isNonexistentGroupError(pqerr):
+				err = failure.ErrGroupNotFound
+			}
+		} else if isContextDeadlineError(err) {
+			err = failure.ErrDeadlineExceeded
+		} else {
+			log.Println(err)
+		}
+		return
+	}
+	group = &model.Group{}
+	result.Scan(
+		&group.ID, &group.OwnerID, &group.Name, &group.Description,
+		&group.IsArchived, &group.ArchivedAt, &group.CreatedAt, &group.UpdatedAt)
+	return
+}
+
+func (r *gr) FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+	SELECT "group_id" AS "id",
+         "owner_id",
+         "name",
+         "description",
+         "is_archived",
+         "archived_at",
+         "created_at",
+         "updated_at"
+	  FROM fetch_groups ($1, $2, $3, $4, $5);`
+	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortBy)
+	if err != nil {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(failure.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				err = failure.ErrNotFound
+			}
+		} else if isContextDeadlineError(err) {
+			err = failure.ErrDeadlineExceeded
+		} else {
+			log.Println(err)
+		}
+		return
+	}
+	defer result.Close()
+	groups = []*model.Group{}
+	err = sqlscan.ScanAll(&groups, result)
+	if err != nil {
+		groups = nil
 	}
 	return
 }

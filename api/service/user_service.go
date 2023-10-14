@@ -126,6 +126,19 @@ func (s *us) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error)
 	}, nil
 }
 
+func (s *us) SearchUsers(pag *types.Pagination, needle, sortExpr string) (*types.Result[transfer.User], error) {
+	users, err := s.r.SearchUsers(pag.Page, pag.RPP, needle, sortExpr)
+	if err != nil {
+		return nil, err
+	}
+	return &types.Result[transfer.User]{
+		Page:      pag.Page,
+		RPP:       pag.RPP,
+		Retrieved: int64(len(users)),
+		Payload:   users,
+	}, nil
+}
+
 func (s *us) GetAllBlocked(pag *types.Pagination) (*types.Result[transfer.User], error) {
 	users, err := s.r.FetchBlockedUsers(pag.Page, pag.RPP)
 	if err != nil {

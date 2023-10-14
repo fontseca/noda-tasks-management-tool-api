@@ -15,6 +15,15 @@ func isNonexistentUserError(err *pq.Error) bool {
 		strings.Contains(err.Message, "nonexistent user with ID")
 }
 
+func isNonexistentGroupError(err *pq.Error) bool {
+	return err.Code == "P0001" &&
+		strings.Contains(err.Message, "nonexistent group with ID")
+}
+
+func isContextDeadlineError(err error) bool {
+	return strings.Compare(err.Error(), "context deadline exceeded") == 0
+}
+
 func isNonexistentPredefinedUserSettingError(err *pq.Error) bool {
 	return err.Code == "P0001" &&
 		strings.Contains(err.Message, "nonexistent predefined user setting key")
