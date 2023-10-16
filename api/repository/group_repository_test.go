@@ -308,3 +308,156 @@ func TestFetchGroups(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestUpdateGroup(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewGroupRepository(db)
+		query = regexp.QuoteMeta(`SELECT update_group ($1, $2, $3, $4);`)
+		res   bool
+		err   error
+		up    = &transfer.GroupUpdate{}
+	)
+
+	/* Success.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"update_group"}).
+			AddRow(true))
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* Did not update and no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"update_group"}).
+			AddRow(false))
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.False(t, res)
+
+	/* Group not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.False(t, res)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.False(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, up.Name, up.Description).
+		WillReturnError(&pq.Error{})
+	res, err = r.UpdateGroup(userID, groupID, up)
+	assert.Error(t, err)
+	assert.False(t, res)
+}
+
+func TestDeleteGroup(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewGroupRepository(db)
+		query = regexp.QuoteMeta(`SELECT delete_group ($1, $2);`)
+		res   bool
+		err   error
+	)
+
+	/* Success.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"delete_group"}).
+			AddRow(true))
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* Did not delete and no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"delete_group"}).
+			AddRow(false))
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.False(t, res)
+
+	/* Group not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.False(t, res)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.False(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID).
+		WillReturnError(&pq.Error{})
+	res, err = r.DeleteGroup(userID, groupID)
+	assert.Error(t, err)
+	assert.False(t, res)
+}
