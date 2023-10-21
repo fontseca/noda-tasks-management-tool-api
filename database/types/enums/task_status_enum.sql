@@ -1,12 +1,9 @@
 DROP TYPE IF EXISTS "task_status_t";
 
 CREATE TYPE "task_status_t"
-    AS ENUM
-    (
-      'incomplete',
-      'complete',
-      'decayed'
-    );
+    AS ENUM ('incomplete',
+             'complete',
+             'decayed');
 
 ALTER TYPE "task_status_t"
   OWNER TO "noda";
