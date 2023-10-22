@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION fetch_one_user_setting (
-  IN p_user_id     UUID,
-  IN p_setting_key TEXT
+  IN p_user_id     "user"."user_id"%TYPE,
+  IN p_setting_key "user_setting"."key"%TYPE
 )
 RETURNS TABLE (
   "key"         "predefined_user_setting"."key"%TYPE,
@@ -28,5 +28,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION fetch_one_user_setting
+ALTER FUNCTION fetch_one_user_setting ("user"."user_id"%TYPE,
+                                       "user_setting"."key"%TYPE)
       OWNER TO "noda";

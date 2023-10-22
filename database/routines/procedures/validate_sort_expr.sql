@@ -1,6 +1,4 @@
-CREATE OR REPLACE PROCEDURE validate_sort_expr (
-  INOUT p_sort_expr TEXT
-)
+CREATE OR REPLACE PROCEDURE validate_sort_expr (INOUT p_sort_expr TEXT)
 LANGUAGE 'plpgsql'
 AS $$
 BEGIN
@@ -14,5 +12,5 @@ BEGIN
 END;
 $$;
 
-ALTER PROCEDURE validate_sort_expr
+ALTER PROCEDURE validate_sort_expr (TEXT)
        OWNER TO "noda";

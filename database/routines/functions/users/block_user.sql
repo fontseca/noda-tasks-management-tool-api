@@ -1,7 +1,6 @@
-CREATE OR REPLACE FUNCTION block_user (
-  IN p_user_id UUID
-)
+CREATE OR REPLACE FUNCTION block_user (IN p_user_id "user"."user_id"%TYPE)
 RETURNS BOOLEAN
+LANGUAGE 'plpgsql'
 AS $$
 DECLARE
   is_already_blocked BOOLEAN;
@@ -12,22 +11,16 @@ BEGIN
     INTO is_already_blocked
     FROM "user"
    WHERE "user_id" = p_user_id;
-
   IF is_already_blocked THEN
     RETURN FALSE;
   END IF;
-
   UPDATE "user"
      SET "is_blocked" = TRUE
    WHERE "user_id" = $1;
-
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
-  IF affected_rows > 0 THEN
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
+  RETURN affected_rows;
 END;
-$$ LANGUAGE 'plpgsql';
+$$;
 
-ALTER FUNCTION block_user
+ALTER FUNCTION block_user ("user"."user_id"%TYPE)
       OWNER TO "noda";

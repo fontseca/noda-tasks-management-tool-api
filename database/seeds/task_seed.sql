@@ -11,7 +11,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Curabitur at ipsum ac tellus semper interdum.', 'Vestibulum rutrum rutrum neque.', 'Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus.', 'medium', 'decayed', false),
@@ -33,7 +33,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Proin leo odio, porttitor id, consequat in, consequat ut, nulla.', 'Sed ante.', 'Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio. Curabitur convallis. Duis consequat dui nec nisi volutpat eleifend.', 'high', 'decayed', false),
@@ -55,7 +55,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Nullam varius.', 'Proin interdum mauris non ligula pellentesque ultrices.', 'Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam. Suspendisse potenti. Nullam porttitor lacus at turpis.', 'medium', 'complete', true),
@@ -77,7 +77,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Donec quis orci eget orci vehicula condimentum.', 'Vivamus tortor.', 'Duis bibendum.', 'low', 'complete', false),
@@ -99,7 +99,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Curabitur in libero ut massa volutpat convallis.', 'Nunc rhoncus dui vel sem.', 'Cras in purus eu magna vulputate luctus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.', 'medium', 'complete', true),
@@ -122,7 +122,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Quisque ut erat.', 'Integer a nibh.', 'Curabitur in libero ut massa volutpat convallis.', 'high', 'decayed', true),
@@ -144,7 +144,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'tomorrow'
+       AND     "name" = 'tomorrow@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Nunc nisl.', 'In hac habitasse platea dictumst.', 'Donec posuere metus vitae ipsum. Aliquam non mauris.', 'low', 'decayed', true),
@@ -166,7 +166,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Donec quis orci eget orci vehicula condimentum.', 'Quisque porta volutpat erat.', 'Mauris enim leo, rhoncus sed, vestibulum sit amet, cursus id, turpis.', 'high', 'incomplete', false),
@@ -194,7 +194,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Duis ac nibh.', 'Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem.', 'Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam vel augue. Vestibulum rutrum rutrum neque.', 'high', 'incomplete', false),
@@ -223,7 +223,7 @@ WITH
     SELECT "list_id"
       FROM "list"
      WHERE "owner_id" = (SELECT * FROM "target_user")
-       AND     "name" = 'today'
+       AND     "name" = 'today@' || "owner_id"
   )
   INSERT INTO "task" ("owner_id", "list_id", "position_in_list", "title", "headline", "description", "priority", "status", "is_pinned")
        VALUES ((SELECT * FROM "target_user"), (SELECT * FROM "target_list"), 1, 'Pellentesque ultrices mattis odio.', 'Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.', 'In hac habitasse platea dictumst. Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem.', 'low', 'decayed', false),

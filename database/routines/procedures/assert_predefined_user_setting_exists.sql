@@ -1,6 +1,4 @@
-CREATE OR REPLACE PROCEDURE assert_predefined_user_setting_exists (
-  IN p_setting_key TEXT
-)
+CREATE OR REPLACE PROCEDURE assert_predefined_user_setting_exists (IN p_setting_key "user_setting"."key"%TYPE)
 LANGUAGE 'plpgsql'
 AS $$
 DECLARE
@@ -8,7 +6,7 @@ DECLARE
   p_setting_key_txt TEXT := p_setting_key::TEXT;
 BEGIN
   IF p_setting_key IS NOT NULL THEN
-    SELECT count(*)
+    SELECT count (*)
       INTO n_records
       FROM "predefined_user_setting"
     WHERE "key" = lower (p_setting_key);
@@ -24,5 +22,5 @@ BEGIN
 END;
 $$;
 
-ALTER PROCEDURE assert_predefined_user_setting_exists
+ALTER PROCEDURE assert_predefined_user_setting_exists ("user_setting"."key"%TYPE)
        OWNER TO "noda";

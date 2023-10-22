@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION update_user (
   IN p_middle_name "user"."middle_name"%TYPE,
   IN p_last_name   "user"."last_name"%TYPE,
   IN p_surname     "user"."surname"%TYPE,
-  IN p_email       TEXT,
+  IN p_email       "user"."email"%TYPE,
   IN p_picture_url "user"."picture_url"%TYPE,
   IN p_password    "user"."password"%TYPE
 )
@@ -60,13 +60,15 @@ BEGIN
    WHERE "user"."user_id" = p_user_id;
   GET DIAGNOSTICS rows_affected = ROW_COUNT;
   RETURN rows_affected;
-  IF rows_affected > 0 THEN
-    RETURN TRUE;
-  ELSE
-    RETURN FALSE;
-  END IF;
 END;
 $$;
 
-ALTER FUNCTION update_user
+ALTER FUNCTION update_user ("user"."user_id"%TYPE,
+                            "user"."first_name"%TYPE,
+                            "user"."middle_name"%TYPE,
+                            "user"."last_name"%TYPE,
+                            "user"."surname"%TYPE,
+                            "user"."email"%TYPE,
+                            "user"."picture_url"%TYPE,
+                            "user"."password"%TYPE)
       OWNER TO "noda";

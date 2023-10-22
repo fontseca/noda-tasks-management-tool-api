@@ -1,11 +1,11 @@
-CREATE OR REPLACE FUNCTION check_setting_is_not_repeated ()
+CREATE OR REPLACE FUNCTION check_setting_is_not_repeated()
 RETURNS TRIGGER
 LANGUAGE 'plpgsql'
 AS $$
 DECLARE
   n_settings INT;
 BEGIN
-  SELECT count(*)
+  SELECT count (*)
     INTO n_settings
     FROM "user_setting" 
     WHERE "key" = NEW."key" AND
@@ -17,9 +17,9 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION check_setting_is_not_repeated
+ALTER FUNCTION check_setting_is_not_repeated()
       OWNER TO "noda";
 
     CREATE OR REPLACE TRIGGER check_setting_is_not_repeated
              BEFORE INSERT ON "user_setting"
-FOR EACH ROW EXECUTE FUNCTION check_setting_is_not_repeated ();
+FOR EACH ROW EXECUTE FUNCTION check_setting_is_not_repeated();

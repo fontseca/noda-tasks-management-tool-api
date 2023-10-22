@@ -24,5 +24,5 @@ BEGIN
 END;
 $$;
 
-ALTER PROCEDURE validate_rpp_and_page
+ALTER PROCEDURE validate_rpp_and_page (BIGINT, BIGINT)
        OWNER TO "noda";

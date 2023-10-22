@@ -1,6 +1,4 @@
-CREATE OR REPLACE PROCEDURE assert_user_exists (
-  IN p_user_id UUID
-)
+CREATE OR REPLACE PROCEDURE assert_user_exists (IN p_user_id "user"."user_id"%TYPE)
 LANGUAGE 'plpgsql'
 AS $$
 DECLARE
@@ -19,9 +17,9 @@ BEGIN
     user_id_txt := '(NULL)';
   END IF;
   RAISE EXCEPTION 'nonexistent user with ID "%"', user_id_txt
-       USING HINT = 'Please check the given user ID';
+       USING HINT = 'Please check the given user ID.';
 END;
 $$;
 
-ALTER PROCEDURE assert_user_exists
+ALTER PROCEDURE assert_user_exists ("user"."user_id"%TYPE)
        OWNER TO "noda";

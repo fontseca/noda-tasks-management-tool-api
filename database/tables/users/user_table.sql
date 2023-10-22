@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "user"
 (
-  "user_id"     UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "user_id"     UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
   "role_id"     SERIAL NOT NULL REFERENCES "role" ("role_id"),
   "first_name"  VARCHAR(50) NOT NULL,
   "middle_name" VARCHAR(50) DEFAULT NULL,
@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS "user"
   "email"       email_t UNIQUE,
   "password"    VARCHAR NOT NULL,
   "is_blocked"  BOOLEAN DEFAULT FALSE,
-  "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT now()
+  "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now (),
+  "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT now ()
 );
 
 ALTER TABLE "user"

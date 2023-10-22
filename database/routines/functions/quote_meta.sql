@@ -14,5 +14,5 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION quote_meta (pattern TEXT)
+ALTER FUNCTION quote_meta (TEXT)
       OWNER TO "noda";

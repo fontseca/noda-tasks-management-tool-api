@@ -17,9 +17,16 @@ BEGIN
        VALUES (p_first_name, p_middle_name, p_last_name, p_surname, p_email, p_password, '2')
     RETURNING "user_id"
          INTO new_user_id;
+  PERFORM make_today_list (new_user_id),
+          make_tomorrow_list (new_user_id);
   RETURN new_user_id;
 END;
 $$;
 
-ALTER FUNCTION make_user
+ALTER FUNCTION make_user (TEXT,
+                          TEXT,
+                          TEXT,
+                          TEXT,
+                          email_t,
+                          TEXT)
       OWNER TO "noda";

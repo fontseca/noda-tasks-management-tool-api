@@ -1,6 +1,4 @@
-CREATE OR REPLACE FUNCTION delete_user_hardly (
-  IN p_user_id UUID
-)
+CREATE OR REPLACE FUNCTION delete_user_hardly (IN p_user_id "user"."user_id"%TYPE)
 RETURNS BOOLEAN
 LANGUAGE 'plpgsql'
 AS $$
@@ -11,12 +9,9 @@ BEGIN
   DELETE FROM "user"
         WHERE "user_id" = p_user_id;
   GET DIAGNOSTICS n_affected_rows := ROW_COUNT;
-  IF n_affected_rows >= 1 THEN
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
+  RETURN n_affected_rows;
 END;
 $$;
 
-ALTER FUNCTION delete_user_hardly
+ALTER FUNCTION delete_user_hardly ("user"."user_id"%TYPE)
       OWNER TO "noda";

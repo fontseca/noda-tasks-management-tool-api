@@ -1,6 +1,4 @@
-CREATE OR REPLACE FUNCTION "unblock_user" (
-  IN p_user_id UUID
-)
+CREATE OR REPLACE FUNCTION unblock_user (IN p_user_id "user"."user_id"%TYPE)
 RETURNS BOOLEAN
 LANGUAGE 'plpgsql'
 AS $$
@@ -13,22 +11,16 @@ BEGIN
     INTO is_blocked
     FROM "user"
    WHERE "user_id" = p_user_id;
-
   IF is_blocked IS FALSE THEN
     RETURN FALSE;
   END IF;
-
   UPDATE "user"
      SET "is_blocked" = FALSE
    WHERE "user_id" = p_user_id;
-
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
-  IF affected_rows > 0 THEN
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
+  RETURN affected_rows;
 END;
 $$;
 
-ALTER FUNCTION "unblock_user"
+ALTER FUNCTION unblock_user ("user"."user_id"%TYPE)
       OWNER TO "noda";

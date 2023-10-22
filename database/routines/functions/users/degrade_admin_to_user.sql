@@ -1,6 +1,4 @@
-CREATE OR REPLACE FUNCTION degrade_admin_to_user (
-  IN p_user_id UUID
-)
+CREATE OR REPLACE FUNCTION degrade_admin_to_user (IN p_user_id "user"."user_id"%TYPE)
 RETURNS BOOLEAN
 LANGUAGE 'plpgsql'
 AS $$
@@ -17,19 +15,14 @@ BEGIN
   IF actual_role = 2 THEN
     RETURN FALSE;
   END IF;
-
   UPDATE "user"
      SET "role_id" = 2,
-         "updated_at" = 'now()'
+         "updated_at" = 'now ()'
    WHERE "user_id" = p_user_id;
-
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
-  IF affected_rows > 0 THEN
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
+  RETURN affected_rows;
 END;
 $$;
 
-ALTER FUNCTION degrade_admin_to_user
+ALTER FUNCTION degrade_admin_to_user ("user"."user_id"%TYPE)
       OWNER TO "noda";

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "task"
 (
-  "task_id"          UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+  "task_id"          UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4 (),
   "group_id"         UUID DEFAULT NULL REFERENCES "group" ("group_id") ON DELETE CASCADE,
   "owner_id"         UUID NOT NULL REFERENCES "user" ("user_id") ON DELETE CASCADE,
   "list_id"          UUID NOT NULL REFERENCES "list" ("list_id") ON DELETE CASCADE,
@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS "task"
   "remind_at"        TIMESTAMPTZ DEFAULT NULL,
   "completed_at"     TIMESTAMPTZ DEFAULT NULL,
   "archived_at"      TIMESTAMPTZ DEFAULT NULL,
-  "created_at"       TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "updated_at"       TIMESTAMPTZ NOT NULL DEFAULT now()
+  "created_at"       TIMESTAMPTZ NOT NULL DEFAULT now (),
+  "updated_at"       TIMESTAMPTZ NOT NULL DEFAULT now ()
 );
 
 ALTER TABLE "task"

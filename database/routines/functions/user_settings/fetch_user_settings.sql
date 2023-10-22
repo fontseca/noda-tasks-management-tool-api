@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION fetch_user_settings (
-  IN p_user_id   UUID,
+  IN p_user_id   "user"."user_id"%TYPE,
   IN p_page      BIGINT,
   IN p_rpp       BIGINT,
   IN p_needle    TEXT,
@@ -44,56 +44,5 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION fetch_user_settings (UUID, BIGINT, BIGINT, TEXT, TEXT)
-      OWNER TO "noda";
-
-CREATE OR REPLACE FUNCTION fetch_user_settings (
-  IN p_user_id UUID,
-  IN p_page    BIGINT,
-  IN p_rpp     BIGINT,
-  IN p_needle  TEXT
-)
-RETURNS TABLE (
-  "key"         "predefined_user_setting"."key"%TYPE,
-  "description" "predefined_user_setting"."description"%TYPE,
-  "value"       "predefined_user_setting"."default_value"%TYPE,
-  "created_at"  "user_setting"."created_at"%TYPE,
-  "updated_at"  "user_setting"."updated_at"%TYPE
-)
-LANGUAGE 'plpgsql'
-AS $$
-BEGIN
-  RETURN QUERY
-        SELECT *
-          FROM fetch_user_settings (
-            p_user_id, p_page, p_rpp, p_needle, NULL);
-END;
-$$;
-
-ALTER FUNCTION fetch_user_settings (UUID, BIGINT, BIGINT, TEXT)
-      OWNER TO "noda";
-
-CREATE OR REPLACE FUNCTION fetch_user_settings (
-  IN p_user_id UUID,
-  IN p_page    BIGINT,
-  IN p_rpp     BIGINT
-)
-RETURNS TABLE (
-  "key"         "predefined_user_setting"."key"%TYPE,
-  "description" "predefined_user_setting"."description"%TYPE,
-  "value"       "predefined_user_setting"."default_value"%TYPE,
-  "created_at"  "user_setting"."created_at"%TYPE,
-  "updated_at"  "user_setting"."updated_at"%TYPE
-)
-LANGUAGE 'plpgsql'
-AS $$
-BEGIN
-  RETURN QUERY
-        SELECT *
-          FROM fetch_user_settings (
-            p_user_id, p_page, p_rpp, NULL, NULL);
-END;
-$$;
-
-ALTER FUNCTION fetch_user_settings (UUID, BIGINT, BIGINT)
+ALTER FUNCTION fetch_user_settings ("user"."user_id"%TYPE, BIGINT, BIGINT, TEXT, TEXT)
       OWNER TO "noda";

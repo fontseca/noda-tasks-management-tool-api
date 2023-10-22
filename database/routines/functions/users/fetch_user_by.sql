@@ -37,5 +37,5 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION fetch_user_by
+ALTER FUNCTION fetch_user_by (TEXT, TEXT)
       OWNER TO "noda";

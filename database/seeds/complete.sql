@@ -1,4 +1,16 @@
-
+-- WITH "example" ("list_name")
+--        AS (
+--     VALUES ('list (1)'),
+--            ('list (1) (1)'),
+--            ('list (1) (2)'),
+--            ('list (1) (3)'),
+--            ('list (1) (4)'),
+--            ('list (1) (5)'),
+--            ('list')
+--   )
+-- SELECT "list_name",
+--        regexp_count ("list_name", '^' || quote_meta ('list (1)') || '(?: \(\d+\))?$')
+-- FROM "example";
 -- CREATE FUNCTION somefunc() RETURNS integer AS $$
 -- << outerblock >>
 -- DECLARE

@@ -1,6 +1,4 @@
-CREATE OR REPLACE PROCEDURE gen_search_pattern (
-  INOUT p_keyword TEXT
-)
+CREATE OR REPLACE PROCEDURE gen_search_pattern (INOUT p_keyword TEXT)
 LANGUAGE 'plpgsql'
 AS $$
 BEGIN
@@ -13,5 +11,5 @@ BEGIN
 END;
 $$;
 
-ALTER PROCEDURE gen_search_pattern
+ALTER PROCEDURE gen_search_pattern (TEXT)
        OWNER TO "noda";

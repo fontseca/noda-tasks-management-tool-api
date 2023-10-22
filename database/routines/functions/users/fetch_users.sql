@@ -44,37 +44,3 @@ $$;
 
 ALTER FUNCTION fetch_users (BIGINT, BIGINT, TEXT, TEXT)
       OWNER TO "noda";
-
-
-CREATE OR REPLACE FUNCTION fetch_users (
-  IN p_page   BIGINT,
-  IN p_rpp    BIGINT,
-  IN p_needle TEXT
-)
-RETURNS SETOF "user"
-LANGUAGE 'sql'
-AS $$
-  SELECT *
-    FROM fetch_users (
-      p_page, p_rpp, p_needle, NULL);
-$$;
-
-ALTER FUNCTION fetch_users (BIGINT, BIGINT, TEXT)
-      OWNER TO "noda";
-
-DROP FUNCTION IF EXISTS fetch_users (BIGINT, BIGINT);
-
-CREATE OR REPLACE FUNCTION fetch_users (
-  IN p_page BIGINT,
-  IN p_rpp  BIGINT
-)
-RETURNS SETOF "user"
-LANGUAGE 'sql'
-AS $$
-  SELECT *
-    FROM fetch_users (
-      p_page, p_rpp, NULL, NULL);
-$$;
-
-ALTER FUNCTION fetch_users (BIGINT, BIGINT)
-      OWNER TO "noda";
