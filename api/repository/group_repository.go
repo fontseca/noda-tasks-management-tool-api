@@ -22,9 +22,7 @@ func NewGroupRepository(db *sql.DB) *GroupRepository {
 	return &GroupRepository{db}
 }
 
-type gr = GroupRepository
-
-func (r *gr) InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error) {
+func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	result := r.db.QueryRowContext(ctx, "SELECT make_group ($1, $2, $3);",
@@ -48,7 +46,7 @@ func (r *gr) InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (inse
 	return
 }
 
-func (r *gr) FetchGroupByID(ownerID, groupID string) (group *model.Group, err error) {
+func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.Group, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT * FROM fetch_group_by_id ($1, $2);`
@@ -79,7 +77,7 @@ func (r *gr) FetchGroupByID(ownerID, groupID string) (group *model.Group, err er
 	return
 }
 
-func (r *gr) FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error) {
+func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -118,7 +116,7 @@ func (r *gr) FetchGroups(ownerID string, page, rpp int64, needle, sortBy string)
 	return
 }
 
-func (r *gr) UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
+func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT update_group ($1, $2, $3, $4);`
@@ -144,7 +142,7 @@ func (r *gr) UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok 
 	return
 }
 
-func (r *gr) DeleteGroup(ownerID, groupID string) (ok bool, err error) {
+func (r *GroupRepository) DeleteGroup(ownerID, groupID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT delete_group ($1, $2);`
