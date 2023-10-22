@@ -57,23 +57,23 @@ func main() {
 		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
 	}
 
-	// dbRootConf := config.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
-	// db, err = sql.Open("postgres", dbRootConf.Conn())
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer db.Close()
+	dbRootConf := config.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
+	db, err = sql.Open("postgres", dbRootConf.Conn())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-	// if err = db.Ping(); err != nil {
-	// 	log.Fatal(err)
-	// }
-	// dbRootConf.LogSuccess()
+	if err = db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+	dbRootConf.LogSuccess()
 
-	// ExecuteScriptsOf("init", index.Init)
+	ExecuteScriptsOf("init", index.Init)
 
-	// if err = db.Close(); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err = db.Close(); err != nil {
+		log.Fatal(err)
+	}
 
 	dbAdminConf := config.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
 	db, err = sql.Open("postgres", dbAdminConf.Conn())
@@ -87,14 +87,14 @@ func main() {
 	}
 	dbAdminConf.LogSuccess()
 
-	// ExecuteScriptsOf("extensions", index.Extensions)
-	// ExecuteScriptsOf("domains", index.Domains)
-	// ExecuteScriptsOf("types", index.Types)
-	// ExecuteScriptsOf("tables", index.Tables)
-	// ExecuteScriptsOf("views", index.Views)
-	// ExecuteScriptsOf("indexes", index.Indexes)
+	ExecuteScriptsOf("extensions", index.Extensions)
+	ExecuteScriptsOf("domains", index.Domains)
+	ExecuteScriptsOf("types", index.Types)
+	ExecuteScriptsOf("tables", index.Tables)
+	ExecuteScriptsOf("views", index.Views)
+	ExecuteScriptsOf("indexes", index.Indexes)
 	ExecuteScriptsOf("routines", index.Routines)
-	// ExecuteScriptsOf("seeds", index.Seeds)
+	ExecuteScriptsOf("seeds", index.Seeds)
 }
 
 func ExecuteScriptsOf(directory string, filesWithPrecedence Files) {
