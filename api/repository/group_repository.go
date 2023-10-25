@@ -111,6 +111,7 @@ func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, s
 	groups = []*model.Group{}
 	err = sqlscan.ScanAll(&groups, result)
 	if err != nil {
+		log.Println(err)
 		groups = nil
 	}
 	return
