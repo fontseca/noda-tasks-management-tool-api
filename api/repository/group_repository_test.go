@@ -17,7 +17,7 @@ import (
 
 const groupID string = "942d76f4-28b2-44be-8339-232b62c0ef22"
 
-func TestInsertGroup(t *testing.T) {
+func TestGroupRepository_TestInsertGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -62,7 +62,7 @@ func TestInsertGroup(t *testing.T) {
 	assert.Equal(t, "", res)
 }
 
-func TestFetchGroupByID(t *testing.T) {
+func TestGroupRepository_TestFetchGroupByID(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -141,7 +141,7 @@ func TestFetchGroupByID(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFetchGroups(t *testing.T) {
+func TestGroupRepository_FetchGroups(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -309,7 +309,7 @@ func TestFetchGroups(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestUpdateGroup(t *testing.T) {
+func TestGroupRepository_TestUpdateGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -386,7 +386,7 @@ func TestUpdateGroup(t *testing.T) {
 	assert.False(t, res)
 }
 
-func TestDeleteGroup(t *testing.T) {
+func TestGroupRepository_TestDeleteGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()

@@ -20,6 +20,11 @@ func isNonexistentGroupError(err *pq.Error) bool {
 		strings.Contains(err.Message, "nonexistent group with ID")
 }
 
+func isNonexistentListError(err *pq.Error) bool {
+	return err.Code == "P0001" &&
+		strings.Contains(err.Message, "nonexistent list with ID")
+}
+
 func isContextDeadlineError(err error) bool {
 	return strings.Compare(err.Error(), "context deadline exceeded") == 0
 }

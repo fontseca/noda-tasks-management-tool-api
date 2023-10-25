@@ -13,7 +13,7 @@ import (
 
 const userID string = "9039f725-e31f-4f04-bdb1-7b74e7f72d59"
 
-func TestInsertUser(t *testing.T) {
+func TestGroupRepository_TestInsertUser(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -78,7 +78,7 @@ func TestInsertUser(t *testing.T) {
 
 }
 
-func TestUpdateUser(t *testing.T) {
+func TestGroupRepository_TestUpdateUser(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -135,7 +135,7 @@ func TestUpdateUser(t *testing.T) {
 	assert.Equal(t, res, false)
 }
 
-func TestPromoteUserToAdmin(t *testing.T) {
+func TestGroupRepository_TestPromoteUserToAdmin(t *testing.T) {
 	db, mock := newMock()
 	defer db.Close()
 	var (
