@@ -182,3 +182,49 @@ func (r *ListRepository) FetchLists(
 	}
 	return
 }
+
+func (r *ListRepository) FetchGroupedLists(
+	ownerID, groupID string,
+	page, rpp int64,
+	needle, sortBy string) (lists []*model.List, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+    SELECT "list_id" AS "id",
+		       "owner_id",
+		       "group_id",
+		       "name",
+		       "description",
+		       "is_archived",
+		       "archived_at",
+		       "created_at",
+		       "updated_at"
+      FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`
+	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortBy)
+	if err != nil {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(failure.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				err = failure.ErrNotFound
+			case isNonexistentGroupError(pqerr):
+				err = failure.ErrGroupNotFound
+			}
+		} else if isContextDeadlineError(err) {
+			err = failure.ErrDeadlineExceeded
+		} else {
+			log.Println(err)
+		}
+		return
+	}
+	defer result.Close()
+	lists = make([]*model.List, 0)
+	err = sqlscan.ScanAll(&lists, result)
+	if nil != err {
+		log.Println(err)
+		lists = nil
+	}
+	return
+}

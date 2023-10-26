@@ -465,3 +465,181 @@ func TestListRepository_FetchLists(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestListRepository_FetchGroupedLists(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewListRepository(db)
+		query = regexp.QuoteMeta(`
+		SELECT "list_id" AS "id",
+		       "owner_id",
+		       "group_id",
+		       "name",
+		       "description",
+		       "is_archived",
+		       "archived_at",
+		       "created_at",
+		       "updated_at"
+      FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`)
+		res       []*model.List
+		err       error
+		page, rpp int64
+		needle    = ""
+		sortBy    = ""
+		list      = &model.List{
+			ID:          uuid.MustParse(listID),
+			OwnerID:     uuid.MustParse(userID),
+			Name:        "name",
+			Description: "desc",
+			IsArchived:  false,
+			ArchivedAt:  nil,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+		columns = []string{"id", "owner_id", "group_id", "name", "description", "is_archived", "archived_at", "created_at", "updated_at"}
+	)
+
+	/* Success with 2 records.  */
+
+	page, rpp = 1, 2
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.
+			NewRows(columns).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.NoError(t, err)
+	assert.Len(t, res, 2)
+
+	/* Success with the default number of records (10).  */
+
+	page, rpp = 1, -1000
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.
+			NewRows(columns).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.NoError(t, err)
+	assert.Len(t, res, 10)
+
+	/* Success with custom pagination and RPP.  */
+
+	page, rpp = 2, 5
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.
+			NewRows(columns).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.NoError(t, err)
+	assert.Len(t, res, 5)
+
+	/* Success with searching.  */
+
+	page, rpp, needle = 1, 7, "name"
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.
+			NewRows(columns).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.NoError(t, err)
+	assert.Len(t, res, 7)
+
+	/* There should not be a response for a weird needle and neither should be
+	   an error.  */
+
+	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.NewRows(columns))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 0)
+
+	/* User not found.  */
+
+	page, rpp = 1, 10
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.Nil(t, res)
+
+	/* Group not found.  */
+
+	page, rpp = 1, 10
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.Nil(t, res)
+
+	/* Deadline (5s) exceeded.  */
+
+	page, rpp = 1, 10
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.Nil(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnError(&pq.Error{})
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+
+	/* Unexpected scanning error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WillReturnRows(sqlmock.
+			NewRows([]string{
+				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
+				"archived_at", "created_at", "updated_at"}).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
