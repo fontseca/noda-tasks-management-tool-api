@@ -2,6 +2,7 @@ CREATE OR REPLACE FUNCTION get_today_list_id (IN p_user_id "list"."owner_id"%TYP
 RETURNS UUID
 LANGUAGE 'sql'
 AS $$
+  /* TODO: Convert to PL/pgSQL function to assert user existence. */
   SELECT "list_id"
     FROM "user_special_list"
    WHERE "user_id" = p_user_id AND

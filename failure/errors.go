@@ -7,6 +7,7 @@ import (
 var (
 	ErrNotFound         = errors.New("record not found")
 	ErrGroupNotFound    = errors.New("group not found")
+	ErrListNotFound     = errors.New("list not found")
 	ErrSettingNotFound  = errors.New("user setting not found")
 	ErrSameEmail        = errors.New("the given email address is already registered")
 	ErrIncorrectPassord = errors.New("the given password does not match with stored password")

@@ -13,6 +13,7 @@ LANGUAGE 'plpgsql'
 AS $$
 DECLARE
   rows_affected INT;
+  /* TODO: Use a ROWTYPE instead.   */
   old_first_name "user"."first_name"%TYPE;
   old_middle_name "user"."middle_name"%TYPE;
   old_last_name "user"."last_name"%TYPE;
