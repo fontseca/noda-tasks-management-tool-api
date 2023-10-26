@@ -810,3 +810,101 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestGroupRepository_DeleteList(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewListRepository(db)
+		query = regexp.QuoteMeta(`SELECT delete_list ($1, $2, $3);`)
+		res   bool
+		err   error
+	)
+
+	/* Success for grouped list.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"delete_list"}).
+			AddRow(true))
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* Success for scattered list.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, nil, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"delete_list"}).
+			AddRow(true))
+	res, err = r.DeleteList(userID, "", listID)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* Did not delete and no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"delete_list"}).
+			AddRow(false))
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.False(t, res)
+
+	/* Group not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.False(t, res)
+
+	/* List not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.False(t, res)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.False(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, groupID, listID).
+		WillReturnError(&pq.Error{})
+	res, err = r.DeleteList(userID, groupID, listID)
+	assert.Error(t, err)
+	assert.False(t, res)
+}
