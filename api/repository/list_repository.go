@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/lib/pq"
 	"log"
@@ -176,7 +175,6 @@ func (r *ListRepository) FetchLists(
 	}
 	defer result.Close()
 	lists = make([]*model.List, 0)
-	fmt.Println(result.Columns())
 	err = sqlscan.ScanAll(&lists, result)
 	if err != nil {
 		log.Println(err)
