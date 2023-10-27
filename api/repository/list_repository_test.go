@@ -1049,3 +1049,101 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 	assert.Error(t, err)
 	assert.False(t, res)
 }
+
+func TestGroupRepository_MoveList(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewListRepository(db)
+		query = regexp.QuoteMeta(`SELECT move_list ($1, $2, $3);`)
+		res   bool
+		err   error
+	)
+
+	/* Success.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"move_list"}).
+			AddRow(true))
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* Did not move and no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"move_list"}).
+			AddRow(false))
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.False(t, res)
+
+	/* List not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.False(t, res)
+	assert.ErrorIs(t, err, failure.ErrListNotFound)
+
+	/* Target group does not exist.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.False(t, res)
+
+	/* Did not move and there's no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"move_list"}).
+			AddRow(false))
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.False(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID, groupID).
+		WillReturnError(&pq.Error{})
+	res, err = r.MoveList(userID, listID, groupID)
+	assert.Error(t, err)
+	assert.False(t, res)
+}
