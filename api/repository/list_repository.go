@@ -389,3 +389,38 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 	}
 	return
 }
+
+func (r *ListRepository) UpdateList(
+	ownerID, groupID, listID string,
+	up *transfer.ListUpdate) (ok bool, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `SELECT update_list ($1, $2, $3, $4, $5);`
+	var row *sql.Row
+	if "" != strings.Trim(groupID, " ") {
+		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID, up.Name, up.Description)
+	} else {
+		row = r.db.QueryRowContext(ctx, query, ownerID, nil, listID, up.Name, up.Description)
+	}
+	err = row.Scan(&ok)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(failure.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				err = failure.ErrNotFound
+			case isNonexistentGroupError(pqerr):
+				err = failure.ErrGroupNotFound
+			case isNonexistentListError(pqerr):
+				err = failure.ErrListNotFound
+			}
+		} else if isContextDeadlineError(err) {
+			err = failure.ErrDeadlineExceeded
+		} else {
+			log.Println(err)
+		}
+	}
+	return
+}
