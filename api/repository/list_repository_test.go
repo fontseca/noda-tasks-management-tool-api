@@ -908,3 +908,68 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 	assert.Error(t, err)
 	assert.False(t, res)
 }
+
+func TestGroupRepository_DuplicateList(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r         = NewListRepository(db)
+		query     = regexp.QuoteMeta(`SELECT duplicate_list ($1, $2);`)
+		replicaID = uuid.New().String()
+		res       string
+		err       error
+	)
+
+	/* Success.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"duplicate_list"}).
+			AddRow(replicaID))
+	res, err = r.DuplicateList(userID, listID)
+	assert.Equal(t, replicaID, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.DuplicateList(userID, listID)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.Empty(t, res)
+
+	/* List not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+	res, err = r.DuplicateList(userID, listID)
+	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.Empty(t, res)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.DuplicateList(userID, listID)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.Empty(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{})
+	res, err = r.DuplicateList(userID, listID)
+	assert.Error(t, err)
+	assert.Empty(t, res)
+}
