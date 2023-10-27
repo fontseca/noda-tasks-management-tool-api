@@ -973,3 +973,79 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, res)
 }
+
+func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewListRepository(db)
+		query = regexp.QuoteMeta(`SELECT convert_to_scattered_list ($1, $2);`)
+		res   bool
+		err   error
+	)
+
+	/* Success.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"convert_to_scattered_list"}).
+			AddRow(true))
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.True(t, res)
+	assert.NoError(t, err)
+
+	/* User not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.False(t, res)
+
+	/* List not found.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.False(t, res)
+	assert.ErrorIs(t, err, failure.ErrListNotFound)
+
+	/* Did not convert and there's no error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnRows(sqlmock.
+			NewRows([]string{"convert_to_scattered_list"}).
+			AddRow(false))
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.False(t, res)
+	assert.NoError(t, err)
+
+	/* Deadline (5s) exceeded.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(errors.New("context deadline exceeded"))
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.False(t, res)
+
+	/* Unexpected database error.  */
+
+	mock.
+		ExpectQuery(query).
+		WithArgs(userID, listID).
+		WillReturnError(&pq.Error{})
+	res, err = r.ConvertToScatteredList(userID, listID)
+	assert.Error(t, err)
+	assert.False(t, res)
+}
