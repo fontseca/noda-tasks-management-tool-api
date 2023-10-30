@@ -14,6 +14,14 @@ import (
 	"github.com/lib/pq"
 )
 
+type IGroupRepository interface {
+	InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error)
+	FetchGroupByID(ownerID, groupID string) (group *model.Group, err error)
+	FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error)
+	UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error)
+	DeleteGroup(ownerID, groupID string) (ok bool, err error)
+}
+
 type GroupRepository struct {
 	db *sql.DB
 }
