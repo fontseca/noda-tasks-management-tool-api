@@ -44,6 +44,11 @@ func (o *groupRepositoryMock) UpdateGroup(ownerID, groupID string, up *transfer.
 	return args.Bool(0), args.Error(1)
 }
 
+func (o *groupRepositoryMock) DeleteGroup(ownerID, groupID string) (ok bool, err error) {
+	args := o.Called(ownerID, groupID)
+	return args.Bool(0), args.Error(1)
+}
+
 func TestGroupService_SaveGroup(t *testing.T) {
 	var (
 		m       *groupRepositoryMock
@@ -183,6 +188,41 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 			Return(false, unexpected)
 		s = NewGroupService(m)
 		res, err = s.UpdateGroup(ownerID, groupID, up)
+		assert.False(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestGroupService_DeleteGroup(t *testing.T) {
+	var (
+		m                *groupRepositoryMock
+		ownerID, groupID = uuid.New(), uuid.New()
+		s                *GroupService
+		res              bool
+		err              error
+	)
+
+	/* Success.  */
+
+	t.Run("success", func(t *testing.T) {
+		m = new(groupRepositoryMock)
+		m.On("DeleteGroup", ownerID.String(), groupID.String()).
+			Return(true, nil)
+		s = NewGroupService(m)
+		res, err = s.DeleteGroup(ownerID, groupID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	/* Got an error.  */
+
+	t.Run("got an error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(groupRepositoryMock)
+		m.On("DeleteGroup", ownerID.String(), groupID.String()).
+			Return(false, unexpected)
+		s = NewGroupService(m)
+		res, err = s.DeleteGroup(ownerID, groupID)
 		assert.False(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
