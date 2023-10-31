@@ -39,6 +39,11 @@ func (o *groupRepositoryMock) FetchGroups(ownerID string, page, rpp int64, needl
 	return groups, args.Error(1)
 }
 
+func (o *groupRepositoryMock) UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
+	args := o.Called(ownerID, groupID, up)
+	return args.Bool(0), args.Error(1)
+}
+
 func TestGroupService_SaveGroup(t *testing.T) {
 	var (
 		m       *groupRepositoryMock
@@ -143,6 +148,42 @@ func TestGroupService_FindGroups(t *testing.T) {
 		s = NewGroupService(m)
 		res, err = s.FindGroupByID(ownerID, groupID)
 		assert.Nil(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestGroupService_UpdateGroup(t *testing.T) {
+	var (
+		m                *groupRepositoryMock
+		ownerID, groupID = uuid.New(), uuid.New()
+		s                *GroupService
+		res              bool
+		err              error
+		up               = new(transfer.GroupUpdate)
+	)
+
+	/* Success.  */
+
+	t.Run("success", func(t *testing.T) {
+		m = new(groupRepositoryMock)
+		m.On("UpdateGroup", ownerID.String(), groupID.String(), up).
+			Return(true, nil)
+		s = NewGroupService(m)
+		res, err = s.UpdateGroup(ownerID, groupID, up)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	/* Got an error.  */
+
+	t.Run("got an error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(groupRepositoryMock)
+		m.On("UpdateGroup", ownerID.String(), groupID.String(), up).
+			Return(false, unexpected)
+		s = NewGroupService(m)
+		res, err = s.UpdateGroup(ownerID, groupID, up)
+		assert.False(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
 }
