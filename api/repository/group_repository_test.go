@@ -31,35 +31,41 @@ func TestGroupRepository_TestInsertGroup(t *testing.T) {
 
 	/* Success.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, next.Name, next.Description).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"make_group"}).
-			AddRow(groupID))
-	res, err = r.InsertGroup(userID, next)
-	assert.NoError(t, err)
-	assert.Equal(t, groupID, res)
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, next.Name, next.Description).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"make_group"}).
+				AddRow(groupID))
+		res, err = r.InsertGroup(userID, next)
+		assert.NoError(t, err)
+		assert.Equal(t, groupID, res)
+	})
 
 	/* User not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, next.Name, next.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.InsertGroup(userID, next)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
-	assert.Equal(t, "", res)
+	t.Run("user not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, next.Name, next.Description).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.InsertGroup(userID, next)
+		assert.ErrorIs(t, err, failure.ErrNotFound)
+		assert.Equal(t, "", res)
+	})
 
 	/* Unexpected database error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, next.Name, next.Description).
-		WillReturnError(&pq.Error{})
-	res, err = r.InsertGroup(userID, next)
-	assert.Error(t, err)
-	assert.Equal(t, "", res)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, next.Name, next.Description).
+			WillReturnError(&pq.Error{})
+		res, err = r.InsertGroup(userID, next)
+		assert.Error(t, err)
+		assert.Equal(t, "", res)
+	})
 }
 
 func TestGroupRepository_TestFetchGroupByID(t *testing.T) {
@@ -88,57 +94,68 @@ func TestGroupRepository_TestFetchGroupByID(t *testing.T) {
 
 	/* Success.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(
-				group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived,
-				group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroupByID(userID, groupID)
-	assert.NoError(t, err)
-	assert.Equal(t, group, res)
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnRows(sqlmock.
+				NewRows(columns).
+				AddRow(
+					group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived,
+					group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroupByID(userID, groupID)
+		assert.NoError(t, err)
+		assert.Equal(t, group, res)
+	})
 
 	/* User not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchGroupByID(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
-	assert.Nil(t, res)
+	t.Run("user not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.FetchGroupByID(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrNotFound)
+		assert.Nil(t, res)
+	})
 
 	/* Group not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.FetchGroupByID(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
-	assert.Nil(t, res)
+	t.Run("group not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		res, err = r.FetchGroupByID(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+		assert.Nil(t, res)
+	})
 
 	/* Deadline (5s) exceeded.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchGroupByID(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Nil(t, res)
+	t.Run("deadline (5s) exceeded", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(errors.New("context deadline exceeded"))
+		res, err = r.FetchGroupByID(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+		assert.Nil(t, res)
+	})
 
 	/* Unexpected database error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{})
-	res, err = r.FetchGroupByID(userID, groupID)
-	assert.Error(t, err)
-	assert.Nil(t, res)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{})
+		res, err = r.FetchGroupByID(userID, groupID)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
 }
 
 func TestGroupRepository_FetchGroups(t *testing.T) {
@@ -179,134 +196,152 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 
 	/* Success with 2 records.  */
 
-	page, rpp = 1, 2
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 2)
+	t.Run("success with 2 records", func(t *testing.T) {
+		page, rpp = 1, 2
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.
+				NewRows(columns).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.NoError(t, err)
+		assert.Len(t, res, 2)
+	})
 
 	/* Success with the default number of records (10).  */
 
-	page, rpp = 1, -1000
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy) /* Should set `rpp' to 10.  */
-	assert.NoError(t, err)
-	assert.Len(t, res, 10)
+	t.Run("success with the default number of records (10)", func(t *testing.T) {
+		page, rpp = 1, -1000
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.
+				NewRows(columns).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy) /* Should set `rpp' to 10.  */
+		assert.NoError(t, err)
+		assert.Len(t, res, 10)
+	})
 
 	/* Success with custom pagination and RPP.  */
 
-	page, rpp = 2, 5
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 5)
+	t.Run("success with custom pagination and RPP", func(t *testing.T) {
+		page, rpp = 2, 5
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.
+				NewRows(columns).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.NoError(t, err)
+		assert.Len(t, res, 5)
+	})
 
 	/* Success with searching.  */
 
-	page, rpp, needle = 1, 7, "name"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 7)
+	t.Run("success with searching", func(t *testing.T) {
+		page, rpp, needle = 1, 7, "name"
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.
+				NewRows(columns).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.NoError(t, err)
+		assert.Len(t, res, 7)
+	})
 
 	/* There should not be a response for a weird needle and neither should be
 	   an error.  */
 
-	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Len(t, res, 0)
+	t.Run("no response/error for weird needle", func(t *testing.T) {
+		page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.NewRows(columns))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Len(t, res, 0)
+	})
 
 	/* User not found.  */
 
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
-	assert.Nil(t, res)
+	t.Run("user not found", func(t *testing.T) {
+		page, rpp = 1, 10
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.ErrorIs(t, err, failure.ErrNotFound)
+		assert.Nil(t, res)
+	})
 
 	/* Deadline (5s) exceeded.  */
 
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Nil(t, res)
+	t.Run("deadline (5s) exceeded", func(t *testing.T) {
+		page, rpp = 1, 10
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnError(errors.New("context deadline exceeded"))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+		assert.Nil(t, res)
+	})
 
 	/* Unexpected database error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{})
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.Error(t, err)
-	assert.Nil(t, res)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnError(&pq.Error{})
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
 
 	/* Unexpected scanning error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows([]string{
-				"group_id", "owner_id", "name", "description", "is_archived",
-				"archived_at", "created_at", "updated_at"}).
-			AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-	res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-	assert.Error(t, err)
-	assert.Nil(t, res)
+	t.Run("unexpected scanning error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortBy).
+			WillReturnRows(sqlmock.
+				NewRows([]string{
+					"group_id", "owner_id", "name", "description", "is_archived",
+					"archived_at", "created_at", "updated_at"}).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
 }
 
 func TestGroupRepository_TestUpdateGroup(t *testing.T) {
@@ -323,67 +358,79 @@ func TestGroupRepository_TestUpdateGroup(t *testing.T) {
 
 	/* Success.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"update_group"}).
-			AddRow(true))
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.True(t, res)
-	assert.NoError(t, err)
+	t.Run("succes", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"update_group"}).
+				AddRow(true))
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
 
 	/* Did not update and no error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"update_group"}).
-			AddRow(false))
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.False(t, res)
-	assert.NoError(t, err)
+	t.Run("did not update and no error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"update_group"}).
+				AddRow(false))
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.False(t, res)
+		assert.NoError(t, err)
+	})
 
 	/* User not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
-	assert.False(t, res)
+	t.Run("user not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.ErrorIs(t, err, failure.ErrNotFound)
+		assert.False(t, res)
+	})
 
-	/* Group not found.  */
+	t.Run("group not found", func(t *testing.T) {
+		/* Group not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
-	assert.False(t, res)
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+		assert.False(t, res)
+	})
 
 	/* Deadline (5s) exceeded.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.False(t, res)
+	t.Run("deadline (5s) exceeded", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnError(errors.New("context deadline exceeded"))
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+		assert.False(t, res)
+	})
 
 	/* Unexpected database error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, up.Name, up.Description).
-		WillReturnError(&pq.Error{})
-	res, err = r.UpdateGroup(userID, groupID, up)
-	assert.Error(t, err)
-	assert.False(t, res)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID, up.Name, up.Description).
+			WillReturnError(&pq.Error{})
+		res, err = r.UpdateGroup(userID, groupID, up)
+		assert.Error(t, err)
+		assert.False(t, res)
+	})
 }
 
 func TestGroupRepository_TestDeleteGroup(t *testing.T) {
@@ -399,65 +446,77 @@ func TestGroupRepository_TestDeleteGroup(t *testing.T) {
 
 	/* Success.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"delete_group"}).
-			AddRow(true))
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.True(t, res)
-	assert.NoError(t, err)
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"delete_group"}).
+				AddRow(true))
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
 
 	/* Did not delete and no error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"delete_group"}).
-			AddRow(false))
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.False(t, res)
-	assert.NoError(t, err)
+	t.Run("did not delete and no error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"delete_group"}).
+				AddRow(false))
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.False(t, res)
+		assert.NoError(t, err)
+	})
 
 	/* User not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
-	assert.False(t, res)
+	t.Run("user not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrNotFound)
+		assert.False(t, res)
+	})
 
 	/* Group not found.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
-	assert.False(t, res)
+	t.Run("group not found", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+		assert.False(t, res)
+	})
 
 	/* Deadline (5s) exceeded.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.False(t, res)
+	t.Run("deadline (5s) exceeded", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(errors.New("context deadline exceeded"))
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+		assert.False(t, res)
+	})
 
 	/* Unexpected database error.  */
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID).
-		WillReturnError(&pq.Error{})
-	res, err = r.DeleteGroup(userID, groupID)
-	assert.Error(t, err)
-	assert.False(t, res)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, groupID).
+			WillReturnError(&pq.Error{})
+		res, err = r.DeleteGroup(userID, groupID)
+		assert.Error(t, err)
+		assert.False(t, res)
+	})
 }
