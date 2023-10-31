@@ -17,7 +17,7 @@ import (
 
 const groupID string = "942d76f4-28b2-44be-8339-232b62c0ef22"
 
-func TestGroupRepository_TestInsertGroup(t *testing.T) {
+func TestGroupRepository_InsertGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -68,7 +68,7 @@ func TestGroupRepository_TestInsertGroup(t *testing.T) {
 	})
 }
 
-func TestGroupRepository_TestFetchGroupByID(t *testing.T) {
+func TestGroupRepository_FetchGroupByID(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -344,7 +344,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 	})
 }
 
-func TestGroupRepository_TestUpdateGroup(t *testing.T) {
+func TestGroupRepository_UpdateGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -433,7 +433,7 @@ func TestGroupRepository_TestUpdateGroup(t *testing.T) {
 	})
 }
 
-func TestGroupRepository_TestDeleteGroup(t *testing.T) {
+func TestGroupRepository_DeleteGroup(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
