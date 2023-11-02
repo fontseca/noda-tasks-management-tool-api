@@ -95,3 +95,31 @@ func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Re
 	}
 	w.Write(data)
 }
+
+func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Request) {
+	userID, _ := extractUserPayload(r)
+	pagination := parsePagination(w, r)
+	if nil == pagination {
+		return
+	}
+	groups, err := h.s.FindGroups(userID, pagination, "", "")
+	if nil != err {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		case errors.Is(err, failure.ErrDeadlineExceeded):
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	data, err := json.Marshal(groups)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+}
