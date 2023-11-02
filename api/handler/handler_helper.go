@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func ParseQueryParameter(r *http.Request, key, fallback string) string {
+func parseQueryParameter(r *http.Request, key, fallback string) string {
 	k := r.URL.Query().Get(key)
 	if strings.Compare(k, "") == 0 {
 		k = fallback
@@ -20,8 +20,8 @@ func ParseQueryParameter(r *http.Request, key, fallback string) string {
 	return k
 }
 
-func ParsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
-	page, err := strconv.ParseInt(ParseQueryParameter(r, "page", "1"), 10, 64)
+func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
+	page, err := strconv.ParseInt(parseQueryParameter(r, "page", "1"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
 		switch {
@@ -43,7 +43,7 @@ func ParsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 		agg.Append(errors.New("\"page\" must be a positive number"))
 	}
 
-	rpp, err := strconv.ParseInt(ParseQueryParameter(r, "rpp", "10"), 10, 64)
+	rpp, err := strconv.ParseInt(parseQueryParameter(r, "rpp", "10"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
 		switch {
@@ -74,8 +74,8 @@ func ParsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 	return nil
 }
 
-func ParseSorting(w http.ResponseWriter, r *http.Request) string {
-	sortBy := ParseQueryParameter(r, "sort_by", "")
+func parseSorting(w http.ResponseWriter, r *http.Request) string {
+	sortBy := parseQueryParameter(r, "sort_by", "")
 	if len(r.URL.Query()["sort_by"]) > 1 {
 		failure.Emit(w, http.StatusBadRequest, "too much values for query parameter: \"sort_by\"",
 			"please provide only one parameter value for key \"sort_by\"")

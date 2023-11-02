@@ -25,8 +25,8 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
-	pagination := ParsePagination(w, r)
-	if pagination == nil { /* Errors handled in ParsePagination ocurred.  */
+	pagination := parsePagination(w, r)
+	if pagination == nil { /* Errors handled in parsePagination ocurred.  */
 		return
 	}
 
@@ -43,15 +43,15 @@ func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
-	pagination := ParsePagination(w, r)
+	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
 	}
-	sortExpr := ParseSorting(w, r)
+	sortExpr := parseSorting(w, r)
 	if strings.Compare(sortExpr, "") == 0 {
 		return
 	}
-	needle := ParseQueryParameter(r, "q", "")
+	needle := parseQueryParameter(r, "q", "")
 	res, err := h.s.SearchUsers(pagination, needle, sortExpr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -64,7 +64,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Request) {
-	pagination := ParsePagination(w, r)
+	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
 	}
@@ -297,7 +297,7 @@ func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request
 }
 
 func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http.Request) {
-	pagination := ParsePagination(w, r)
+	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
 	}
