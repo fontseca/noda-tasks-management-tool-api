@@ -189,3 +189,8 @@ func parsePathParameterToUUID(w http.ResponseWriter, r *http.Request, parameter 
 	}
 	return id, nil
 }
+
+func extractUserPayload(r *http.Request) (userID uuid.UUID, userRole types.Role) {
+	payload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
+	return payload.UserID, payload.UserRole
+}
