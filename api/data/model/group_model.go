@@ -10,14 +10,14 @@ import (
 
 /* Gathers together one or more lists.  */
 type Group struct {
-	ID          uuid.UUID `json:"group_id"`
-	OwnerID     uuid.UUID `json:"owner_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	IsArchived  bool      `json:"is_archived"`
-	ArchivedAt  time.Time `json:"archived_at"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          uuid.UUID  `json:"group_id"`
+	OwnerID     uuid.UUID  `json:"owner_id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	IsArchived  bool       `json:"is_archived"`
+	ArchivedAt  *time.Time `json:"archived_at"`
+	CreatedAt   *time.Time `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
 func (g *Group) String() string {
