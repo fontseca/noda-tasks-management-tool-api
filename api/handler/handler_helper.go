@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"noda/api/data/types"
@@ -96,4 +98,81 @@ func parseSorting(w http.ResponseWriter, r *http.Request) string {
 			"must contain one or more word characters (alphanumeric characters and underscores)",
 		})
 	return ""
+}
+
+type malformedRequest struct {
+	status           int
+	message, details string
+}
+
+func (mr *malformedRequest) Error() string {
+	return mr.details
+}
+
+func decodeJSONRequestBody(w http.ResponseWriter, r *http.Request, out any) error {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	var decoder = json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var err = decoder.Decode(&out)
+	if nil != err {
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+		const message = "bad request body"
+		switch {
+		default:
+			return err
+		case errors.As(err, &syntaxError):
+			var details = fmt.Sprintf("request body contains ill-formed JSON at position %d",
+				syntaxError.Offset)
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: details,
+			}
+		case errors.As(err, &unmarshalTypeError):
+			var details = fmt.Sprintf("request body contains an invalid value for the %q field at position %d",
+				unmarshalTypeError.Field, unmarshalTypeError.Offset)
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: details,
+			}
+		case errors.Is(err, io.ErrUnexpectedEOF):
+			var details = "request body contains ill-formed JSON"
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: details,
+			}
+		case strings.HasPrefix(err.Error(), "json: unknown field "):
+			var field = strings.TrimPrefix(err.Error(), "json: unknown field ")
+			var details = fmt.Sprintf("request body contains unknown field %s", field)
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: details,
+			}
+		case errors.Is(err, io.EOF):
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: "request body must not be empty",
+			}
+		case err.Error() == "http: request body too large":
+			return &malformedRequest{
+				status:  http.StatusBadRequest,
+				message: message,
+				details: "request body must not be larger than 1MB",
+			}
+		}
+	}
+	err = decoder.Decode(&struct{}{})
+	if !errors.Is(err, io.EOF) {
+		return &malformedRequest{
+			status:  http.StatusBadRequest,
+			message: "bad request body",
+			details: "request body must only contain a single JSON object",
+		}
+	}
+	return nil
 }
