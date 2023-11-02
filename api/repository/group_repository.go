@@ -46,6 +46,7 @@ func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCr
 				err = failure.ErrNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -72,6 +73,7 @@ func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.
 				err = failure.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -109,6 +111,7 @@ func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, s
 				err = failure.ErrNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -143,6 +146,7 @@ func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.Grou
 				err = failure.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -169,6 +173,7 @@ func (r *GroupRepository) DeleteGroup(ownerID, groupID string) (ok bool, err err
 				err = failure.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
