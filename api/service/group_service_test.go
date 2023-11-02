@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
+	"noda/api/data/types"
 	"testing"
 )
 
@@ -123,22 +124,29 @@ func TestGroupService_FindGroupByID(t *testing.T) {
 
 func TestGroupService_FindGroups(t *testing.T) {
 	var (
-		m                *groupRepositoryMock
-		ownerID, groupID = uuid.New(), uuid.New()
-		s                *GroupService
-		res              *model.Group
-		err              error
+		m       *groupRepositoryMock
+		ownerID = uuid.New()
+		s       *GroupService
+		err     error
+		res     *types.Result[model.Group]
+		pag     = &types.Pagination{Page: 1, RPP: 10}
 	)
 
 	/* Success.  */
 
 	t.Run("success", func(t *testing.T) {
-		current := new(model.Group)
+		var groups = make([]*model.Group, 0)
+		current := &types.Result[model.Group]{
+			Page:      1,
+			RPP:       10,
+			Payload:   groups,
+			Retrieved: int64(len(groups)),
+		}
 		m = new(groupRepositoryMock)
-		m.On("FetchGroupByID", ownerID.String(), groupID.String()).
-			Return(current, nil)
+		m.On("FetchGroups", ownerID.String(), pag.Page, pag.RPP, "", "").
+			Return(groups, nil)
 		s = NewGroupService(m)
-		res, err = s.FindGroupByID(ownerID, groupID)
+		res, err = s.FindGroups(ownerID, pag, "", "")
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
@@ -148,10 +156,10 @@ func TestGroupService_FindGroups(t *testing.T) {
 	t.Run("got an error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(groupRepositoryMock)
-		m.On("FetchGroupByID", ownerID.String(), groupID.String()).
+		m.On("FetchGroups", ownerID.String(), pag.Page, pag.RPP, "", "").
 			Return(nil, unexpected)
 		s = NewGroupService(m)
-		res, err = s.FindGroupByID(ownerID, groupID)
+		res, err = s.FindGroups(ownerID, pag, "", "")
 		assert.Nil(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})

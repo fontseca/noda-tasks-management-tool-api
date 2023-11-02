@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
+	"noda/api/data/types"
 	"noda/api/repository"
 )
 
@@ -23,8 +24,20 @@ func (s *GroupService) FindGroupByID(ownerID, groupID uuid.UUID) (group *model.G
 	return s.r.FetchGroupByID(ownerID.String(), groupID.String())
 }
 
-func (s *GroupService) FindGroups(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (groups []*model.Group, err error) {
-	return s.r.FetchGroups(ownerID.String(), page, rpp, needle, sortExpr)
+func (s *GroupService) FindGroups(
+	ownerID uuid.UUID,
+	pag *types.Pagination,
+	needle, sortExpr string) (result *types.Result[model.Group], err error) {
+	groups, err := s.r.FetchGroups(ownerID.String(), pag.Page, pag.RPP, needle, sortExpr)
+	if nil != err {
+		return nil, err
+	}
+	return &types.Result[model.Group]{
+		Page:      pag.Page,
+		RPP:       pag.RPP,
+		Retrieved: int64(len(groups)),
+		Payload:   groups,
+	}, nil
 }
 
 func (s *GroupService) UpdateGroup(ownerID, groupID uuid.UUID, up *transfer.GroupUpdate) (ok bool, err error) {
