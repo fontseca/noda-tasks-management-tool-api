@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
@@ -175,4 +177,15 @@ func decodeJSONRequestBody(w http.ResponseWriter, r *http.Request, out any) erro
 		}
 	}
 	return nil
+}
+
+func parsePathParameterToUUID(w http.ResponseWriter, r *http.Request, parameter string) (uuid.UUID, error) {
+	var key = chi.URLParam(r, parameter)
+	id, err := uuid.Parse(key)
+	if nil != err {
+		var message = fmt.Sprintf("failure with %q", key)
+		failure.Emit(w, http.StatusBadRequest, message, err)
+		return uuid.Nil, err
+	}
+	return id, nil
 }
