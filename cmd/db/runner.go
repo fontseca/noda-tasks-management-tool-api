@@ -139,7 +139,7 @@ func TraverseDirectory(directory string, alreadyExecutedFiles Files) {
 }
 
 func LogNextFileToExecute(filename string) {
-	log.Printf("Attempting to load and execute file: \033[1;32m%s\033[0m ...\n", filename)
+	fmt.Printf("Attempting to load and execute file: \033[1;32m%s\033[0m ...\n", filename)
 }
 
 func ReadQueryFromFile(script string) string {

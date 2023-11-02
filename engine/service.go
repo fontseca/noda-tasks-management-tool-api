@@ -52,7 +52,7 @@ func Run() {
 	}
 	defer listener.Close()
 
-	log.Printf("Serving HTTP at \033[0;32m`%s'\033[0m ...", listener.Addr())
+	fmt.Printf("Serving HTTP at \033[0;32m`%s'\033[0m ...\n", listener.Addr())
 	log.Fatal(server.Serve(listener))
 }
 
@@ -70,5 +70,5 @@ func tcpConnStatLogger(c net.Conn, cs http.ConnState) {
 	case http.StateClosed:
 		color = "\033[0;31m" /* Red.  */
 	}
-	log.Printf("\033[0;32mTCP connection:\033[0m (me) <--> (%s): %s%s\033[0m\n", c.RemoteAddr(), color, cs)
+	fmt.Printf("\033[0;32mTCP connection:\033[0m (me) <--> (%s): %s%s\033[0m\n", c.RemoteAddr(), color, cs)
 }
