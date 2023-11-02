@@ -175,3 +175,28 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
 	w.WriteHeader(http.StatusSeeOther)
 }
+
+func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Request) {
+	groupID, err := parsePathParameterToUUID(w, r, "group_id")
+	if nil != err {
+		return
+	}
+	userID, _ := extractUserPayload(r)
+	_, err = h.s.DeleteGroup(userID, groupID)
+	if nil != err {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		case errors.Is(err, failure.ErrGroupNotFound):
+			var details = fmt.Sprintf("not found group with ID %q", groupID)
+			failure.Emit(w, http.StatusNotFound, "not found", details)
+		case errors.Is(err, failure.ErrDeadlineExceeded):
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
