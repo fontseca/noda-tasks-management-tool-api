@@ -2,17 +2,15 @@ package repository
 
 import (
 	"errors"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+	"github.com/stretchr/testify/assert"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/failure"
 	"regexp"
 	"testing"
-	"time"
-
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
-	"github.com/lib/pq"
-	"github.com/stretchr/testify/assert"
 )
 
 const groupID string = "942d76f4-28b2-44be-8339-232b62c0ef22"
@@ -83,9 +81,9 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			Name:        "name",
 			Description: "desc",
 			IsArchived:  false,
-			ArchivedAt:  time.Now(),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			ArchivedAt:  nil,
+			CreatedAt:   nil,
+			UpdatedAt:   nil,
 		}
 		columns = []string{
 			"id", "owner_id", "name", "description", "is_archived",
@@ -185,9 +183,9 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			Name:        "name",
 			Description: "desc",
 			IsArchived:  false,
-			ArchivedAt:  time.Now(),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			ArchivedAt:  nil,
+			CreatedAt:   nil,
+			UpdatedAt:   nil,
 		}
 		columns = []string{
 			"id", "owner_id", "name", "description", "is_archived",
