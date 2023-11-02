@@ -34,6 +34,7 @@ func Run() {
 	routes.InitializeForAuthentication(router)
 	routes.InitializeForUsers(router)
 	routes.InitializeForTasks(router)
+	routes.InitializeForGroups(router)
 
 	config := config.GetServerConfig()
 	server := http.Server{
