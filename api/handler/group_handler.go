@@ -123,3 +123,55 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 	}
 	w.Write(data)
 }
+
+func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request) {
+	var up = new(transfer.GroupUpdate)
+	err := decodeJSONRequestBody(w, r, up)
+	if nil != err {
+		var mr *malformedRequest
+		if errors.As(err, &mr) {
+			failure.Emit(w, mr.status, mr.message, mr.details)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	userID, _ := extractUserPayload(r)
+	groupID, err := parsePathParameterToUUID(w, r, "group_id")
+	if nil != err {
+		return
+	}
+	ok, err := h.s.UpdateGroup(userID, groupID, up)
+	if nil != err {
+		switch {
+		default:
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Is(err, failure.ErrNotFound):
+			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		case errors.Is(err, failure.ErrGroupNotFound):
+			var details = fmt.Sprintf("not found group with ID %q", groupID)
+			failure.Emit(w, http.StatusNotFound, "not found", details)
+		case errors.Is(err, failure.ErrDeadlineExceeded):
+			w.WriteHeader(http.StatusInternalServerError)
+		case strings.Contains(err.Error(), "name too long"):
+			failure.Emit(w, http.StatusBadRequest, "bad request", err)
+		}
+		return
+	}
+	if ok {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	var (
+		scheme = "http://"
+		host   = r.Host
+		path   = fmt.Sprintf("/me/groups/%s", groupID)
+	)
+	if nil != r.TLS {
+		scheme = "https://"
+	}
+	w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
+	w.WriteHeader(http.StatusSeeOther)
+}
