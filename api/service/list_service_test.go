@@ -1,9 +1,13 @@
 package service
 
 import (
+	"errors"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
+	"testing"
 )
 
 type listRepositoryMock struct {
@@ -88,4 +92,58 @@ func (o *listRepositoryMock) MoveList(ownerID, listID, targetGroupID string) (bo
 func (o *listRepositoryMock) UpdateList(ownerID, groupID, listID string, up *transfer.ListUpdate) (bool, error) {
 	args := o.Called(ownerID, groupID, listID, up)
 	return args.Bool(0), args.Error(1)
+}
+
+func TestListService_SaveList(t *testing.T) {
+	var (
+		m                *listRepositoryMock
+		s                *ListService
+		res              uuid.UUID
+		err              error
+		ownerID, groupID = uuid.New(), uuid.New()
+		next             = new(transfer.ListCreation)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		insertedID := uuid.New()
+		m = new(listRepositoryMock)
+		m.On("InsertList", ownerID.String(), groupID.String(), next).
+			Return(insertedID.String(), nil)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		assert.Equal(t, insertedID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got UUID parsing error", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("InsertList", ownerID.String(), groupID.String(), next).
+			Return("x", nil)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		assert.ErrorContains(t, err, "invalid UUID length: 1")
+		assert.Equal(t, uuid.Nil, res)
+	})
+
+	t.Run("did parse UUID", func(t *testing.T) {
+		parsed := uuid.MustParse("4fedb41f-5e44-4e63-9266-4b094bd7ba2d")
+		m = new(listRepositoryMock)
+		m.On("InsertList", ownerID.String(), groupID.String(), next).
+			Return(parsed.String(), nil)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		assert.Equal(t, parsed, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got an error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("InsertList", ownerID.String(), groupID.String(), next).
+			Return("", unexpected)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Equal(t, uuid.Nil, res)
+	})
 }
