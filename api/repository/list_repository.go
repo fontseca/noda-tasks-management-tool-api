@@ -47,6 +47,7 @@ func (r *ListRepository) InsertList(
 				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -83,6 +84,7 @@ func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *m
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -108,6 +110,7 @@ func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err erro
 				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		}
 	} else {
@@ -132,6 +135,7 @@ func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err e
 				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		}
 	} else {
@@ -167,6 +171,7 @@ func (r *ListRepository) FetchLists(
 				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -213,6 +218,7 @@ func (r *ListRepository) FetchGroupedLists(
 				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -259,6 +265,7 @@ func (r *ListRepository) FetchScatteredLists(
 				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -300,6 +307,7 @@ func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, e
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -328,6 +336,7 @@ func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -354,6 +363,7 @@ func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -382,6 +392,7 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
@@ -417,6 +428,7 @@ func (r *ListRepository) UpdateList(
 				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
+			log.Println(err)
 			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
