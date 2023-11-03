@@ -101,7 +101,10 @@ func TestListService_SaveList(t *testing.T) {
 		res              uuid.UUID
 		err              error
 		ownerID, groupID = uuid.New(), uuid.New()
-		next             = new(transfer.ListCreation)
+		next             = &transfer.ListCreation{
+			Name:        "\t   list name\n   ",
+			Description: "\n  description  \n",
+		}
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -136,13 +139,26 @@ func TestListService_SaveList(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("name cannot be empty", func(t *testing.T) {
+		var previousName = next.Name
+		next.Name = "  		  \n"
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "InsertList", mock.Anything, mock.Anything, mock.Anything)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		next.Name = previousName
+		assert.ErrorContains(t, err, "name cannot be an empty string")
+		assert.Equal(t, uuid.Nil, res)
+	})
+
 	t.Run("name too long", func(t *testing.T) {
+		var previousName = next.Name
 		next.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
 		m = new(listRepositoryMock)
 		m.AssertNotCalled(t, "InsertList", mock.Anything, mock.Anything, mock.Anything)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
-		next.Name = ""
+		next.Name = previousName
 		assert.ErrorContains(t, err, "name too long")
 		assert.Equal(t, uuid.Nil, res)
 	})
