@@ -14,6 +14,21 @@ import (
 	"time"
 )
 
+type IListRepository interface {
+	InsertList(ownerID, groupID string, next *transfer.ListCreation) (insertedID string, err error)
+	FetchListByID(ownerID, groupID, listID string) (list *model.List, err error)
+	GetTodayListID(ownerID string) (listID string, err error)
+	GetTomorrowListID(ownerID string) (listID string, err error)
+	FetchLists(ownerID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
+	FetchGroupedLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
+	FetchScatteredLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
+	DeleteList(ownerID, groupID, listID string) (ok bool, err error)
+	DuplicateList(ownerID, listID string) (replicaID string, err error)
+	ConvertToScatteredList(ownerID, listID string) (ok bool, err error)
+	MoveList(ownerID, listID, targetGroupID string) (ok bool, err error)
+	UpdateList(ownerID, groupID, listID string, up *transfer.ListUpdate) (ok bool, err error)
+}
+
 type ListRepository struct {
 	db *sql.DB
 }

@@ -3,5 +3,9 @@ package service
 import "noda/api/repository"
 
 type ListService struct {
-	r *repository.ListRepository
+	r repository.IListRepository
+}
+
+func NewListService(r repository.IListRepository) *ListService {
+	return &ListService{r}
 }
