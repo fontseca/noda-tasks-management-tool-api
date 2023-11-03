@@ -136,6 +136,17 @@ func TestListService_SaveList(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("name too long", func(t *testing.T) {
+		next.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "InsertList", mock.Anything, mock.Anything, mock.Anything)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		next.Name = ""
+		assert.ErrorContains(t, err, "name too long")
+		assert.Equal(t, uuid.Nil, res)
+	})
+
 	t.Run("got an error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
