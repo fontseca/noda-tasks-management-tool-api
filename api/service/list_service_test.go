@@ -218,3 +218,68 @@ func TestListService_SaveList(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 }
+
+func TestListService_FetchListByID(t *testing.T) {
+	var (
+		m                        *listRepositoryMock
+		s                        *ListService
+		res                      *model.List
+		err                      error
+		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
+		actual                   = &model.List{
+			ID:          listID,
+			OwnerID:     ownerID,
+			GroupID:     groupID,
+			Name:        "the list name (1)",
+			Description: "description",
+		}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("FetchListByID", mock.Anything, mock.Anything, mock.Anything).
+			Return(actual, nil)
+		s = NewListService(m)
+		res, err = s.FindListByID(ownerID, groupID, listID)
+		assert.NoError(t, err)
+		assert.Equal(t, actual, res)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchListByID")
+		s = NewListService(m)
+		res, err = s.FindListByID(uuid.Nil, groupID, listID)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+	})
+
+	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchListByID")
+		s = NewListService(m)
+		res, err = s.FindListByID(ownerID, uuid.Nil, listID)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, "parameter \"groupID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchListByID")
+		s = NewListService(m)
+		res, err = s.FindListByID(ownerID, groupID, uuid.Nil)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, "parameter \"listID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("FetchListByID", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		s = NewListService(m)
+		res, err = s.FindListByID(ownerID, groupID, listID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}

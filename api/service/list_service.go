@@ -3,8 +3,10 @@ package service
 import (
 	"errors"
 	"github.com/google/uuid"
+	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/api/repository"
+	"noda/failure"
 	"strings"
 )
 
@@ -38,4 +40,16 @@ func (s *ListService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 		return uuid.Nil, err
 	}
 	return uuid.Parse(id)
+}
+
+func (s *ListService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		return nil, failure.NewNilParameterError("FindListByID", "ownerID")
+	case uuid.Nil == groupID:
+		return nil, failure.NewNilParameterError("FindListByID", "groupID")
+	case uuid.Nil == listID:
+		return nil, failure.NewNilParameterError("FindListByID", "listID")
+	}
+	return s.r.FetchListByID(ownerID.String(), groupID.String(), listID.String())
 }
