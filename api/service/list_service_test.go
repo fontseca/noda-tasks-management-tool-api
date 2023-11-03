@@ -151,7 +151,7 @@ func TestListService_SaveList(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
-	t.Run("name too long", func(t *testing.T) {
+	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
 		var previousName = next.Name
 		next.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
 		m = new(listRepositoryMock)
@@ -163,7 +163,7 @@ func TestListService_SaveList(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
-	t.Run("got an error", func(t *testing.T) {
+	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
 		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
