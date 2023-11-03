@@ -22,7 +22,7 @@ func (o *listRepositoryMock) InsertList(ownerID, groupID string, next *transfer.
 func (o *listRepositoryMock) FetchListByID(ownerID, groupID, listID string) (*model.List, error) {
 	args := o.Called(ownerID, groupID, listID)
 	arg1 := args.Get(0)
-	var list = new(model.List)
+	var list *model.List
 	if nil != arg1 {
 		list = arg1.(*model.List)
 	}
@@ -42,7 +42,7 @@ func (o *listRepositoryMock) GetTomorrowListID(ownerID string) (string, error) {
 func (o *listRepositoryMock) FetchLists(ownerID string, page, rpp int64, needle, sortExpr string) ([]*model.List, error) {
 	args := o.Called(ownerID, page, rpp, needle, sortExpr)
 	arg1 := args.Get(0)
-	var lists = make([]*model.List, 0)
+	var lists []*model.List
 	if nil != arg1 {
 		lists = arg1.([]*model.List)
 	}
@@ -52,7 +52,7 @@ func (o *listRepositoryMock) FetchLists(ownerID string, page, rpp int64, needle,
 func (o *listRepositoryMock) FetchGroupedLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
 	args := o.Called(ownerID, groupID, page, rpp, needle, sortBy)
 	arg1 := args.Get(0)
-	var lists = make([]*model.List, 0)
+	var lists []*model.List
 	if nil != arg1 {
 		lists = arg1.([]*model.List)
 	}
@@ -62,7 +62,7 @@ func (o *listRepositoryMock) FetchGroupedLists(ownerID, groupID string, page, rp
 func (o *listRepositoryMock) FetchScatteredLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
 	args := o.Called(ownerID, groupID, page, rpp, needle, sortBy)
 	arg1 := args.Get(0)
-	var lists = make([]*model.List, 0)
+	var lists []*model.List
 	if nil != arg1 {
 		lists = arg1.([]*model.List)
 	}
