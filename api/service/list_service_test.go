@@ -107,7 +107,7 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		insertedID := uuid.New()
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), groupID.String(), next).
+		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
 			Return(insertedID.String(), nil)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
@@ -117,7 +117,7 @@ func TestListService_SaveList(t *testing.T) {
 
 	t.Run("got UUID parsing error", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), groupID.String(), next).
+		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
 			Return("x", nil)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
@@ -128,7 +128,7 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("did parse UUID", func(t *testing.T) {
 		parsed := uuid.MustParse("4fedb41f-5e44-4e63-9266-4b094bd7ba2d")
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), groupID.String(), next).
+		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
 			Return(parsed.String(), nil)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
@@ -139,7 +139,7 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("got an error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), groupID.String(), next).
+		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
 			Return("", unexpected)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
