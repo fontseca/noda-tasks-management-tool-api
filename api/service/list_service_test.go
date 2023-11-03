@@ -190,6 +190,23 @@ func TestListService_SaveList(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
+	t.Run("next.Name and next.Description must be trimmed", func(t *testing.T) {
+		var previousName, previousDesc = next.Name, next.Description
+		var insertedID = uuid.New()
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "InsertList")
+		s = NewListService(m)
+		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+			Return(insertedID.String(), nil)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, groupID, next)
+		assert.Equal(t, "list name", next.Name)
+		assert.Equal(t, "description", next.Description)
+		next.Name, next.Description = previousName, previousDesc
+		assert.Equal(t, insertedID, res)
+		assert.NoError(t, err)
+	})
+
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
