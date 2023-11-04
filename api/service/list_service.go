@@ -64,3 +64,14 @@ func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err e
 	}
 	return uuid.Parse(id)
 }
+
+func (s *ListService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
+	if uuid.Nil == ownerID {
+		return uuid.Nil, failure.NewNilParameterError("GetTomorrowListID", "ownerID")
+	}
+	id, err := s.r.GetTomorrowListID(ownerID.String())
+	if nil != err {
+		return uuid.Nil, err
+	}
+	return uuid.Parse(id)
+}
