@@ -283,3 +283,64 @@ func TestListService_FetchListByID(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestListService_GetTodayListID(t *testing.T) {
+	var (
+		m               *listRepositoryMock
+		s               *ListService
+		res             uuid.UUID
+		err             error
+		ownerID, listID = uuid.New(), uuid.New()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("GetTodayListID", mock.Anything).
+			Return(listID.String(), nil)
+		s = NewListService(m)
+		res, err = s.GetTodayListID(ownerID)
+		assert.Equal(t, listID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got UUID parsing error", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("GetTodayListID", mock.Anything).
+			Return("x", nil)
+		s = NewListService(m)
+		res, err = s.GetTodayListID(ownerID)
+		assert.ErrorContains(t, err, "invalid UUID length: 1")
+		assert.Equal(t, uuid.Nil, res)
+	})
+
+	t.Run("did parse UUID", func(t *testing.T) {
+		var id = uuid.MustParse("4fedb41f-5e44-4e63-9266-4b094bd7ba2d")
+		m = new(listRepositoryMock)
+		m.On("GetTodayListID", mock.Anything).
+			Return(id.String(), nil)
+		s = NewListService(m)
+		res, err = s.GetTodayListID(ownerID)
+		assert.Equal(t, id, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "GetTodayListID")
+		s = NewListService(m)
+		res, err = s.GetTodayListID(uuid.Nil)
+		assert.Equal(t, uuid.Nil, res)
+		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"GetTodayListID\" cannot be uuid.Nil or nil")
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("GetTodayListID", mock.Anything).
+			Return("", unexpected)
+		s = NewListService(m)
+		res, err = s.GetTodayListID(ownerID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Equal(t, uuid.Nil, res)
+	})
+}

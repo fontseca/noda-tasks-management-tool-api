@@ -53,3 +53,14 @@ func (s *ListService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *mo
 	}
 	return s.r.FetchListByID(ownerID.String(), groupID.String(), listID.String())
 }
+
+func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
+	if uuid.Nil == ownerID {
+		return uuid.Nil, failure.NewNilParameterError("GetTodayListID", "ownerID")
+	}
+	id, err := s.r.GetTodayListID(ownerID.String())
+	if nil != err {
+		return uuid.Nil, err
+	}
+	return uuid.Parse(id)
+}
