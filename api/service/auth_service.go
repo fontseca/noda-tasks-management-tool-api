@@ -39,7 +39,7 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 			log.Println(err)
 			return nil, err
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return nil, failure.ErrIncorrectPassord
+			return nil, failure.ErrIncorrectPassword
 		}
 	}
 

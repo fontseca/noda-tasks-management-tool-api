@@ -37,7 +37,7 @@ func (s *us) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 			log.Println(err)
 			return uuid.Nil, err
 		case errors.Is(err, bcrypt.ErrPasswordTooLong):
-			return uuid.Nil, failure.ErrPassordTooLong
+			return uuid.Nil, failure.ErrPasswordTooLong
 		}
 	}
 	next.Password = string(hashedPassword)

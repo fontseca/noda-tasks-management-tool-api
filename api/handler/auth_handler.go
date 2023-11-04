@@ -43,9 +43,9 @@ func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 			failure.Emit(w, http.StatusBadRequest,
 				"signing up failed", failure.ErrSameEmail)
 			return
-		case errors.Is(err, failure.ErrPassordTooLong):
+		case errors.Is(err, failure.ErrPasswordTooLong):
 			failure.Emit(w, http.StatusBadRequest,
-				"signing up failed", failure.ErrPassordTooLong)
+				"signing up failed", failure.ErrPasswordTooLong)
 			return
 		}
 
@@ -81,9 +81,9 @@ func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 			failure.Emit(w, http.StatusNotFound,
 				"signing in failed", fmt.Sprintf("could not find any user with email %q", credentials.Email))
 			return
-		case errors.Is(err, failure.ErrIncorrectPassord):
+		case errors.Is(err, failure.ErrIncorrectPassword):
 			failure.Emit(w, http.StatusBadRequest,
-				"signing in failed", failure.ErrIncorrectPassord)
+				"signing in failed", failure.ErrIncorrectPassword)
 			return
 		case errors.Is(err, failure.ErrUserBlocked):
 			failure.Emit(w, http.StatusForbidden,
