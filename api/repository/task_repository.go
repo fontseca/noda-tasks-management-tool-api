@@ -58,7 +58,7 @@ func (r *TaskRepository) SelectByID(id uuid.UUID) (*model.Task, error) {
 	task := model.Task{}
 	if err = sqlscan.ScanOne(&task, row); err != nil {
 		if sqlscan.NotFound(err) {
-			return nil, failure.ErrNotFound
+			return nil, failure.ErrUserNotFound
 		}
 		return nil, err
 	}

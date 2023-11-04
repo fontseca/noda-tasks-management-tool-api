@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrNotFound          = errors.New("record not found")
+	ErrUserNotFound      = errors.New("user not found")
 	ErrGroupNotFound     = errors.New("group not found")
 	ErrListNotFound      = errors.New("list not found")
 	ErrSettingNotFound   = errors.New("user setting not found")

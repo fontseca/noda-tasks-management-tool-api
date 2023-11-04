@@ -51,7 +51,7 @@ func (r UserRepository) UpdateUser(userID string, up *transfer.UserUpdate) (bool
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -70,7 +70,7 @@ func (r UserRepository) PromoteUserToAdmin(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -89,7 +89,7 @@ func (r UserRepository) DegradeAdminToNormalUser(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -108,7 +108,7 @@ func (r UserRepository) BlockUser(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -127,7 +127,7 @@ func (r UserRepository) UnblockUser(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -214,7 +214,7 @@ func (r UserRepository) FetchUserSettings(userID string, page, rpp int64) ([]*tr
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, failure.ErrNotFound
+				return nil, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -242,7 +242,7 @@ func (r UserRepository) FetchOneUserSetting(userID, settingKey string) (*transfe
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, failure.ErrNotFound
+				return nil, failure.ErrUserNotFound
 			case isNonexistentPredefinedUserSettingError(pqerr):
 				return nil, failure.ErrSettingNotFound
 			}
@@ -273,7 +273,7 @@ func (r UserRepository) UpdateUserSetting(userID, settingKey string, value strin
 		case errors.As(err, &pqerr):
 			switch {
 			case isNonexistentUserError(pqerr):
-				return false, failure.ErrNotFound
+				return false, failure.ErrUserNotFound
 			case isNonexistentPredefinedUserSettingError(pqerr):
 				return false, failure.ErrSettingNotFound
 			}
@@ -344,7 +344,7 @@ func (r UserRepository) FetchUserByID(userID string) (*model.User, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, failure.ErrNotFound
+				return nil, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -386,7 +386,7 @@ func (r UserRepository) FetchUserByEmail(email string) (*model.User, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNotFoundEmailError(pqerr) {
-				return nil, failure.ErrNotFound
+				return nil, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -445,7 +445,7 @@ func (r UserRepository) FetchTransferUserByID(userID string) (*transfer.User, er
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, failure.ErrNotFound
+				return nil, failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -471,7 +471,7 @@ func (r UserRepository) HardlyDeleteUser(userID string) error {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return failure.ErrNotFound
+				return failure.ErrUserNotFound
 			}
 			log.Println(failure.PQErrorToString(pqerr))
 		}
@@ -499,7 +499,7 @@ func (r UserRepository) SoftlyDeleteUser(userID string) (string, error) {
 			log.Println(failure.PQErrorToString(pqerr))
 			return "", err
 		case errors.Is(err, sql.ErrNoRows):
-			return "", failure.ErrNotFound
+			return "", failure.ErrUserNotFound
 		}
 	}
 	return deletedUserID, nil

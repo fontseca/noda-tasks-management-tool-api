@@ -42,7 +42,7 @@ func (r *ListRepository) InsertList(
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
@@ -76,7 +76,7 @@ func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *m
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -105,7 +105,7 @@ func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err erro
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			err = failure.ErrDeadlineExceeded
@@ -129,7 +129,7 @@ func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err e
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			err = failure.ErrDeadlineExceeded
@@ -164,7 +164,7 @@ func (r *ListRepository) FetchLists(
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			err = failure.ErrDeadlineExceeded
@@ -208,7 +208,7 @@ func (r *ListRepository) FetchGroupedLists(
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
@@ -254,7 +254,7 @@ func (r *ListRepository) FetchScatteredLists(
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
@@ -293,7 +293,7 @@ func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, e
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -321,7 +321,7 @@ func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -349,7 +349,7 @@ func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
@@ -375,7 +375,7 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -410,7 +410,7 @@ func (r *ListRepository) UpdateList(
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			case isNonexistentListError(pqerr):

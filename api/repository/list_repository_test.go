@@ -60,7 +60,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.InsertList(userID, groupID, next)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Group not found.  */
@@ -70,7 +70,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.InsertList(userID, groupID, next)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Unexpected database error.  */
@@ -137,7 +137,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchListByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Group was not found.  */
@@ -221,7 +221,7 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.GetTodayListID(userID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Empty(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -275,7 +275,7 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.GetTomorrowListID(userID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Deadline (5s) exceeded.  */
@@ -427,7 +427,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -594,7 +594,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Group not found.  */
@@ -772,7 +772,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -865,7 +865,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.DeleteList(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* Group not found.  */
@@ -940,7 +940,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.DuplicateList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Empty(t, res)
 
 	/* List not found.  */
@@ -1004,7 +1004,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.ConvertToScatteredList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -1092,7 +1092,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.MoveList(userID, listID, groupID)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -1203,7 +1203,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.UpdateList(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* Group not found.  */

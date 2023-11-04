@@ -45,7 +45,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		case errors.Is(err, failure.ErrDeadlineExceeded):
 			w.WriteHeader(http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Re
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		case errors.Is(err, failure.ErrGroupNotFound):
 			var details = fmt.Sprintf("not found group with ID %q", groupID)
@@ -108,7 +108,7 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		case errors.Is(err, failure.ErrDeadlineExceeded):
 			w.WriteHeader(http.StatusInternalServerError)
@@ -148,7 +148,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		case errors.Is(err, failure.ErrGroupNotFound):
 			var details = fmt.Sprintf("not found group with ID %q", groupID)
@@ -188,7 +188,7 @@ func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Reques
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		case errors.Is(err, failure.ErrGroupNotFound):
 			var details = fmt.Sprintf("not found group with ID %q", groupID)

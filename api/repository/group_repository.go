@@ -43,7 +43,7 @@ func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCr
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -68,7 +68,7 @@ func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
@@ -108,7 +108,7 @@ func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, s
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -141,7 +141,7 @@ func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.Grou
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
@@ -168,7 +168,7 @@ func (r *GroupRepository) DeleteGroup(ownerID, groupID string) (ok bool, err err
 			default:
 				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrNotFound
+				err = failure.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}

@@ -77,7 +77,7 @@ func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"signing in failed", fmt.Sprintf("could not find any user with email %q", credentials.Email))
 			return

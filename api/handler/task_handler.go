@@ -36,7 +36,7 @@ func (h *TaskHandler) RetrieveTaskByID(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any task with ID %q", id))
 			return

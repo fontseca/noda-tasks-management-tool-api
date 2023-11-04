@@ -121,7 +121,7 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.UpdateUser(userID, up)
-	assert.ErrorIs(t, err, failure.ErrNotFound)
+	assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	assert.Equal(t, res, false)
 
 	/* Unexpected database error.  */

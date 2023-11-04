@@ -93,7 +93,7 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -117,7 +117,7 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -151,7 +151,7 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -191,7 +191,7 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -231,7 +231,7 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -270,7 +270,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound,
 				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
 			return
@@ -284,7 +284,7 @@ func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request
 	user, err := h.s.GetByID(jwtPayload.UserID)
 	if err != nil {
 		switch {
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
@@ -307,7 +307,7 @@ func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http
 		switch {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
@@ -328,7 +328,7 @@ func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Is(err, failure.ErrSettingNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
@@ -358,7 +358,7 @@ func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *h
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Is(err, failure.ErrSettingNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
@@ -400,7 +400,7 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		switch {
-		case errors.Is(err, failure.ErrNotFound):
+		case errors.Is(err, failure.ErrUserNotFound):
 			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
