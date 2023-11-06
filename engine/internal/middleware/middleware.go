@@ -3,11 +3,10 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
+	"noda"
 	"noda/api/data/types"
-	"noda/failure"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -15,8 +14,7 @@ import (
 )
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
-	failure.Emit(w, http.StatusNotFound,
-		"target not found", fmt.Sprintf("could not find resource %q", r.URL))
+	noda.EmitError(w, noda.ErrTargetNotFound)
 }
 
 func LetOptionsPassThrough(next http.Handler) http.Handler {
@@ -35,7 +33,7 @@ func Authorization(next http.Handler) http.Handler {
 
 		if value == "" {
 			w.Header().Set("WWW-Authenticate", "Bearer realm=\"access to users\"")
-			failure.Emit(w, http.StatusUnauthorized, "bad authorization request", "no Authorization header provided")
+			noda.EmitError(w, noda.ErrMissingAuthorizationHeader)
 			return
 		}
 
@@ -45,29 +43,30 @@ func Authorization(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			details := ""
+			var e = noda.ErrJSONWebToken.Clone()
 			switch {
 			default:
 				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			case errors.Is(err, jwt.ErrInvalidKey):
-				details = jwt.ErrInvalidKey.Error() // key is invalid
+				e.SetDetails("Key is invalid.")
 			case errors.Is(err, jwt.ErrInvalidKeyType):
-				details = jwt.ErrInvalidKeyType.Error() // key is of invalid type
+				e.SetDetails("Key is of invalid type.")
 			case errors.Is(err, jwt.ErrTokenMalformed):
-				details = "token is not properly formed"
+				e.SetDetails("This token is not properly formed.")
 			case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-				details = jwt.ErrTokenSignatureInvalid.Error() // token signature is invalid
+				e.SetDetails("This token signature is invalid.")
 			case errors.Is(err, jwt.ErrTokenExpired):
-				details = "token has expired: sign in again" // token is expired
+				e.SetDetails("This token has expired.").
+					SetHint("Try singing in again.")
 			case errors.Is(err, jwt.ErrTokenNotValidYet):
-				details = jwt.ErrTokenNotValidYet.Error() // token is not valid yet
+				e.SetDetails("This token is not valid yet.")
 			case errors.Is(err, jwt.ErrTokenInvalidClaims):
-				details = jwt.ErrTokenInvalidClaims.Error() // token has invalid claims
+				e.SetDetails("This token has invalid claims.")
 			case errors.Is(err, jwt.ErrInvalidType):
-				details = jwt.ErrInvalidType.Error() // invalid type for claim
+				e.SetDetails("Invalid type for claim.")
 			}
-			failure.Emit(w, http.StatusUnauthorized, "jwt failure", details)
+			noda.EmitError(w, e)
 			return
 		}
 
@@ -79,7 +78,7 @@ func Authorization(next http.Handler) http.Handler {
 		claims := t.Claims.(jwt.MapClaims)
 		id, err := uuid.Parse(claims["user_id"].(string))
 		if err != nil {
-			failure.Emit(w, http.StatusUnauthorized, "jwt failure", "a claim in jwt seems corrupted")
+			noda.EmitError(w, noda.ErrCorruptedClaim)
 			return
 		}
 		ctx := context.WithValue(r.Context(), types.ContextKey{}, types.JWTPayload{
@@ -100,7 +99,7 @@ func AdminPrivileges(next http.Handler) http.Handler {
 		}
 		jwtPayload := got.(types.JWTPayload)
 		if jwtPayload.UserRole != types.RoleAdmin {
-			failure.Emit(w, http.StatusForbidden, "authorization refused", "insufficient rights to access this resource")
+			noda.EmitError(w, noda.ErrNoEnoughRights)
 			return
 		}
 		next.ServeHTTP(w, r)
