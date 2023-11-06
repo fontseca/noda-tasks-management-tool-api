@@ -10,16 +10,198 @@ import (
 	"strings"
 )
 
+/* URL details.  */
+
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrGroupNotFound     = errors.New("group not found")
-	ErrListNotFound      = errors.New("list not found")
-	ErrSettingNotFound   = errors.New("user setting not found")
-	ErrSameEmail         = errors.New("the given email address is already registered")
-	ErrIncorrectPassword = errors.New("the given password does not match with stored password")
-	ErrPasswordTooLong   = errors.New("the given password length exceeds 72 bytes")
-	ErrUserBlocked       = errors.New("this user has been blocked")
-	ErrDeadlineExceeded  = errors.New("context deadline exceeded")
+	ErrTargetNotFound = &Error{
+		code:    ErrorCode("U0001"),
+		message: "Target not found.",
+		details: "Could not find the resource requested by the given URL.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrBadQueryParameter = &Error{
+		code:    ErrorCode("U0002"),
+		message: "Query parameter failure.",
+		details: "",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrMultipleValuesForQueryParameter = &Error{
+		code:    ErrorCode("U0003"),
+		message: "Multiple values for query parameter.",
+		details: "Too much values for query parameter: %q.",
+		hint:    "Provide only one value for this query parameter.",
+		status:  http.StatusNotFound,
+	}
+	ErrQueryParameterNotParsed = &Error{
+		code:    ErrorCode("U0004"),
+		message: "Could not parse parameter.",
+		details: "Could not parse query parameter: %q.",
+		hint:    "Provide only one value for this query parameter.",
+		status:  http.StatusNotFound,
+	}
+	ErrInvalidUUIDFormat = &Error{
+		code:    ErrorCode("U0005"),
+		message: "Error parsing path parameter.",
+		details: "Invalid UUID format.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrInvalidUUIDLength = &Error{
+		code:    ErrorCode("U0006"),
+		message: "Error parsing path parameter.",
+		details: "Invalid UUID length.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+)
+
+/* Authentication details.  */
+
+var (
+	ErrMissingAuthorizationHeader = &Error{
+		code:    ErrorCode("A0001"),
+		message: "Authorization refused.",
+		details: "Missing \"Authorization\" header in request.",
+		hint:    "Check HTTP headers in request.",
+		status:  http.StatusUnauthorized,
+	}
+	ErrNoEnoughRights = &Error{
+		code:    ErrorCode("A0002"),
+		message: "Authorization refused.",
+		details: "Insufficient rights to access this resource.",
+		hint:    "",
+		status:  http.StatusUnauthorized,
+	}
+	ErrJSONWebToken = &Error{
+		code:    ErrorCode("A0003"),
+		message: "JSON Web Token failure.",
+		details: "",
+		hint:    "",
+		status:  http.StatusUnauthorized,
+	}
+	ErrCorruptedClaim = &Error{
+		code:    ErrorCode("A0004"),
+		message: "JSON Web Token failure.",
+		details: "One claim in JWT seems to be corrupted.",
+		hint:    "",
+		status:  http.StatusUnauthorized,
+	}
+)
+
+/* Service details.  */
+
+var (
+	ErrTooLong = &Error{
+		code:    ErrorCode("S0001"),
+		message: "Request did not meet validation.",
+		details: "Field %q is too long for %s. Maximum name length must be %d.",
+		hint:    "",
+		status:  http.StatusBadRequest,
+	}
+	ErrPasswordTooLong = &Error{
+		code:    ErrorCode("S0002"),
+		message: "Request did not meet validation.",
+		details: "The length of this password exceeds 72 bytes.",
+		hint:    "",
+		status:  http.StatusBadRequest,
+	}
+)
+
+/* Request details.  */
+
+var (
+	ErrMalformedRequest = &Error{
+		code:    ErrorCode("RQ001"),
+		message: "Bad JSON in request body.",
+		details: "",
+		hint:    "",
+		status:  http.StatusBadRequest,
+	}
+	ErrBadRequest = &Error{
+		code:    ErrorCode("RQ002"),
+		message: "Bad request made.",
+		details: "",
+		hint:    "Check fields in request body object.",
+		status:  http.StatusBadRequest,
+	}
+	ErrPasswordRestrictions = &Error{
+		code:    ErrorCode("RQ003"),
+		message: "Password restrictions not met.",
+		details: "",
+		hint:    "",
+		status:  http.StatusBadRequest,
+	}
+	ErrSelfOperation = &Error{
+		code:    ErrorCode("RQ004"),
+		message: "Refused to perform self operation.",
+		details: "You cannot perform this operation on the logged in user.",
+		hint:    "",
+		status:  http.StatusBadRequest,
+	}
+)
+
+/* Repository details.  */
+
+var (
+	ErrUserNotFound = &Error{
+		code:    ErrorCode("R0001"),
+		message: "Not found.",
+		details: "Could not find any user with this ID.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrUserNoLongerExists = &Error{
+		code:    ErrorCode("R0008"),
+		message: "Not found.",
+		details: "This user account no longer exists.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrGroupNotFound = &Error{
+		code:    ErrorCode("R002"),
+		message: "Not found.",
+		details: "Could not find any group with this ID.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrListNotFound = &Error{
+		code:    ErrorCode("R0003"),
+		message: "Not found.",
+		details: "Could not find any list with this ID.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrSettingNotFound = &Error{
+		code:    ErrorCode("R0004"),
+		message: "Not found.",
+		details: "Could not find any user setting with this ID.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
+	ErrSameEmail = &Error{
+		code:    ErrorCode("R0005"),
+		message: "Conflicting email address.",
+		details: "This email address is already registered.",
+		hint:    "Try using another one.",
+		status:  http.StatusBadRequest,
+	}
+	ErrIncorrectPassword = &Error{
+		code:    ErrorCode("R0006"),
+		message: "Signing in failed.",
+		details: "This password does not match with the one that's expected.",
+		hint:    "Try using another one or recover it.",
+		status:  http.StatusBadRequest,
+	}
+	ErrUserBlocked = &Error{
+		code:    ErrorCode("R0007"),
+		message: "Authentication refused.",
+		details: "This user account has been blocked.",
+		hint:    "",
+		status:  http.StatusForbidden,
+	}
+	ErrDeadlineExceeded = errors.New("context deadline exceeded")
 )
 
 type ErrorCode string
