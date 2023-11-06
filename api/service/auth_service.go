@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"noda"
 	"noda/api/data/transfer"
-	"noda/failure"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,6 +28,7 @@ func (s *AuthenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, 
 }
 
 func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
+	// TODO: Check credentials.Email is a valid email address.
 	user, err := s.userService.GetUserWithPasswordByEmail(credentials.Email)
 	if err != nil {
 		return nil, err
@@ -39,12 +40,12 @@ func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*
 			log.Println(err)
 			return nil, err
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return nil, failure.ErrIncorrectPassword
+			return nil, noda.ErrIncorrectPassword
 		}
 	}
 
 	if user.IsBlocked {
-		return nil, failure.ErrUserBlocked
+		return nil, noda.ErrUserBlocked
 	}
 
 	claims := jwt.MapClaims{
