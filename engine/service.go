@@ -5,8 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"noda/config"
-	"noda/database"
+	"noda"
 	noda_middleware "noda/engine/internal/middleware"
 	"noda/engine/internal/routes"
 	"os"
@@ -16,8 +15,8 @@ import (
 )
 
 func Run() {
-	database.Connect()
-	db := database.Get()
+	noda.ConnectToDatabase()
+	db := noda.GetDatabase()
 	defer db.Close()
 
 	router := chi.NewRouter()
@@ -36,7 +35,7 @@ func Run() {
 	routes.InitializeForTasks(router)
 	routes.InitializeForGroups(router)
 
-	config := config.GetServerConfig()
+	config := noda.GetServerConfig()
 	server := http.Server{
 		WriteTimeout:      config.WriteTimeout,
 		ReadTimeout:       config.ReadTimeout,

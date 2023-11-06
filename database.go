@@ -13,7 +13,7 @@ var (
 	db   *sql.DB
 )
 
-func Connect() {
+func ConnectToDatabase() {
 	if db == nil {
 		once.Do(func() {
 			var err error
@@ -32,7 +32,7 @@ func Connect() {
 	log.Fatal("already connected to database")
 }
 
-func Get() *sql.DB {
+func GetDatabase() *sql.DB {
 	if db == nil {
 		log.Fatal("connection to database not established yet")
 	}
