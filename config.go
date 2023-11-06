@@ -1,4 +1,4 @@
-package config
+package noda
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Database struct {
+type DatabaseConfig struct {
 	Name string
 	Host string
 	Port string
@@ -18,7 +18,7 @@ type Database struct {
 	}
 }
 
-type Server struct {
+type ServerConfig struct {
 	Port              string
 	Host              string
 	WriteTimeout      time.Duration
@@ -27,17 +27,17 @@ type Server struct {
 	IdleTimeout       time.Duration
 }
 
-func (db *Database) Conn() string {
+func (db *DatabaseConfig) Conn() string {
 	return fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable",
 		db.User.Name, db.User.Password, db.Host, db.Name)
 }
 
-func (db *Database) LogSuccess() {
+func (db *DatabaseConfig) LogSuccess() {
 	fmt.Printf("Connection established to database \033[0;32m`%s'\033[0m as user \033[0;34m`%s'\033[0m ...\n", db.Name, db.User.Name)
 }
 
-func GetDatabaseConfig() *Database {
-	return &Database{
+func GetDatabaseConfig() *DatabaseConfig {
+	return &DatabaseConfig{
 		Name: getEnv("DB_NAME"),
 		Host: getEnv("DB_HOST", "localhost"),
 		Port: getEnv("DB_PORT", "5432"),
@@ -57,7 +57,7 @@ func GetDatabaseConfigWithValues(
 	port,
 	user,
 	password string,
-) *Database {
+) *DatabaseConfig {
 	if port == "" {
 		port = "5432"
 	}
@@ -66,7 +66,7 @@ func GetDatabaseConfigWithValues(
 		host = "localhost"
 	}
 
-	return &Database{
+	return &DatabaseConfig{
 		Name: dbname,
 		Host: host,
 		Port: port,
@@ -80,8 +80,8 @@ func GetDatabaseConfigWithValues(
 	}
 }
 
-func GetServerConfig() *Server {
-	return &Server{
+func GetServerConfig() *ServerConfig {
+	return &ServerConfig{
 		Host:              getEnv("SERVER_HOST", "localhost"),
 		Port:              getEnv("SERVER_PORT", "2846"),
 		WriteTimeout:      5 * time.Second,

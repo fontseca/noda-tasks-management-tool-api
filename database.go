@@ -1,9 +1,8 @@
-package database
+package noda
 
 import (
 	"database/sql"
 	"log"
-	"noda/config"
 	"sync"
 
 	_ "github.com/lib/pq"
@@ -18,7 +17,7 @@ func Connect() {
 	if db == nil {
 		once.Do(func() {
 			var err error
-			dbconfig := config.GetDatabaseConfig()
+			dbconfig := GetDatabaseConfig()
 			db, err = sql.Open("postgres", dbconfig.Conn())
 			if err != nil {
 				log.Fatal(err)
