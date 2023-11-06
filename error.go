@@ -1,4 +1,4 @@
-package failure
+package noda
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"github.com/lib/pq"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -21,28 +22,69 @@ var (
 	ErrDeadlineExceeded  = errors.New("context deadline exceeded")
 )
 
-type Aggregation struct {
-	errors []string
+type ErrorCode string
+
+type Error struct {
+	status  int
+	code    ErrorCode
+	message string
+	details string
+	hint    string
 }
 
-func NewAggregation() *Aggregation {
-	return &Aggregation{}
+func (e *Error) Error() string {
+	return e.details
 }
 
-func (a *Aggregation) Error() string {
-	str := ""
-	for _, err := range a.errors {
-		str += err + "\n"
+func (e *Error) Clone() *Error {
+	return &Error{
+		code:    e.code,
+		message: e.message,
+		details: e.details,
+		hint:    e.hint,
+		status:  e.status,
 	}
-	return str
 }
 
-func (a *Aggregation) Append(err error) {
-	a.errors = append(a.errors, err.Error())
+func (e *Error) Details() string {
+	return e.details
 }
 
-func (a *Aggregation) Dump() []string {
-	return a.errors
+func (e *Error) SetDetails(details string) *Error {
+	e.details = strings.Trim(details, " \n\t")
+	return e
+}
+
+func (e *Error) FormatDetails(a ...any) *Error {
+	e.details = fmt.Sprintf(strings.Trim(e.details, " \n\t"), a...)
+	return e
+}
+
+func (e *Error) Status() int {
+	return e.status
+}
+
+func (e *Error) SetStatus(status int) *Error {
+	e.status = status
+	return e
+}
+
+func (e *Error) Message() string {
+	return e.message
+}
+
+func (e *Error) SetMessage(message string) *Error {
+	e.message = strings.Trim(message, " \n\t")
+	return e
+}
+
+func (e *Error) Hint() string {
+	return e.hint
+}
+
+func (e *Error) SetHint(hint string) *Error {
+	e.hint = strings.Trim(hint, " \n\t")
+	return e
 }
 
 func (a *Aggregation) Has() bool {
