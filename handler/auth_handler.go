@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"noda"
-	"noda/api/data/transfer"
-	"noda/api/service"
+	"noda/data/transfer"
+	"noda/service"
 )
 
 type AuthenticationHandler struct {

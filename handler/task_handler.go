@@ -8,8 +8,8 @@ import (
 	"log"
 	"net/http"
 	"noda"
-	"noda/api/data/types"
-	"noda/api/service"
+	"noda/data/types"
+	"noda/service"
 )
 
 type TaskHandler struct {

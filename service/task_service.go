@@ -1,8 +1,8 @@
 package service
 
 import (
-	"noda/api/data/model"
-	"noda/api/repository"
+	"noda/data/model"
+	"noda/repository"
 
 	"github.com/google/uuid"
 )

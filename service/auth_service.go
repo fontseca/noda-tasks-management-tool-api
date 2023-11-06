@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"noda"
-	"noda/api/data/transfer"
+	"noda/data/transfer"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

@@ -3,10 +3,10 @@ package service
 import (
 	"github.com/google/uuid"
 	"noda"
-	"noda/api/data/model"
-	"noda/api/data/transfer"
-	"noda/api/data/types"
-	"noda/api/repository"
+	"noda/data/model"
+	"noda/data/transfer"
+	"noda/data/types"
+	"noda/repository"
 )
 
 type GroupService struct {

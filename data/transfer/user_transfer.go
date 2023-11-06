@@ -1,7 +1,7 @@
 package transfer
 
 import (
-	"noda/api/data/types"
+	"noda/data/types"
 	"time"
 
 	"github.com/google/uuid"

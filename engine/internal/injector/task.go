@@ -2,8 +2,8 @@ package injector
 
 import (
 	"noda"
-	"noda/api/repository"
-	"noda/api/service"
+	"noda/repository"
+	"noda/service"
 	"sync"
 )
 

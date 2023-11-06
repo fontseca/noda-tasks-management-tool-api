@@ -8,8 +8,8 @@ import (
 	"github.com/lib/pq"
 	"log"
 	"noda"
-	"noda/api/data/model"
-	"noda/api/data/transfer"
+	"noda/data/model"
+	"noda/data/transfer"
 	"strings"
 	"time"
 )

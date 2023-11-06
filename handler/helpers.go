@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 	"noda"
-	"noda/api/data/types"
+	"noda/data/types"
 	"regexp"
 	"strconv"
 	"strings"

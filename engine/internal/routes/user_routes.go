@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"noda/api/handler"
 	"noda/engine/internal/injector"
 	"noda/engine/internal/middleware"
+	"noda/handler"
 
 	"github.com/go-chi/chi/v5"
 )

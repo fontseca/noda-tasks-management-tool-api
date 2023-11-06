@@ -4,9 +4,9 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"noda"
-	"noda/api/data/model"
-	"noda/api/data/transfer"
-	"noda/api/repository"
+	"noda/data/model"
+	"noda/data/transfer"
+	"noda/repository"
 	"strings"
 )
 

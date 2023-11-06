@@ -2,7 +2,7 @@ package repository
 
 import (
 	"noda"
-	"noda/api/data/transfer"
+	"noda/data/transfer"
 	"regexp"
 	"testing"
 

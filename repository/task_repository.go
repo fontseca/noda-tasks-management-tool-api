@@ -8,7 +8,7 @@ import (
 	"github.com/lib/pq"
 	"log"
 	"noda"
-	"noda/api/data/model"
+	"noda/data/model"
 )
 
 type TaskRepository struct {

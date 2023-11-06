@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 	"noda"
-	"noda/api/data/transfer"
-	"noda/api/service"
+	"noda/data/transfer"
+	"noda/service"
 	"strings"
 
 	"github.com/go-chi/chi/v5"

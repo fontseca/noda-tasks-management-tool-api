@@ -6,8 +6,8 @@ import (
 	"errors"
 	"log"
 	"noda"
-	"noda/api/data/model"
-	"noda/api/data/transfer"
+	"noda/data/model"
+	"noda/data/transfer"
 	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"

@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"noda"
-	"noda/api/data/types"
+	"noda/data/types"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"

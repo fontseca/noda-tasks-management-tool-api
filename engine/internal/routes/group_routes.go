@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/go-chi/chi/v5"
-	"noda/api/handler"
 	"noda/engine/internal/injector"
 	"noda/engine/internal/middleware"
+	"noda/handler"
 )
 
 func InitializeForGroups(router chi.Router) {
