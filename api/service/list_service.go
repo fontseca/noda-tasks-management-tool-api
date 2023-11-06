@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"github.com/google/uuid"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/api/repository"
-	"noda/failure"
 	"strings"
 )
 
@@ -21,11 +21,11 @@ func NewListService(r repository.IListRepository) *ListService {
 func (s *ListService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
 	switch {
 	case uuid.Nil == ownerID:
-		return uuid.Nil, failure.NewNilParameterError("SaveList", "ownerID")
+		return uuid.Nil, noda.NewNilParameterError("SaveList", "ownerID")
 	case uuid.Nil == groupID:
-		return uuid.Nil, failure.NewNilParameterError("SaveList", "groupID")
+		return uuid.Nil, noda.NewNilParameterError("SaveList", "groupID")
 	case nil == next:
-		return uuid.Nil, failure.NewNilParameterError("SaveList", "next")
+		return uuid.Nil, noda.NewNilParameterError("SaveList", "next")
 	}
 	next.Name = strings.Trim(next.Name, " \t\n")
 	next.Description = strings.Trim(next.Description, " \t\n")
@@ -45,18 +45,18 @@ func (s *ListService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 func (s *ListService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
 	switch {
 	case uuid.Nil == ownerID:
-		return nil, failure.NewNilParameterError("FindListByID", "ownerID")
+		return nil, noda.NewNilParameterError("FindListByID", "ownerID")
 	case uuid.Nil == groupID:
-		return nil, failure.NewNilParameterError("FindListByID", "groupID")
+		return nil, noda.NewNilParameterError("FindListByID", "groupID")
 	case uuid.Nil == listID:
-		return nil, failure.NewNilParameterError("FindListByID", "listID")
+		return nil, noda.NewNilParameterError("FindListByID", "listID")
 	}
 	return s.r.FetchListByID(ownerID.String(), groupID.String(), listID.String())
 }
 
 func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
 	if uuid.Nil == ownerID {
-		return uuid.Nil, failure.NewNilParameterError("GetTodayListID", "ownerID")
+		return uuid.Nil, noda.NewNilParameterError("GetTodayListID", "ownerID")
 	}
 	id, err := s.r.GetTodayListID(ownerID.String())
 	if nil != err {
@@ -67,7 +67,7 @@ func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err e
 
 func (s *ListService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
 	if uuid.Nil == ownerID {
-		return uuid.Nil, failure.NewNilParameterError("GetTomorrowListID", "ownerID")
+		return uuid.Nil, noda.NewNilParameterError("GetTomorrowListID", "ownerID")
 	}
 	id, err := s.r.GetTomorrowListID(ownerID.String())
 	if nil != err {

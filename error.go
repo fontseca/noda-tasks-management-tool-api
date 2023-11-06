@@ -335,3 +335,16 @@ func EmitError(w http.ResponseWriter, e *Error) {
 	w.WriteHeader(e.status)
 	w.Write(res)
 }
+
+type nilParameterError struct {
+	f string
+	p string
+}
+
+func (np nilParameterError) Error() string {
+	return fmt.Sprintf("parameter %q on function %q cannot be uuid.Nil or nil", np.p, np.f)
+}
+
+func NewNilParameterError(funcName string, parameter string) error {
+	return &nilParameterError{f: funcName, p: parameter}
+}
