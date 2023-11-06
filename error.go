@@ -304,39 +304,34 @@ func PQErrorToString(err *pq.Error) string {
 		err.Code, err.Code.Name(), err.Message, err.Detail, err.Hint)
 }
 
-type Response struct {
-	Message string `json:"message"`
-	Details any    `json:"details,omitempty"`
+type errorBody struct {
+	Code    ErrorCode `json:"error_code"`
+	Message string    `json:"message"`
+	Details any       `json:"details,omitempty"`
+	Hint    string    `json:"hint,omitempty"`
 }
 
-func NewResponse(message string, details any) *Response {
-	err, ok := details.(error)
-	if ok {
-		return &Response{
-			Message: message,
-			Details: err.Error(),
+func EmitError(w http.ResponseWriter, e *Error) {
+	var response = &errorBody{
+		Code:    e.code,
+		Message: e.message,
+		Hint:    e.hint,
+	}
+	var buf = []byte(e.details)
+	err := json.Unmarshal(buf, &response.Details)
+	if nil != err {
+		var s *json.SyntaxError
+		if errors.As(err, &s) {
+			/* A normal string is expected.  */
+			response.Details = &e.details
 		}
 	}
-
-	return &Response{
-		Message: message,
-		Details: details,
-	}
-}
-
-func Emit(
-	w http.ResponseWriter,
-	status int,
-	message string,
-	details any,
-) {
-	response := NewResponse(message, details)
 	res, err := json.Marshal(response)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(status)
+	w.WriteHeader(e.status)
 	w.Write(res)
 }
