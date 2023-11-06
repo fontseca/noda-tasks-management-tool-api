@@ -3,9 +3,9 @@ package repository
 import (
 	"errors"
 	"github.com/google/uuid"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
-	"noda/failure"
 	"regexp"
 	"testing"
 	"time"
@@ -60,7 +60,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.InsertList(userID, groupID, next)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Group not found.  */
@@ -70,7 +70,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.InsertList(userID, groupID, next)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Unexpected database error.  */
@@ -137,7 +137,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchListByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Group was not found.  */
@@ -147,7 +147,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 	res, err = r.FetchListByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
 
 	/* Grouped list not found.  */
@@ -157,7 +157,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.FetchListByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
 	/* Scattered list not found.  */
@@ -167,7 +167,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, nil, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.FetchListByID(userID, "", listID)
-	assert.Error(t, err, failure.ErrListNotFound)
+	assert.Error(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -177,7 +177,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.FetchListByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
 	/* Unexpected database error.  */
@@ -221,7 +221,7 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.GetTodayListID(userID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Empty(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -231,7 +231,7 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.GetTodayListID(userID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
 
 	/* Unexpected database error.  */
@@ -275,7 +275,7 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.GetTomorrowListID(userID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Equal(t, "", res)
 
 	/* Deadline (5s) exceeded.  */
@@ -285,7 +285,7 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.GetTomorrowListID(userID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
 
 	/* Unexpected database error.  */
@@ -427,7 +427,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -438,7 +438,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
 	/* Unexpected database error.  */
@@ -594,7 +594,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Group not found.  */
@@ -605,7 +605,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -616,7 +616,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
 	/* Unexpected database error.  */
@@ -772,7 +772,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Nil(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -783,7 +783,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
 	/* Unexpected database error.  */
@@ -865,7 +865,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.DeleteList(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* Group not found.  */
@@ -875,7 +875,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 	res, err = r.DeleteList(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -885,7 +885,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.DeleteList(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -895,7 +895,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.DeleteList(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
 	/* Unexpected database error.  */
@@ -940,7 +940,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.DuplicateList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Empty(t, res)
 
 	/* List not found.  */
@@ -950,7 +950,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.DuplicateList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Empty(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -960,7 +960,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.DuplicateList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
 
 	/* Unexpected database error.  */
@@ -1004,7 +1004,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.ConvertToScatteredList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -1015,7 +1015,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.ConvertToScatteredList(userID, listID)
 	assert.False(t, res)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 
 	/* Did not convert and there's no error.  */
 
@@ -1036,7 +1036,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WithArgs(userID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.ConvertToScatteredList(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
 	/* Unexpected database error.  */
@@ -1092,7 +1092,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.MoveList(userID, listID, groupID)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -1103,7 +1103,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.MoveList(userID, listID, groupID)
 	assert.False(t, res)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 
 	/* Target group does not exist.  */
 
@@ -1112,7 +1112,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 	res, err = r.MoveList(userID, listID, groupID)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
 	/* Did not move and there's no error.  */
@@ -1134,7 +1134,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WithArgs(userID, listID, groupID).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.MoveList(userID, listID, groupID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
 	/* Unexpected database error.  */
@@ -1203,7 +1203,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.UpdateList(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.False(t, res)
 
 	/* Group not found.  */
@@ -1213,7 +1213,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 	res, err = r.UpdateList(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
+	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
 	/* List not found.  */
@@ -1223,7 +1223,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
 	res, err = r.UpdateList(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrListNotFound)
+	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
 	/* Deadline (5s) exceeded.  */
@@ -1233,7 +1233,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(errors.New("context deadline exceeded"))
 	res, err = r.UpdateList(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
+	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
 	/* Unexpected database error.  */

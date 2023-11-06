@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
-	"noda/failure"
 	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -41,13 +41,13 @@ func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCr
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -66,15 +66,15 @@ func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -106,13 +106,13 @@ func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, s
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -139,15 +139,15 @@ func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.Grou
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -166,15 +166,15 @@ func (r *GroupRepository) DeleteGroup(ownerID, groupID string) (ok bool, err err
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}

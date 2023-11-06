@@ -3,13 +3,12 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"log"
-	"noda/api/data/model"
-	"noda/failure"
-
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"log"
+	"noda"
+	"noda/api/data/model"
 )
 
 type TaskRepository struct {
@@ -49,7 +48,7 @@ func (r *TaskRepository) SelectByID(id uuid.UUID) (*model.Task, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(failure.PQErrorToString(pqerr))
+			log.Println(noda.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -58,7 +57,7 @@ func (r *TaskRepository) SelectByID(id uuid.UUID) (*model.Task, error) {
 	task := model.Task{}
 	if err = sqlscan.ScanOne(&task, row); err != nil {
 		if sqlscan.NotFound(err) {
-			return nil, failure.ErrUserNotFound
+			return nil, noda.ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -93,7 +92,7 @@ func (r *TaskRepository) SelectAll() (*[]*model.Task, error) {
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(failure.PQErrorToString(pqerr))
+			log.Println(noda.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -136,7 +135,7 @@ func (r *TaskRepository) SelectByOwnerID(userID uuid.UUID) (*[]*model.Task, erro
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(failure.PQErrorToString(pqerr))
+			log.Println(noda.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}

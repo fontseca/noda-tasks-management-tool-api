@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"noda"
 	"noda/api/data/transfer"
-	"noda/failure"
 	"regexp"
 	"testing"
 
@@ -63,7 +63,7 @@ func TestGroupRepository_TestInsertUser(t *testing.T) {
 		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
 		WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"user_email_key\""})
 	res, err = r.InsertUser(n)
-	assert.ErrorIs(t, err, failure.ErrSameEmail)
+	assert.ErrorIs(t, err, noda.ErrSameEmail)
 	assert.Equal(t, "", res)
 
 	/* Unexpected database error.  */
@@ -121,7 +121,7 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 	res, err = r.UpdateUser(userID, up)
-	assert.ErrorIs(t, err, failure.ErrUserNotFound)
+	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Equal(t, res, false)
 
 	/* Unexpected database error.  */

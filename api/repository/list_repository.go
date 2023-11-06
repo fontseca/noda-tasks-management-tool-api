@@ -7,9 +7,9 @@ import (
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/lib/pq"
 	"log"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
-	"noda/failure"
 	"strings"
 	"time"
 )
@@ -40,14 +40,14 @@ func (r *ListRepository) InsertList(
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -74,16 +74,16 @@ func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *m
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -103,12 +103,12 @@ func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err erro
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		}
 	} else {
 		log.Println(err)
@@ -127,12 +127,12 @@ func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err e
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		}
 	} else {
 		log.Println(err)
@@ -162,12 +162,12 @@ func (r *ListRepository) FetchLists(
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -206,14 +206,14 @@ func (r *ListRepository) FetchGroupedLists(
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -252,14 +252,14 @@ func (r *ListRepository) FetchScatteredLists(
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -291,16 +291,16 @@ func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, e
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -319,16 +319,16 @@ func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -347,14 +347,14 @@ func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -373,16 +373,16 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -408,16 +408,16 @@ func (r *ListRepository) UpdateList(
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(failure.PQErrorToString(pqerr))
+				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNotFound
+				err = noda.ErrUserNotFound
 			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
+				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
+				err = noda.ErrListNotFound
 			}
 		} else if isContextDeadlineError(err) {
-			err = failure.ErrDeadlineExceeded
+			err = noda.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
