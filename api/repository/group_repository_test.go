@@ -49,7 +49,7 @@ func TestGroupRepository_InsertGroup(t *testing.T) {
 			WithArgs(userID, next.Name, next.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.InsertGroup(userID, next)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Equal(t, "", res)
 	})
 
@@ -114,7 +114,7 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchGroupByID(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
 
@@ -296,7 +296,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
 
@@ -390,7 +390,7 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.UpdateGroup(userID, groupID, up)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
 
@@ -478,7 +478,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.DeleteGroup(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
 
