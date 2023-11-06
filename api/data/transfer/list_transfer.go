@@ -1,14 +1,12 @@
 package transfer
 
-import "noda/failure"
-
 /* Transfers a list creation request.  */
 type ListCreation struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description" validate:"required"`
 }
 
-func (l *ListCreation) Validate() *failure.Aggregation {
+func (l *ListCreation) Validate() error {
 	return validate(l)
 }
 

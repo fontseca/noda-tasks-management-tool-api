@@ -1,7 +1,5 @@
 package transfer
 
-import "noda/failure"
-
 /* Transfers a tag creation request.  */
 type TagCreation struct {
 	Name        string `json:"name" validate:"required"`
@@ -9,7 +7,7 @@ type TagCreation struct {
 	Color       string `json:"color" validate:"required"`
 }
 
-func (t *TagCreation) Validate() *failure.Aggregation {
+func (t *TagCreation) Validate() error {
 	return validate(t)
 }
 

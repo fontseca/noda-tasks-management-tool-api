@@ -1,13 +1,11 @@
 package transfer
 
-import "noda/failure"
-
 /* Transfers a step creation request.  */
 type StepCreation struct {
 	Description string `json:"description" validate:"required"`
 }
 
-func (s *StepCreation) Validate() *failure.Aggregation {
+func (s *StepCreation) Validate() error {
 	return validate(s)
 }
 

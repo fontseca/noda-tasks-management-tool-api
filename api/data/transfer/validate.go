@@ -2,14 +2,14 @@ package transfer
 
 import (
 	"fmt"
-	"noda/failure"
+	"noda"
 	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
 
-func validate(s any) *failure.Aggregation {
+func validate(s any) error {
 	validate := validator.New()
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
@@ -19,9 +19,9 @@ func validate(s any) *failure.Aggregation {
 		return name
 	})
 	if err := validate.Struct(s); err != nil {
-		errs := failure.NewAggregation()
+		errs := new(noda.AggregateDetails)
 		for _, e := range err.(validator.ValidationErrors) {
-			errs.Append(fmt.Errorf("validation for field %q failed on %q",
+			errs.Append(fmt.Sprintf("Validation for %q failed on: %s.",
 				e.Field(), e.Tag()))
 		}
 		return errs

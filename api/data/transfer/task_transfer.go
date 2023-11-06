@@ -2,7 +2,6 @@ package transfer
 
 import (
 	"noda/api/data/types"
-	"noda/failure"
 )
 
 /* Transfers a task creation request.  */
@@ -14,7 +13,7 @@ type TaskCreation struct {
 	Status      types.TaskStatus   `json:"status"`
 }
 
-func (t *TaskCreation) Validate() *failure.Aggregation {
+func (t *TaskCreation) Validate() error {
 	return validate(t)
 }
 

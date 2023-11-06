@@ -2,7 +2,6 @@ package transfer
 
 import (
 	"noda/api/data/types"
-	"noda/failure"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,7 +17,7 @@ type UserCreation struct {
 	Password   string `json:"password" validate:"required"`
 }
 
-func (u *UserCreation) Validate() *failure.Aggregation {
+func (u *UserCreation) Validate() error {
 	return validate(u)
 }
 
@@ -30,7 +29,7 @@ type UserUpdate struct {
 	Surname    string `json:"surname"`
 }
 
-func (u *UserUpdate) Validate() *failure.Aggregation {
+func (u *UserUpdate) Validate() error {
 	return validate(u)
 }
 
@@ -55,6 +54,6 @@ type UserCredentials struct {
 	Password string `json:"password" validate:"required"`
 }
 
-func (u *UserCredentials) Validate() *failure.Aggregation {
+func (u *UserCredentials) Validate() error {
 	return validate(u)
 }
