@@ -1,8 +1,8 @@
 package service
 
 import (
-	"errors"
 	"github.com/google/uuid"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/api/data/types"
@@ -19,7 +19,7 @@ func NewGroupService(repository repository.IGroupRepository) *GroupService {
 
 func (s *GroupService) SaveGroup(ownerID uuid.UUID, newGroup *transfer.GroupCreation) (insertedID string, err error) {
 	if len(newGroup.Name) > 50 {
-		return "", errors.New("name too long for group: max length must be 50")
+		return "", noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}
 	return s.r.InsertGroup(ownerID.String(), newGroup)
 }
@@ -46,7 +46,7 @@ func (s *GroupService) FindGroups(
 
 func (s *GroupService) UpdateGroup(ownerID, groupID uuid.UUID, up *transfer.GroupUpdate) (ok bool, err error) {
 	if len(up.Name) > 50 {
-		return false, errors.New("name too long for group: max length must be 50")
+		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}
 	return s.r.UpdateGroup(ownerID.String(), groupID.String(), up)
 }
