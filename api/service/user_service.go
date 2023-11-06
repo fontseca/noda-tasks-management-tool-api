@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"noda"
 	"noda/api/data/model"
 	"noda/api/data/transfer"
 	"noda/api/data/types"
 	"noda/api/repository"
-	"noda/failure"
 	"regexp"
 	"strings"
 
@@ -37,7 +37,7 @@ func (s *us) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 			log.Println(err)
 			return uuid.Nil, err
 		case errors.Is(err, bcrypt.ErrPasswordTooLong):
-			return uuid.Nil, failure.ErrPasswordTooLong
+			return uuid.Nil, noda.ErrPasswordTooLong
 		}
 	}
 	next.Password = string(hashedPassword)
@@ -45,14 +45,19 @@ func (s *us) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 	if err != nil {
 		return uuid.Nil, err
 	}
-	return uuid.MustParse(insertedID), nil
+	parsed, err := uuid.Parse(insertedID)
+	if nil != err {
+		log.Println(err)
+		return uuid.Nil, err
+	}
+	return parsed, nil
 }
 
-func assertPasswordIsValid(password, email *string) *failure.Aggregation {
-	passwordErrors := failure.NewAggregation()
+func assertPasswordIsValid(password, email *string) *noda.AggregateDetails {
+	passwordErrors := new(noda.AggregateDetails)
 	emailWithoutAt := strings.Split(*email, "@")[0]
 	if strings.Contains(emailWithoutAt, *password) {
-		passwordErrors.Append(errors.New("password looks similar to email"))
+		passwordErrors.Append("Password seems to be similar to email.")
 		return passwordErrors
 	}
 	lengthPattern, _ := regexp.Compile(`^.{8,}$`)
@@ -61,19 +66,19 @@ func assertPasswordIsValid(password, email *string) *failure.Aggregation {
 	lowerCasePattern, _ := regexp.Compile(`.*[a-záéíóú]`)
 	specialCharPattern, _ := regexp.Compile(`.*[!@#$%^&*? ]`)
 	if !lengthPattern.MatchString(*password) {
-		passwordErrors.Append(errors.New("password must be at least 8 characters long"))
+		passwordErrors.Append("Password must be at least 8 characters long.")
 	}
 	if !digitPattern.MatchString(*password) {
-		passwordErrors.Append(errors.New("password must contain at least one digit"))
+		passwordErrors.Append("Password must contain at least one digit.")
 	}
 	if !upperCasePattern.MatchString(*password) {
-		passwordErrors.Append(errors.New("password must contain at least one uppercase letter"))
+		passwordErrors.Append("Password must contain at least one uppercase letter.")
 	}
 	if !lowerCasePattern.MatchString(*password) {
-		passwordErrors.Append(errors.New("password must contain at least one lowercase letter"))
+		passwordErrors.Append("Password must contain at least one lowercase letter.")
 	}
 	if !specialCharPattern.MatchString(*password) {
-		passwordErrors.Append(errors.New("password must contain at least one special character (!@#$%^&*?)"))
+		passwordErrors.Append("Password must contain at least one special character (!@#$%^&*?).")
 	}
 	if passwordErrors.Has() {
 		return passwordErrors
