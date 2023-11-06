@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/noda_logo.svg" alt="drawing" style="width:400px;"/>
+  <img src="./logo.svg" alt="drawing" style="width:400px;"/>
 
 ---
 
