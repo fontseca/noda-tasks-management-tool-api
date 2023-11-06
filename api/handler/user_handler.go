@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"noda"
 	"noda/api/data/transfer"
-	"noda/api/data/types"
 	"noda/api/service"
-	"noda/failure"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -57,10 +55,13 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	data, err := json.Marshal(res)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.Write(data)
 }
 
 func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Request) {
@@ -82,45 +83,50 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 }
 
 func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
+	userID, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 	user, err := h.s.GetByID(userID)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
 		}
 	}
-	if err := json.NewEncoder(w).Encode(user); err != nil {
+	data, err := json.Marshal(user)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.Write(data)
 }
 
 func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
+	userID, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 	userWasPromoted, err := h.s.PromoteToAdmin(userID)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
 		}
 	}
 	if userWasPromoted {
@@ -140,21 +146,22 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
+	userID, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 	userWasPromoted, err := h.s.DegradeToNormalUser(userID)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
 		}
 	}
 	if userWasPromoted {
@@ -174,27 +181,27 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
-	}
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	if jwtPayload.UserID == userID {
-		failure.Emit(w, http.StatusBadRequest, "failure with block operation",
-			"cannot block yourself")
-		return
-	}
-	userWasBlocked, err := h.s.Block(userID)
-	if err != nil {
-		switch {
-		default:
+	userToBlock, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
+		}
+	}
+	userID, _ := extractUserPayload(r)
+	if userToBlock == userID {
+		noda.EmitError(w, noda.ErrSelfOperation)
+		return
+	}
+	userWasBlocked, err := h.s.Block(userToBlock)
+	if err != nil {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
 	if userWasBlocked {
@@ -214,27 +221,27 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
-	}
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	if jwtPayload.UserID == userID {
-		failure.Emit(w, http.StatusBadRequest, "failure with unblock operation",
-			"cannot unblock yourself")
-		return
-	}
-	userWasUnblocked, err := h.s.Unblock(userID)
-	if err != nil {
-		switch {
-		default:
+	userToUnblock, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
+		}
+	}
+	userID, _ := extractUserPayload(r)
+	if userToUnblock == userID {
+		noda.EmitError(w, noda.ErrSelfOperation)
+		return
+	}
+	userWasUnblocked, err := h.s.Unblock(userToUnblock)
+	if err != nil {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
 	if userWasUnblocked {
@@ -243,7 +250,7 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 		var (
 			scheme = "http://"
 			host   = r.Host
-			path   = fmt.Sprintf("/users/%s", userID)
+			path   = fmt.Sprintf("/users/%s", userToUnblock)
 		)
 		if r.TLS != nil { /* Running on HTTPS.  */
 			scheme = "https://"
@@ -254,46 +261,56 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(chi.URLParam(r, "user_id"))
-	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"user_id\"", err)
-		return
-	}
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	if jwtPayload.UserID == userID {
-		failure.Emit(w, http.StatusBadRequest, "failure with delete operation",
-			"cannot perform a self removal")
-		return
-	}
-	if err := h.s.HardDelete(userID); err != nil {
-		switch {
-		default:
+	userToDelete, err := parsePathParameterToUUID(r, "user_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any user with ID %q", userID))
-			return
+		}
+	}
+	userID, _ := extractUserPayload(r)
+	if userToDelete == userID {
+		noda.EmitError(w, noda.ErrSelfOperation)
+		return
+	}
+	err = h.s.HardDelete(userToDelete)
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request) {
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	user, err := h.s.GetByID(jwtPayload.UserID)
+	userID, _ := extractUserPayload(r)
+	user, err := h.s.GetByID(userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		var e *noda.Error
+		if errors.As(err, &e) {
+			switch {
+			default:
+				noda.EmitError(w, e)
+			case errors.Is(err, noda.ErrUserNotFound):
+				noda.EmitError(w, noda.ErrUserNoLongerExists)
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
-
-	if err := json.NewEncoder(w).Encode(user); err != nil {
+	data, err := json.Marshal(user)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.Write(data)
 }
 
 func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http.Request) {
@@ -301,65 +318,79 @@ func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http
 	if pagination == nil {
 		return
 	}
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	settings, err := h.s.GetUserSettings(pagination, jwtPayload.UserID)
+	userID, _ := extractUserPayload(r)
+	settings, err := h.s.GetUserSettings(pagination, userID)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			switch {
+			default:
+				noda.EmitError(w, e)
+			case errors.Is(err, noda.ErrUserNotFound):
+				noda.EmitError(w, noda.ErrUserNoLongerExists)
+			}
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
 	}
-	if err := json.NewEncoder(w).Encode(settings); err != nil {
+	data, err := json.Marshal(settings)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.Write(data)
 }
 
 func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *http.Request) {
 	settingKey := chi.URLParam(r, "setting_key")
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	setting, err := h.s.GetOneSetting(jwtPayload.UserID, settingKey)
+	userID, _ := extractUserPayload(r)
+	setting, err := h.s.GetOneSetting(userID, settingKey)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			switch {
+			default:
+				noda.EmitError(w, e)
+			case errors.Is(err, noda.ErrUserNotFound):
+				noda.EmitError(w, noda.ErrUserNoLongerExists)
+			}
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrSettingNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
 	}
-	if err := json.NewEncoder(w).Encode(setting); err != nil {
+	data, err := json.Marshal(setting)
+	if nil != err {
 		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *http.Request) {
-	settingKey := chi.URLParam(r, "setting_key")
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	up := &transfer.UserSettingUpdate{}
-	if err := decoder.Decode(up); err != nil {
-		// TODO: Catch all different errors
-		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	wasUpdated, err := h.s.UpdateUserSetting(jwtPayload.UserID, settingKey, up)
+	w.Write(data)
+}
+
+func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *http.Request) {
+	up := &transfer.UserSettingUpdate{}
+	var err = decodeJSONRequestBody(w, r, up)
+	if nil != err {
+		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		return
+	}
+	userID, _ := extractUserPayload(r)
+	settingKey := chi.URLParam(r, "setting_key")
+	wasUpdated, err := h.s.UpdateUserSetting(userID, settingKey, up)
 	if err != nil {
-		switch {
-		default:
+		var e *noda.Error
+		if errors.As(err, &e) {
+			switch {
+			default:
+				noda.EmitError(w, e)
+			case errors.Is(err, noda.ErrUserNotFound):
+				noda.EmitError(w, noda.ErrUserNoLongerExists)
+			}
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrSettingNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", fmt.Sprintf("could not find any user setting with key %q", settingKey))
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
 		}
 		return
 	}
@@ -381,31 +412,31 @@ func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *h
 
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserUpdate{}
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(up); err != nil {
-		// TODO: Catch all different errors
-		log.Print(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	var err = decodeJSONRequestBody(w, r, up)
+	if nil != err {
+		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
-
-	if err := up.Validate(); err != nil {
-		failure.Emit(w, http.StatusBadRequest, "validations did not succeed", err.Dump())
+	if err = up.Validate(); err != nil {
+		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
-
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	userWasUpdated, err := h.s.Update(jwtPayload.UserID, up)
+	userID, _ := extractUserPayload(r)
+	userWasUpdated, err := h.s.Update(userID, up)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		switch {
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
+		var e *noda.Error
+		if errors.As(err, &e) {
+			switch {
+			default:
+				noda.EmitError(w, e)
+			case errors.Is(err, noda.ErrUserNotFound):
+				noda.EmitError(w, noda.ErrUserNoLongerExists)
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
-
 	if userWasUpdated {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
@@ -423,15 +454,22 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {
-	jwtPayload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
-	id, err := h.s.SoftDelete(jwtPayload.UserID)
+	userID, _ := extractUserPayload(r)
+	id, err := h.s.SoftDelete(userID)
 	if err != nil {
-		log.Println(err)
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
-
-	if err := json.NewEncoder(w).Encode(id); err != nil {
+	data, err := json.Marshal(id)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.Write(data)
 }

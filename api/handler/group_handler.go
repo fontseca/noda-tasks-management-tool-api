@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"noda"
 	"noda/api/data/transfer"
 	"noda/api/service"
-	"noda/failure"
-	"strings"
 )
 
 type GroupHandler struct {
@@ -24,33 +23,22 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 	var group = new(transfer.GroupCreation)
 	var err = decodeJSONRequestBody(w, r, group)
 	if nil != err {
-		var mr *malformedRequest
-		if errors.As(err, &mr) {
-			failure.Emit(w, mr.status, mr.message, mr.details)
-		} else {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
-	var validationError = group.Validate()
-	if nil != validationError {
-		failure.Emit(w, http.StatusBadRequest, "validation did not succeed", validationError.Dump())
+	err = group.Validate()
+	if nil != err {
+		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
 	insertedID, err := h.s.SaveGroup(userID, group)
 	if nil != err {
-		switch {
-		default:
-			log.Println(err)
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		case errors.Is(err, failure.ErrDeadlineExceeded):
-			w.WriteHeader(http.StatusInternalServerError)
-		case strings.Contains(err.Error(), "name too long"):
-			failure.Emit(w, http.StatusBadRequest, "bad request", err)
 		}
 		return
 	}
@@ -67,22 +55,22 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 
 func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
-	groupID, err := parsePathParameterToUUID(w, r, "group_id")
+	groupID, err := parsePathParameterToUUID(r, "group_id")
 	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	group, err := h.s.FindGroupByID(userID, groupID)
 	if nil != err {
-		switch {
-		default:
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		case errors.Is(err, failure.ErrGroupNotFound):
-			var details = fmt.Sprintf("not found group with ID %q", groupID)
-			failure.Emit(w, http.StatusNotFound, "not found", details)
-		case errors.Is(err, failure.ErrDeadlineExceeded):
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -104,13 +92,10 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 	}
 	groups, err := h.s.FindGroups(userID, pagination, "", "")
 	if nil != err {
-		switch {
-		default:
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		case errors.Is(err, failure.ErrDeadlineExceeded):
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -128,35 +113,22 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 	var up = new(transfer.GroupUpdate)
 	err := decodeJSONRequestBody(w, r, up)
 	if nil != err {
-		var mr *malformedRequest
-		if errors.As(err, &mr) {
-			failure.Emit(w, mr.status, mr.message, mr.details)
-		} else {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	groupID, err := parsePathParameterToUUID(w, r, "group_id")
+	groupID, err := parsePathParameterToUUID(r, "group_id")
 	if nil != err {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	ok, err := h.s.UpdateGroup(userID, groupID, up)
 	if nil != err {
-		switch {
-		default:
-			log.Println(err)
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		case errors.Is(err, failure.ErrGroupNotFound):
-			var details = fmt.Sprintf("not found group with ID %q", groupID)
-			failure.Emit(w, http.StatusNotFound, "not found", details)
-		case errors.Is(err, failure.ErrDeadlineExceeded):
-			w.WriteHeader(http.StatusInternalServerError)
-		case strings.Contains(err.Error(), "name too long"):
-			failure.Emit(w, http.StatusBadRequest, "bad request", err)
 		}
 		return
 	}
@@ -177,23 +149,18 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Request) {
-	groupID, err := parsePathParameterToUUID(w, r, "group_id")
+	groupID, err := parsePathParameterToUUID(r, "group_id")
 	if nil != err {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	userID, _ := extractUserPayload(r)
 	_, err = h.s.DeleteGroup(userID, groupID)
 	if nil != err {
-		switch {
-		default:
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound, "not found", "this is user account no longer exists")
-		case errors.Is(err, failure.ErrGroupNotFound):
-			var details = fmt.Sprintf("not found group with ID %q", groupID)
-			failure.Emit(w, http.StatusNotFound, "not found", details)
-		case errors.Is(err, failure.ErrDeadlineExceeded):
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return

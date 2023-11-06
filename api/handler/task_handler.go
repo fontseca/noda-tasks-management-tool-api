@@ -3,15 +3,13 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
-	"net/http"
-	"noda/api/data/types"
-	"noda/api/service"
-	"noda/failure"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"log"
+	"net/http"
+	"noda"
+	"noda/api/data/types"
+	"noda/api/service"
 )
 
 type TaskHandler struct {
@@ -25,7 +23,7 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 func (h *TaskHandler) RetrieveTaskByID(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "task_id"))
 	if err != nil {
-		failure.Emit(w, http.StatusBadRequest, "failure with \"task_id\"", err)
+		//noda.Emit(w, http.StatusBadRequest, "failure with \"task_id\"", err)
 		return
 	}
 
@@ -36,9 +34,9 @@ func (h *TaskHandler) RetrieveTaskByID(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case errors.Is(err, failure.ErrUserNotFound):
-			failure.Emit(w, http.StatusNotFound,
-				"record not found", fmt.Sprintf("could not find any task with ID %q", id))
+		case errors.Is(err, noda.ErrUserNotFound):
+			//noda.Emit(w, http.StatusNotFound,
+			//	"record not found", fmt.Sprintf("could not find any task with ID %q", id))
 			return
 		}
 	}
