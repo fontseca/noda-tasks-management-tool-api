@@ -269,8 +269,25 @@ func (e *Error) SetHint(hint string) *Error {
 	return e
 }
 
-func (a *Aggregation) Has() bool {
-	return len(a.errors) > 0
+type AggregateDetails struct {
+	details []string
+}
+
+func (a *AggregateDetails) Error() string {
+	data, err := json.Marshal(a.details)
+	if nil != err {
+		log.Println(err)
+		return ""
+	}
+	return string(data)
+}
+
+func (a *AggregateDetails) Append(detail string) {
+	a.details = append(a.details, detail)
+}
+
+func (a *AggregateDetails) Has() bool {
+	return len(a.details) > 0
 }
 
 func PQErrorToString(err *pq.Error) string {
