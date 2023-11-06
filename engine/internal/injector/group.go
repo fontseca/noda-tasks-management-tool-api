@@ -1,9 +1,9 @@
 package injector
 
 import (
+	"noda"
 	"noda/api/repository"
 	"noda/api/service"
-	"noda/database"
 	"sync"
 )
 
@@ -15,7 +15,7 @@ var (
 func GroupService() *service.GroupService {
 	if nil == groupService {
 		groupOnce.Do(func() {
-			db := database.Get()
+			db := noda.Database()
 			r := repository.NewGroupRepository(db)
 			groupService = service.NewGroupService(r)
 		})

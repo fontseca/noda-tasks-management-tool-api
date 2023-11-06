@@ -16,7 +16,7 @@ import (
 
 func Run() {
 	noda.ConnectToDatabase()
-	db := noda.GetDatabase()
+	db := noda.Database()
 	defer db.Close()
 
 	router := chi.NewRouter()

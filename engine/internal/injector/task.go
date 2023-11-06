@@ -1,9 +1,9 @@
 package injector
 
 import (
+	"noda"
 	"noda/api/repository"
 	"noda/api/service"
-	"noda/database"
 	"sync"
 )
 
@@ -15,7 +15,7 @@ var (
 func TaskService() *service.TaskService {
 	if taskService == nil {
 		taskOnce.Do(func() {
-			rep := repository.NewTaskRepository(database.Get())
+			rep := repository.NewTaskRepository(noda.Database())
 			taskService = service.NewTaskService(rep)
 		})
 	}

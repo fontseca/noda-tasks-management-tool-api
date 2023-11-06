@@ -1,9 +1,9 @@
 package injector
 
 import (
+	"noda"
 	"noda/api/repository"
 	"noda/api/service"
-	"noda/database"
 	"sync"
 )
 
@@ -15,7 +15,7 @@ var (
 func UserService() *service.UserService {
 	if userService == nil {
 		userOnce.Do(func() {
-			rep := repository.NewUserRepository(database.Get())
+			rep := repository.NewUserRepository(noda.Database())
 			userService = service.NewUserService(rep)
 		})
 	}

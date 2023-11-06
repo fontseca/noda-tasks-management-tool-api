@@ -32,7 +32,7 @@ func ConnectToDatabase() {
 	log.Fatal("already connected to database")
 }
 
-func GetDatabase() *sql.DB {
+func Database() *sql.DB {
 	if db == nil {
 		log.Fatal("connection to database not established yet")
 	}

@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"noda/config"
-	"noda/failure"
+	"noda"
 	"os"
 	"path"
 	"path/filepath"
@@ -57,7 +56,7 @@ func main() {
 		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
 	}
 
-	dbRootConf := config.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
+	dbRootConf := noda.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
 	db, err = sql.Open("postgres", dbRootConf.Conn())
 	if err != nil {
 		log.Fatal(err)
@@ -75,7 +74,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbAdminConf := config.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
+	dbAdminConf := noda.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
 	db, err = sql.Open("postgres", dbAdminConf.Conn())
 	if err != nil {
 		log.Fatal(err)
@@ -155,7 +154,7 @@ func TryExecuteScript(filename string) {
 	query := ReadQueryFromFile(filename)
 	if _, err := db.Exec(query); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
-			log.Fatal(failure.PQErrorToString(pqErr))
+			log.Fatal(noda.PQErrorToString(pqErr))
 		} else {
 			log.Fatal(err)
 		}
