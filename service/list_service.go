@@ -3,9 +3,11 @@ package service
 import (
 	"errors"
 	"github.com/google/uuid"
+	"log"
 	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
+	"noda/data/types"
 	"noda/repository"
 	"strings"
 )
@@ -74,4 +76,29 @@ func (s *ListService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, er
 		return uuid.Nil, err
 	}
 	return uuid.Parse(id)
+}
+
+func (s *ListService) FindLists(
+	ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("FindLists", "ownerID")
+		log.Println(err)
+		return nil, err
+	case nil == pagination:
+		err = noda.NewNilParameterError("FindLists", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	res, err := s.r.FetchLists(ownerID.String(), pagination.Page, pagination.RPP, needle, sortBy)
+	if nil != err {
+		return nil, err
+	}
+	lists = &types.Result[model.List]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
+		Retrieved: int64(len(res)),
+		Payload:   res,
+	}
+	return lists, nil
 }
