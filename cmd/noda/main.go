@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"noda/engine"
+	"noda/server"
 )
 
 func init() {
@@ -10,5 +10,5 @@ func init() {
 }
 
 func main() {
-	engine.Run()
+	server.Run()
 }
