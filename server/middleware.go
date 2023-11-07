@@ -1,4 +1,4 @@
-package middleware
+package server
 
 import (
 	"context"
@@ -13,11 +13,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
+func notFound(w http.ResponseWriter, r *http.Request) {
 	noda.EmitError(w, noda.ErrTargetNotFound)
 }
 
-func LetOptionsPassThrough(next http.Handler) http.Handler {
+func letOptionsPassThrough(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -27,7 +27,7 @@ func LetOptionsPassThrough(next http.Handler) http.Handler {
 	})
 }
 
-func Authorization(next http.Handler) http.Handler {
+func authorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		value := r.Header.Get("Authorization")
 
@@ -89,7 +89,7 @@ func Authorization(next http.Handler) http.Handler {
 	})
 }
 
-func AdminPrivileges(next http.Handler) http.Handler {
+func adminPrivileges(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got := r.Context().Value(types.ContextKey{})
 		if got == nil {
