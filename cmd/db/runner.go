@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"noda"
+	"noda/server"
 	"os"
 	"path"
 	"path/filepath"
@@ -56,7 +57,7 @@ func main() {
 		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
 	}
 
-	dbRootConf := noda.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
+	dbRootConf := server.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
 	db, err = sql.Open("postgres", dbRootConf.Conn())
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +75,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbAdminConf := noda.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
+	dbAdminConf := server.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
 	db, err = sql.Open("postgres", dbAdminConf.Conn())
 	if err != nil {
 		log.Fatal(err)
