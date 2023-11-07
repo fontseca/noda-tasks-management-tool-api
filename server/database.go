@@ -1,4 +1,4 @@
-package noda
+package server
 
 import (
 	"database/sql"
@@ -13,11 +13,11 @@ var (
 	db   *sql.DB
 )
 
-func ConnectToDatabase() {
+func connectToDatabase() {
 	if db == nil {
 		once.Do(func() {
 			var err error
-			dbconfig := GetDatabaseConfig()
+			dbconfig := getDatabaseConfig()
 			db, err = sql.Open("postgres", dbconfig.Conn())
 			if err != nil {
 				log.Fatal(err)
@@ -29,12 +29,12 @@ func ConnectToDatabase() {
 		})
 		return
 	}
-	log.Fatal("already connected to database")
+	log.Fatal("already connected to getDatabase")
 }
 
-func Database() *sql.DB {
+func getDatabase() *sql.DB {
 	if db == nil {
-		log.Fatal("connection to database not established yet")
+		log.Fatal("connection to getDatabase not established yet")
 	}
 	return db
 }
