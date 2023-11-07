@@ -96,6 +96,7 @@ func (o *listRepositoryMock) UpdateList(ownerID, groupID, listID string, up *tra
 }
 
 func TestListService_SaveList(t *testing.T) {
+	defer beQuiet()()
 	var (
 		m                *listRepositoryMock
 		s                *ListService
@@ -221,6 +222,7 @@ func TestListService_SaveList(t *testing.T) {
 }
 
 func TestListService_FetchListByID(t *testing.T) {
+	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
 		s                        *ListService
@@ -286,6 +288,7 @@ func TestListService_FetchListByID(t *testing.T) {
 }
 
 func TestListService_GetTodayListID(t *testing.T) {
+	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
 		s               *ListService
@@ -347,6 +350,7 @@ func TestListService_GetTodayListID(t *testing.T) {
 }
 
 func TestListService_GetTomorrowListID(t *testing.T) {
+	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
 		s               *ListService
