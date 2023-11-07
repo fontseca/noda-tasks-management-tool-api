@@ -1,4 +1,4 @@
-package noda
+package server
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ type DatabaseConfig struct {
 	}
 }
 
-type ServerConfig struct {
+type serverConfig struct {
 	Port              string
 	Host              string
 	WriteTimeout      time.Duration
@@ -36,7 +36,7 @@ func (db *DatabaseConfig) LogSuccess() {
 	fmt.Printf("Connection established to database \033[0;32m`%s'\033[0m as user \033[0;34m`%s'\033[0m ...\n", db.Name, db.User.Name)
 }
 
-func GetDatabaseConfig() *DatabaseConfig {
+func getDatabaseConfig() *DatabaseConfig {
 	return &DatabaseConfig{
 		Name: getEnv("DB_NAME"),
 		Host: getEnv("DB_HOST", "localhost"),
@@ -80,8 +80,8 @@ func GetDatabaseConfigWithValues(
 	}
 }
 
-func GetServerConfig() *ServerConfig {
-	return &ServerConfig{
+func getServerConfig() *serverConfig {
+	return &serverConfig{
 		Host:              getEnv("SERVER_HOST", "localhost"),
 		Port:              getEnv("SERVER_PORT", "2846"),
 		WriteTimeout:      5 * time.Second,
