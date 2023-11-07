@@ -1,47 +1,25 @@
-package engine
+package server
 
 import (
 	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"noda"
-	noda_middleware "noda/engine/internal/middleware"
-	"noda/engine/internal/routes"
 	"os"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Run() {
-	noda.ConnectToDatabase()
-	db := noda.Database()
+	connectToDatabase()
+	db := getDatabase()
 	defer db.Close()
-
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-	router.Use(middleware.SetHeader("Content-Type", "application/json"))
-	router.Use(middleware.AllowContentType("application/json"))
-	router.Use(middleware.SetHeader("Access-Control-Allow-Origin", "*"))
-	router.Use(middleware.SetHeader("Access-Control-Allow-Methods", "GET"))
-	router.Use(middleware.SetHeader("Access-Control-Allow-Headers", "*"))
-	router.Use(middleware.SetHeader("Access-Control-Allow-Credentials", "true"))
-	router.Use(noda_middleware.LetOptionsPassThrough)
-	router.NotFound(noda_middleware.NotFound)
-
-	routes.InitializeForAuthentication(router)
-	routes.InitializeForUsers(router)
-	routes.InitializeForTasks(router)
-	routes.InitializeForGroups(router)
-
-	config := noda.GetServerConfig()
+	r := startRouter()
+	config := getServerConfig()
 	server := http.Server{
 		WriteTimeout:      config.WriteTimeout,
 		ReadTimeout:       config.ReadTimeout,
 		ReadHeaderTimeout: config.ReadHeaderTimeout,
 		IdleTimeout:       config.IdleTimeout,
-		Handler:           router,
+		Handler:           r,
 		ErrorLog:          log.New(os.Stderr, "\033[0;31mfatal: \033[0m", log.LstdFlags),
 		ConnState:         tcpConnStatLogger,
 	}
