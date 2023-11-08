@@ -141,6 +141,10 @@ func (s *ListService) FindGroupedLists(
 		needle = strings.Trim(needle, " \n\t")
 	case "" != sortBy:
 		sortBy = strings.Trim(sortBy, " \n\t")
+	case 0 >= pagination.Page:
+		pagination.Page = 1
+	case 0 >= pagination.RPP:
+		pagination.RPP = 10
 	}
 	res, err := s.r.FetchGroupedLists(ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, needle, sortBy)
 	if nil != err {

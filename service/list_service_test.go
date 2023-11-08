@@ -544,6 +544,68 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("if pagination.Page is non-positive, then set it to 1", func(t *testing.T) {
+		const expectedPageNumber int64 = 1
+		var (
+			lists = make([]*model.List, 0)
+			pag   = &types.Pagination{Page: 0, RPP: 1}
+		)
+
+		/* when page=0 */
+
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), expectedPageNumber, pag.RPP, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+
+		/* when page<0 */
+
+		pag.Page = -1
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), expectedPageNumber, pag.RPP, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("if pagination.RPP is non-positive, then set it to 10", func(t *testing.T) {
+		const expectedRPPNumber int64 = 10
+		var (
+			lists = make([]*model.List, 0)
+			pag   = &types.Pagination{Page: 1, RPP: 0}
+		)
+
+		/* when RPP=0 */
+
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), pag.Page, expectedRPPNumber, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+
+		/* when RPP<0 */
+
+		pag.RPP = -1
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), pag.Page, expectedRPPNumber, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
 	t.Run("parameter sortBy must be trimmed", func(t *testing.T) {
 		var (
 			lists  = make([]*model.List, 0)
