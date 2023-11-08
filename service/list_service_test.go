@@ -634,3 +634,157 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestListService_FindScatteredLists(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m          *listRepositoryMock
+		s          *ListService
+		res        *types.Result[model.List]
+		err        error
+		ownerID    = uuid.New()
+		pagination = &types.Pagination{Page: 1, RPP: 10}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var lists = make([]*model.List, 0)
+		var current = &types.Result[model.List]{
+			Page:      1,
+			RPP:       10,
+			Retrieved: int64(len(lists)),
+			Payload:   lists,
+		}
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pagination, "", "")
+		assert.Equal(t, current, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchScatteredLists")
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(uuid.Nil, pagination, "", "")
+		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindScatteredLists\" cannot be uuid.Nil or ni")
+		assert.Nil(t, res)
+	})
+
+	t.Run("parameter pagination cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchScatteredLists")
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, nil, "", "")
+		assert.ErrorContains(t, err, "parameter \"pagination\" on function \"FindScatteredLists\" cannot be uuid.Nil or ni")
+		assert.Nil(t, res)
+	})
+
+	t.Run("parameter needle must be trimmed", func(t *testing.T) {
+		var (
+			lists  = make([]*model.List, 0)
+			needle = "\n		needle 		\n"
+		)
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), pagination.Page, pagination.RPP,
+			strings.Trim(needle, " \n\t"), "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pagination, needle, "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("if pagination.Page is non-positive, then set it to 1", func(t *testing.T) {
+		const expectedPageNumber int64 = 1
+		var (
+			lists = make([]*model.List, 0)
+			pag   = &types.Pagination{Page: 0, RPP: 1}
+		)
+
+		/* when page=0 */
+
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), expectedPageNumber, pag.RPP, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+
+		/* when page<0 */
+
+		pag.Page = -1
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), expectedPageNumber, pag.RPP, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("if pagination.RPP is non-positive, then set it to 10", func(t *testing.T) {
+		const expectedRPPNumber int64 = 10
+		var (
+			lists = make([]*model.List, 0)
+			pag   = &types.Pagination{Page: 1, RPP: 0}
+		)
+
+		/* when RPP=0 */
+
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), pag.Page, expectedRPPNumber, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+
+		/* when RPP<0 */
+
+		pag.RPP = -1
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), pag.Page, expectedRPPNumber, "", "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter sortBy must be trimmed", func(t *testing.T) {
+		var (
+			lists  = make([]*model.List, 0)
+			sortBy = "\n		+first_name 		\n"
+		)
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			ownerID.String(), pagination.Page, pagination.RPP, "",
+			strings.Trim(sortBy, " \n\t")).
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pagination, "", sortBy)
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("FetchScatteredLists",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		s = NewListService(m)
+		res, err = s.FindScatteredLists(ownerID, pagination, "", "")
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}

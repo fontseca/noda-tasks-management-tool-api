@@ -150,6 +150,32 @@ func (s *ListService) FindGroupedLists(
 	return result, nil
 }
 
+func (s *ListService) FindScatteredLists(
+	ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("FindScatteredLists", "ownerID")
+		log.Println(err)
+		return nil, err
+	case nil == pagination:
+		err = noda.NewNilParameterError("FindScatteredLists", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	setToDefaultValues(pagination, &needle, &sortBy)
+	res, err := s.r.FetchScatteredLists(ownerID.String(), pagination.Page, pagination.RPP, needle, sortBy)
+	if nil != err {
+		return nil, err
+	}
+	result = &types.Result[model.List]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
+		Retrieved: int64(len(res)),
+		Payload:   res,
+	}
+	return result, nil
+}
+
 func setToDefaultValues(pagination *types.Pagination, needle, sortBy *string) {
 	switch {
 	case "" != *needle:
