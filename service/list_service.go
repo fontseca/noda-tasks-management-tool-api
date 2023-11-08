@@ -188,3 +188,24 @@ func setToDefaultValues(pagination *types.Pagination, needle, sortBy *string) {
 		pagination.RPP = 10
 	}
 }
+
+func (s *ListService) DeleteList(ownerID, groupID, listID uuid.UUID) error {
+	var (
+		err        error
+		groupIDStr = ""
+	)
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("DeleteList", "ownerID")
+		log.Println(err)
+		return err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("DeleteList", "listID")
+		log.Println(err)
+		return err
+	case uuid.Nil != groupID:
+		groupIDStr = groupID.String()
+	}
+	_, err = s.r.DeleteList(ownerID.String(), groupIDStr, listID.String())
+	return err
+}

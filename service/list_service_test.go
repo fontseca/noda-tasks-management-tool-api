@@ -788,3 +788,57 @@ func TestListService_FindScatteredLists(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestListService_DeleteList(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m                        *listRepositoryMock
+		s                        *ListService
+		err                      error
+		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
+	)
+
+	t.Run("success for grouped list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("DeleteList", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil)
+		s = NewListService(m)
+		err = s.DeleteList(ownerID, groupID, listID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("success for scattered list (groupID=uuid.Nil)", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("DeleteList", ownerID.String(), "", listID.String()).
+			Return(true, nil)
+		s = NewListService(m)
+		err = s.DeleteList(ownerID, uuid.Nil, listID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "DeleteList")
+		s = NewListService(m)
+		err = s.DeleteList(uuid.Nil, groupID, listID)
+		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"DeleteList\" cannot be uuid.Nil or ni")
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "DeleteList")
+		s = NewListService(m)
+		err = s.DeleteList(ownerID, groupID, uuid.Nil)
+		assert.ErrorContains(t, err, "parameter \"listID\" on function \"DeleteList\" cannot be uuid.Nil or ni")
+	})
+
+	t.Run("got a repository error (list could not be deleted)", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("DeleteList", mock.Anything, mock.Anything, mock.Anything).
+			Return(false, unexpected)
+		s = NewListService(m)
+		err = s.DeleteList(ownerID, groupID, listID)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
