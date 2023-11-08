@@ -160,7 +160,8 @@ func TestListService_SaveList(t *testing.T) {
 		m.AssertNotCalled(t, "InsertList")
 		s = NewListService(m)
 		res, err = s.SaveList(uuid.Nil, groupID, next)
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"SaveList\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("SaveList", "ownerID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -169,7 +170,8 @@ func TestListService_SaveList(t *testing.T) {
 		m.AssertNotCalled(t, "InsertList")
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, uuid.Nil, next)
-		assert.ErrorContains(t, err, "parameter \"groupID\" on function \"SaveList\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("SaveList", "groupID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -178,7 +180,8 @@ func TestListService_SaveList(t *testing.T) {
 		m.AssertNotCalled(t, "InsertList")
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, nil)
-		assert.ErrorContains(t, err, "parameter \"next\" on function \"SaveList\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("SaveList", "next").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -256,7 +259,8 @@ func TestListService_FetchListByID(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FindListByID(uuid.Nil, groupID, listID)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindListByID", "ownerID").Error())
 	})
 
 	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
@@ -265,7 +269,8 @@ func TestListService_FetchListByID(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FindListByID(ownerID, uuid.Nil, listID)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, "parameter \"groupID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindListByID", "groupID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
@@ -274,7 +279,8 @@ func TestListService_FetchListByID(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FindListByID(ownerID, groupID, uuid.Nil)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, "parameter \"listID\" on function \"FindListByID\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindListByID", "listID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -336,7 +342,8 @@ func TestListService_GetTodayListID(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.GetTodayListID(uuid.Nil)
 		assert.Equal(t, uuid.Nil, res)
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"GetTodayListID\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("GetTodayListID", "ownerID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -398,7 +405,8 @@ func TestListService_GetTomorrowListID(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.GetTomorrowListID(uuid.Nil)
 		assert.Equal(t, uuid.Nil, res)
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"GetTomorrowListID\" cannot be uuid.Nil or nil")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("GetTomorrowListID", "ownerID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -447,7 +455,8 @@ func TestListService_FindLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchLists")
 		s = NewListService(m)
 		res, err = s.FindLists(uuid.Nil, pagination, "", "")
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindLists", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -456,7 +465,8 @@ func TestListService_FindLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchLists")
 		s = NewListService(m)
 		res, err = s.FindLists(ownerID, nil, "", "")
-		assert.ErrorContains(t, err, "parameter \"pagination\" on function \"FindLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindLists", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -507,7 +517,8 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchGroupedLists")
 		s = NewListService(m)
 		res, err = s.FindGroupedLists(uuid.Nil, groupID, pagination, "", "")
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindGroupedLists", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -516,7 +527,8 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchGroupedLists")
 		s = NewListService(m)
 		res, err = s.FindGroupedLists(ownerID, uuid.Nil, pagination, "", "")
-		assert.ErrorContains(t, err, "parameter \"groupID\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindGroupedLists", "groupID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -525,7 +537,8 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchGroupedLists")
 		s = NewListService(m)
 		res, err = s.FindGroupedLists(ownerID, groupID, nil, "", "")
-		assert.ErrorContains(t, err, "parameter \"pagination\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindGroupedLists", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -670,7 +683,8 @@ func TestListService_FindScatteredLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchScatteredLists")
 		s = NewListService(m)
 		res, err = s.FindScatteredLists(uuid.Nil, pagination, "", "")
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindScatteredLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindScatteredLists", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -679,7 +693,8 @@ func TestListService_FindScatteredLists(t *testing.T) {
 		m.AssertNotCalled(t, "FetchScatteredLists")
 		s = NewListService(m)
 		res, err = s.FindScatteredLists(ownerID, nil, "", "")
-		assert.ErrorContains(t, err, "parameter \"pagination\" on function \"FindScatteredLists\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("FindScatteredLists", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -822,7 +837,8 @@ func TestListService_DeleteList(t *testing.T) {
 		m.AssertNotCalled(t, "DeleteList")
 		s = NewListService(m)
 		err = s.DeleteList(uuid.Nil, groupID, listID)
-		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"DeleteList\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("DeleteList", "ownerID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
@@ -830,7 +846,8 @@ func TestListService_DeleteList(t *testing.T) {
 		m.AssertNotCalled(t, "DeleteList")
 		s = NewListService(m)
 		err = s.DeleteList(ownerID, groupID, uuid.Nil)
-		assert.ErrorContains(t, err, "parameter \"listID\" on function \"DeleteList\" cannot be uuid.Nil or ni")
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("DeleteList", "listID").Error())
 	})
 
 	t.Run("got a repository error (list could not be deleted)", func(t *testing.T) {
