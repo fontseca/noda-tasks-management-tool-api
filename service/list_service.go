@@ -118,3 +118,39 @@ func (s *ListService) FindLists(
 	}
 	return lists, nil
 }
+
+func (s *ListService) FindGroupedLists(
+	ownerID, groupID uuid.UUID,
+	pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("FindGroupedLists", "ownerID")
+		log.Println(err)
+		return nil, err
+	case uuid.Nil == groupID:
+		err = noda.NewNilParameterError("FindGroupedLists", "groupID")
+		log.Println(err)
+		return nil, err
+	case nil == pagination:
+		err = noda.NewNilParameterError("FindGroupedLists", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	switch {
+	case "" != needle:
+		needle = strings.Trim(needle, " \n\t")
+	case "" != sortBy:
+		sortBy = strings.Trim(sortBy, " \n\t")
+	}
+	res, err := s.r.FetchGroupedLists(ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, needle, sortBy)
+	if nil != err {
+		return nil, err
+	}
+	lists = &types.Result[model.List]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
+		Retrieved: int64(len(res)),
+		Payload:   res,
+	}
+	return lists, nil
+}

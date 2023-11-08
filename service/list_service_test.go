@@ -8,6 +8,7 @@ import (
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"strings"
 	"testing"
 )
 
@@ -466,6 +467,107 @@ func TestListService_FindLists(t *testing.T) {
 			Return(nil, unexpected)
 		s = NewListService(m)
 		res, err = s.FindLists(ownerID, pagination, "", "")
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}
+
+func TestListService_FindGroupedLists(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m                *listRepositoryMock
+		s                *ListService
+		res              *types.Result[model.List]
+		err              error
+		ownerID, groupID = uuid.New(), uuid.New()
+		pagination       = &types.Pagination{Page: 1, RPP: 10}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var lists = make([]*model.List, 0)
+		var current = &types.Result[model.List]{
+			Page:      1,
+			RPP:       10,
+			Retrieved: int64(len(lists)),
+			Payload:   lists,
+		}
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", "")
+		assert.Equal(t, current, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchGroupedLists")
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(uuid.Nil, groupID, pagination, "", "")
+		assert.ErrorContains(t, err, "parameter \"ownerID\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.Nil(t, res)
+	})
+
+	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchGroupedLists")
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, uuid.Nil, pagination, "", "")
+		assert.ErrorContains(t, err, "parameter \"groupID\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.Nil(t, res)
+	})
+
+	t.Run("parameter pagination cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "FetchGroupedLists")
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, nil, "", "")
+		assert.ErrorContains(t, err, "parameter \"pagination\" on function \"FindGroupedLists\" cannot be uuid.Nil or ni")
+		assert.Nil(t, res)
+	})
+
+	t.Run("parameter needle must be trimmed", func(t *testing.T) {
+		var (
+			lists  = make([]*model.List, 0)
+			needle = "\n		needle 		\n"
+		)
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), pagination.Page, pagination.RPP,
+			strings.Trim(needle, " \n\t"), "").
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pagination, needle, "")
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter sortBy must be trimmed", func(t *testing.T) {
+		var (
+			lists  = make([]*model.List, 0)
+			sortBy = "\n		+first_name 		\n"
+		)
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, "",
+			strings.Trim(sortBy, " \n\t")).
+			Return(lists, nil)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", sortBy)
+		assert.NotNil(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("FetchGroupedLists",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		s = NewListService(m)
+		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", "")
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
