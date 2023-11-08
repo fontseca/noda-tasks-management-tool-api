@@ -227,3 +227,17 @@ func (s *ListService) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.U
 	}
 	return uuid.Parse(id)
 }
+
+func (s *ListService) ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool, err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("ConvertToScatteredList", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("ConvertToScatteredList", "listID")
+		log.Println(err)
+		return false, err
+	}
+	return s.r.ConvertToScatteredList(ownerID.String(), listID.String())
+}

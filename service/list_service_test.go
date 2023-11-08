@@ -917,3 +917,55 @@ func TestListService_DuplicateList(t *testing.T) {
 		assert.ErrorIs(t, err, unexpected)
 	})
 }
+
+func TestListService_ConvertToScatteredList(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m               *listRepositoryMock
+		s               *ListService
+		res             bool
+		err             error
+		ownerID, listID = uuid.New(), uuid.New()
+	)
+
+	t.Run("success list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("ConvertToScatteredList", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil)
+		s = NewListService(m)
+		res, err = s.ConvertToScatteredList(ownerID, listID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "ConvertToScatteredList")
+		s = NewListService(m)
+		res, err = s.ConvertToScatteredList(uuid.Nil, listID)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("ConvertToScatteredList", "ownerID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "ConvertToScatteredList")
+		s = NewListService(m)
+		res, err = s.ConvertToScatteredList(ownerID, uuid.Nil)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("ConvertToScatteredList", "listID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("ConvertToScatteredList", mock.Anything, mock.Anything, mock.Anything).
+			Return(false, unexpected)
+		s = NewListService(m)
+		res, err = s.ConvertToScatteredList(ownerID, listID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
