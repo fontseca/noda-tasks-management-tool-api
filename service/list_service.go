@@ -121,7 +121,7 @@ func (s *ListService) FindLists(
 
 func (s *ListService) FindGroupedLists(
 	ownerID, groupID uuid.UUID,
-	pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
+	pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("FindGroupedLists", "ownerID")
@@ -141,13 +141,13 @@ func (s *ListService) FindGroupedLists(
 	if nil != err {
 		return nil, err
 	}
-	lists = &types.Result[model.List]{
+	result = &types.Result[model.List]{
 		Page:      pagination.Page,
 		RPP:       pagination.RPP,
 		Retrieved: int64(len(res)),
 		Payload:   res,
 	}
-	return lists, nil
+	return result, nil
 }
 
 func setToDefaultValues(pagination *types.Pagination, needle, sortBy *string) {
