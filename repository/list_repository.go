@@ -21,7 +21,7 @@ type IListRepository interface {
 	GetTomorrowListID(ownerID string) (listID string, err error)
 	FetchLists(ownerID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
 	FetchGroupedLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
-	FetchScatteredLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
+	FetchScatteredLists(ownerID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
 	DeleteList(ownerID, groupID, listID string) (ok bool, err error)
 	DuplicateList(ownerID, listID string) (replicaID string, err error)
 	ConvertToScatteredList(ownerID, listID string) (ok bool, err error)
@@ -251,7 +251,7 @@ func (r *ListRepository) FetchGroupedLists(
 }
 
 func (r *ListRepository) FetchScatteredLists(
-	ownerID, groupID string,
+	ownerID string,
 	page, rpp int64,
 	needle, sortBy string) (lists []*model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -267,7 +267,7 @@ func (r *ListRepository) FetchScatteredLists(
 		     "created_at",
 		     "updated_at"
     FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortBy)
+	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortBy)
 	if nil != err {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -276,8 +276,6 @@ func (r *ListRepository) FetchScatteredLists(
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
 				err = noda.ErrUserNotFound
-			case isNonexistentGroupError(pqerr):
-				err = noda.ErrGroupNotFound
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)

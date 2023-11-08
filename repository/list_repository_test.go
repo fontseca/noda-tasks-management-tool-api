@@ -684,12 +684,12 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp = 1, 2
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
@@ -698,7 +698,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp = 1, -1000
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
@@ -711,7 +711,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
 
@@ -720,7 +720,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp = 2, 5
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
@@ -728,7 +728,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
 
@@ -737,7 +737,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp, needle = 1, 7, "name"
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
@@ -747,7 +747,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
 
@@ -757,9 +757,9 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
@@ -769,9 +769,9 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Nil(t, res)
 
@@ -780,9 +780,9 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
@@ -790,9 +790,9 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
@@ -800,13 +800,13 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows([]string{
 				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
 				"archived_at", "created_at", "updated_at"}).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }

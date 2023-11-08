@@ -61,8 +61,8 @@ func (o *listRepositoryMock) FetchGroupedLists(ownerID, groupID string, page, rp
 	return lists, args.Error(1)
 }
 
-func (o *listRepositoryMock) FetchScatteredLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
-	args := o.Called(ownerID, groupID, page, rpp, needle, sortBy)
+func (o *listRepositoryMock) FetchScatteredLists(ownerID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
+	args := o.Called(ownerID, page, rpp, needle, sortBy)
 	arg1 := args.Get(0)
 	var lists []*model.List
 	if nil != arg1 {
