@@ -136,16 +136,7 @@ func (s *ListService) FindGroupedLists(
 		log.Println(err)
 		return nil, err
 	}
-	switch {
-	case "" != needle:
-		needle = strings.Trim(needle, " \n\t")
-	case "" != sortBy:
-		sortBy = strings.Trim(sortBy, " \n\t")
-	case 0 >= pagination.Page:
-		pagination.Page = 1
-	case 0 >= pagination.RPP:
-		pagination.RPP = 10
-	}
+	setToDefaultValues(pagination, &needle, &sortBy)
 	res, err := s.r.FetchGroupedLists(ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, needle, sortBy)
 	if nil != err {
 		return nil, err
@@ -157,4 +148,17 @@ func (s *ListService) FindGroupedLists(
 		Payload:   res,
 	}
 	return lists, nil
+}
+
+func setToDefaultValues(pagination *types.Pagination, needle, sortBy *string) {
+	switch {
+	case "" != *needle:
+		*needle = strings.Trim(*needle, " \n\t")
+	case "" != *sortBy:
+		*sortBy = strings.Trim(*sortBy, " \n\t")
+	case 0 >= pagination.Page:
+		pagination.Page = 1
+	case 0 >= pagination.RPP:
+		pagination.RPP = 10
+	}
 }
