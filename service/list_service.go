@@ -209,3 +209,21 @@ func (s *ListService) DeleteList(ownerID, groupID, listID uuid.UUID) error {
 	_, err = s.r.DeleteList(ownerID.String(), groupIDStr, listID.String())
 	return err
 }
+
+func (s *ListService) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("DuplicateList", "ownerID")
+		log.Println(err)
+		return uuid.Nil, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("DuplicateList", "listID")
+		log.Println(err)
+		return uuid.Nil, err
+	}
+	id, err := s.r.DuplicateList(ownerID.String(), listID.String())
+	if nil != err {
+		return uuid.Nil, err
+	}
+	return uuid.Parse(id)
+}

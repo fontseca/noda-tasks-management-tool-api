@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
@@ -839,6 +840,80 @@ func TestListService_DeleteList(t *testing.T) {
 			Return(false, unexpected)
 		s = NewListService(m)
 		err = s.DeleteList(ownerID, groupID, listID)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestListService_DuplicateList(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m               *listRepositoryMock
+		s               *ListService
+		res             uuid.UUID
+		err             error
+		ownerID, listID = uuid.New(), uuid.New()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var replicaID = uuid.New()
+		m = new(listRepositoryMock)
+		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+			Return(replicaID.String(), nil)
+		s = NewListService(m)
+		res, err = s.DuplicateList(ownerID, listID)
+		assert.Equal(t, replicaID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got UUID parsing error", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+			Return("x", nil)
+		s = NewListService(m)
+		res, err = s.DuplicateList(ownerID, listID)
+		assert.ErrorContains(t, err, "invalid UUID length: 1")
+		assert.Equal(t, uuid.Nil, res)
+	})
+
+	t.Run("did parse UUID", func(t *testing.T) {
+		var id = uuid.New()
+		m = new(listRepositoryMock)
+		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+			Return(id.String(), nil)
+		s = NewListService(m)
+		res, err = s.DuplicateList(ownerID, listID)
+		assert.Equal(t, id, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "DuplicateList")
+		s = NewListService(m)
+		res, err = s.DuplicateList(uuid.Nil, listID)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("DuplicateList", "ownerID").Error())
+		assert.Equal(t, uuid.Nil, res)
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "DuplicateList")
+		s = NewListService(m)
+		res, err = s.DuplicateList(ownerID, uuid.Nil)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("DuplicateList", "listID").Error())
+		assert.Equal(t, uuid.Nil, res)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+			Return("", unexpected)
+		s = NewListService(m)
+		res, err = s.DuplicateList(ownerID, listID)
+		assert.Equal(t, uuid.Nil, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
 }
