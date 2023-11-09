@@ -986,3 +986,65 @@ func TestListService_ConvertToScatteredList(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestListService_MoveList(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m                        *listRepositoryMock
+		s                        *ListService
+		res                      bool
+		err                      error
+		ownerID, listID, groupID = uuid.New(), uuid.New(), uuid.New()
+	)
+
+	t.Run("success list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("MoveList", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil)
+		s = NewListService(m)
+		res, err = s.MoveList(ownerID, listID, groupID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "MoveList")
+		s = NewListService(m)
+		res, err = s.MoveList(uuid.Nil, listID, groupID)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("MoveList", "ownerID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "MoveList")
+		s = NewListService(m)
+		res, err = s.MoveList(ownerID, uuid.Nil, groupID)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("MoveList", "listID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("parameter targetGroupID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "MoveList")
+		s = NewListService(m)
+		res, err = s.MoveList(ownerID, listID, uuid.Nil)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("MoveList", "targetGroupID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("MoveList", mock.Anything, mock.Anything, mock.Anything).
+			Return(false, unexpected)
+		s = NewListService(m)
+		res, err = s.MoveList(ownerID, listID, groupID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
