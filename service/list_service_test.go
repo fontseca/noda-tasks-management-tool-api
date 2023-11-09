@@ -1048,3 +1048,116 @@ func TestListService_MoveList(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestListService_UpdateList(t *testing.T) {
+	defer beQuiet()()
+	var (
+		m                        *listRepositoryMock
+		s                        *ListService
+		res                      bool
+		err                      error
+		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
+		up                       = &transfer.ListUpdate{
+			Name:        "\t   list name\n   ",
+			Description: "\n  description  \n",
+		}
+	)
+
+	t.Run("success for grouped list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("UpdateList",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil)
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	/*
+		No tomarse a la ligera los nombres o convenciones para nombrar objectos.
+	*/
+
+	t.Run("success for scattered list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("UpdateList",
+			ownerID.String(), "", listID.String(), up).
+			Return(true, nil)
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, uuid.Nil, listID, up)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "UpdateList")
+		s = NewListService(m)
+		res, err = s.UpdateList(uuid.Nil, groupID, listID, up)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("UpdateList", "ownerID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "UpdateList")
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, uuid.Nil, up)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("UpdateList", "listID").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("parameter up cannot be nil", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "UpdateList")
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, listID, nil)
+		assert.ErrorContains(t, err,
+			noda.NewNilParameterError("UpdateList", "up").Error())
+		assert.False(t, res)
+	})
+
+	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
+		var previousName = up.Name
+		up.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "UpdateList")
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		up.Name = previousName
+		assert.ErrorContains(t, err,
+			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
+		assert.False(t, res)
+	})
+
+	t.Run("next.Name and next.Description must be trimmed", func(t *testing.T) {
+		var previousName, previousDesc = up.Name, up.Description
+		m = new(listRepositoryMock)
+		m.AssertNotCalled(t, "UpdateList")
+		s = NewListService(m)
+		m.On("UpdateList",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(false, nil)
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		assert.Equal(t, "list name", up.Name)
+		assert.Equal(t, "description", up.Description)
+		up.Name, up.Description = previousName, previousDesc
+		assert.False(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		unexpected := errors.New("unexpected error")
+		m = new(listRepositoryMock)
+		m.On("UpdateList",
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(false, unexpected)
+		s = NewListService(m)
+		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}

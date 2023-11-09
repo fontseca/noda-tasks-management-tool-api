@@ -259,3 +259,32 @@ func (s *ListService) MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok boo
 	}
 	return s.r.MoveList(ownerID.String(), listID.String(), targetGroupID.String())
 }
+
+func (s *ListService) UpdateList(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error) {
+	var groupIDStr = ""
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("UpdateList", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("UpdateList", "listID")
+		log.Println(err)
+		return false, err
+	case nil == up:
+		err = noda.NewNilParameterError("UpdateList", "up")
+		log.Println(err)
+		return false, err
+	case uuid.Nil != groupID:
+		groupIDStr = groupID.String()
+	}
+	up.Name = strings.Trim(up.Name, " \t\n")
+	up.Description = strings.Trim(up.Description, " \t\n")
+	switch {
+	case 50 < len(up.Name):
+		return false, noda.ErrTooLong.Clone().FormatDetails("name", "list", 50)
+	case 1<<9 < len(up.Description):
+		return false, noda.ErrTooLong.Clone().FormatDetails("description", "list", 1<<9)
+	}
+	return s.r.UpdateList(ownerID.String(), groupIDStr, listID.String(), up)
+}
