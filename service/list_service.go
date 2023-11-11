@@ -12,7 +12,22 @@ import (
 	"strings"
 )
 
-type ListService struct {
+type ListService interface {
+	SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error)
+	FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error)
+	GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error)
+	GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, err error)
+	FindLists(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error)
+	FindGroupedLists(ownerID, groupID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error)
+	FindScatteredLists(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error)
+	DeleteList(ownerID, groupID, listID uuid.UUID) error
+	DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error)
+	ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool, err error)
+	MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok bool, err error)
+	UpdateList(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error)
+}
+
+type listService struct {
 	r repository.IListRepository
 }
 
