@@ -31,11 +31,11 @@ type listService struct {
 	r repository.IListRepository
 }
 
-func NewListService(r repository.IListRepository) *ListService {
-	return &ListService{r}
+func NewListService(r repository.IListRepository) ListService {
+	return &listService{r}
 }
 
-func (s *ListService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
+func (s *listService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("SaveList", "ownerID")
@@ -65,7 +65,7 @@ func (s *ListService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 	return uuid.Parse(id)
 }
 
-func (s *ListService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
+func (s *listService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("FindListByID", "ownerID")
@@ -83,7 +83,7 @@ func (s *ListService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *mo
 	return s.r.FetchListByID(ownerID.String(), groupID.String(), listID.String())
 }
 
-func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
+func (s *listService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
 	if uuid.Nil == ownerID {
 		err = noda.NewNilParameterError("GetTodayListID", "ownerID")
 		log.Println(err)
@@ -96,7 +96,7 @@ func (s *ListService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err e
 	return uuid.Parse(id)
 }
 
-func (s *ListService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
+func (s *listService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
 	if uuid.Nil == ownerID {
 		err = noda.NewNilParameterError("GetTomorrowListID", "ownerID")
 		log.Println(err)
@@ -109,7 +109,7 @@ func (s *ListService) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID, er
 	return uuid.Parse(id)
 }
 
-func (s *ListService) FindLists(
+func (s *listService) FindLists(
 	ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
 	switch {
 	case uuid.Nil == ownerID:
@@ -134,7 +134,7 @@ func (s *ListService) FindLists(
 	return lists, nil
 }
 
-func (s *ListService) FindGroupedLists(
+func (s *listService) FindGroupedLists(
 	ownerID, groupID uuid.UUID,
 	pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
 	switch {
@@ -165,7 +165,7 @@ func (s *ListService) FindGroupedLists(
 	return result, nil
 }
 
-func (s *ListService) FindScatteredLists(
+func (s *listService) FindScatteredLists(
 	ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
 	switch {
 	case uuid.Nil == ownerID:
@@ -204,7 +204,7 @@ func setToDefaultValues(pagination *types.Pagination, needle, sortBy *string) {
 	}
 }
 
-func (s *ListService) DeleteList(ownerID, groupID, listID uuid.UUID) error {
+func (s *listService) DeleteList(ownerID, groupID, listID uuid.UUID) error {
 	var (
 		err        error
 		groupIDStr = ""
@@ -225,7 +225,7 @@ func (s *ListService) DeleteList(ownerID, groupID, listID uuid.UUID) error {
 	return err
 }
 
-func (s *ListService) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
+func (s *listService) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("DuplicateList", "ownerID")
@@ -243,7 +243,7 @@ func (s *ListService) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.U
 	return uuid.Parse(id)
 }
 
-func (s *ListService) ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool, err error) {
+func (s *listService) ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool, err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("ConvertToScatteredList", "ownerID")
@@ -257,7 +257,7 @@ func (s *ListService) ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool
 	return s.r.ConvertToScatteredList(ownerID.String(), listID.String())
 }
 
-func (s *ListService) MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok bool, err error) {
+func (s *listService) MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok bool, err error) {
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("MoveList", "ownerID")
@@ -275,7 +275,7 @@ func (s *ListService) MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok boo
 	return s.r.MoveList(ownerID.String(), listID.String(), targetGroupID.String())
 }
 
-func (s *ListService) UpdateList(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error) {
+func (s *listService) UpdateList(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error) {
 	var groupIDStr = ""
 	switch {
 	case uuid.Nil == ownerID:

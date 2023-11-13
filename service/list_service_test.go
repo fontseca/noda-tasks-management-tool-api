@@ -101,7 +101,7 @@ func TestListService_SaveList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                *listRepositoryMock
-		s                *ListService
+		s                ListService
 		res              uuid.UUID
 		err              error
 		ownerID, groupID = uuid.New(), uuid.New()
@@ -230,7 +230,7 @@ func TestListService_FetchListByID(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
-		s                        *ListService
+		s                        ListService
 		res                      *model.List
 		err                      error
 		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
@@ -299,7 +299,7 @@ func TestListService_GetTodayListID(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
-		s               *ListService
+		s               ListService
 		res             uuid.UUID
 		err             error
 		ownerID, listID = uuid.New(), uuid.New()
@@ -362,7 +362,7 @@ func TestListService_GetTomorrowListID(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
-		s               *ListService
+		s               ListService
 		res             uuid.UUID
 		err             error
 		ownerID, listID = uuid.New(), uuid.New()
@@ -425,7 +425,7 @@ func TestListService_FindLists(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m          *listRepositoryMock
-		s          *ListService
+		s          ListService
 		res        *types.Result[model.List]
 		err        error
 		ownerID    = uuid.New()
@@ -487,7 +487,7 @@ func TestListService_FindGroupedLists(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                *listRepositoryMock
-		s                *ListService
+		s                ListService
 		res              *types.Result[model.List]
 		err              error
 		ownerID, groupID = uuid.New(), uuid.New()
@@ -653,7 +653,7 @@ func TestListService_FindScatteredLists(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m          *listRepositoryMock
-		s          *ListService
+		s          ListService
 		res        *types.Result[model.List]
 		err        error
 		ownerID    = uuid.New()
@@ -809,7 +809,7 @@ func TestListService_DeleteList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
-		s                        *ListService
+		s                        ListService
 		err                      error
 		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
 	)
@@ -865,7 +865,7 @@ func TestListService_DuplicateList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
-		s               *ListService
+		s               ListService
 		res             uuid.UUID
 		err             error
 		ownerID, listID = uuid.New(), uuid.New()
@@ -939,7 +939,7 @@ func TestListService_ConvertToScatteredList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
-		s               *ListService
+		s               ListService
 		res             bool
 		err             error
 		ownerID, listID = uuid.New(), uuid.New()
@@ -991,7 +991,7 @@ func TestListService_MoveList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
-		s                        *ListService
+		s                        ListService
 		res                      bool
 		err                      error
 		ownerID, listID, groupID = uuid.New(), uuid.New(), uuid.New()
@@ -1053,7 +1053,7 @@ func TestListService_UpdateList(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
-		s                        *ListService
+		s                        ListService
 		res                      bool
 		err                      error
 		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
@@ -1073,10 +1073,6 @@ func TestListService_UpdateList(t *testing.T) {
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
-
-	/*
-		No tomarse a la ligera los nombres o convenciones para nombrar objectos.
-	*/
 
 	t.Run("success for scattered list", func(t *testing.T) {
 		m = new(listRepositoryMock)
