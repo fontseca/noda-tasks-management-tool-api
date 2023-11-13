@@ -25,35 +25,35 @@ var (
 		message: "Query parameter failure.",
 		details: "",
 		hint:    "",
-		status:  http.StatusNotFound,
+		status:  http.StatusBadRequest,
 	}
 	ErrMultipleValuesForQueryParameter = &Error{
 		code:    ErrorCode("U0003"),
 		message: "Multiple values for query parameter.",
 		details: "Too much values for query parameter: %q.",
 		hint:    "Provide only one value for this query parameter.",
-		status:  http.StatusNotFound,
+		status:  http.StatusBadRequest,
 	}
 	ErrQueryParameterNotParsed = &Error{
 		code:    ErrorCode("U0004"),
 		message: "Could not parse parameter.",
 		details: "Could not parse query parameter: %q.",
 		hint:    "Provide only one value for this query parameter.",
-		status:  http.StatusNotFound,
+		status:  http.StatusBadRequest,
 	}
 	ErrInvalidUUIDFormat = &Error{
 		code:    ErrorCode("U0005"),
 		message: "Error parsing path parameter.",
 		details: "Invalid UUID format.",
 		hint:    "",
-		status:  http.StatusNotFound,
+		status:  http.StatusBadRequest,
 	}
 	ErrInvalidUUIDLength = &Error{
 		code:    ErrorCode("U0006"),
 		message: "Error parsing path parameter.",
 		details: "Invalid UUID length.",
 		hint:    "",
-		status:  http.StatusNotFound,
+		status:  http.StatusBadRequest,
 	}
 )
 
