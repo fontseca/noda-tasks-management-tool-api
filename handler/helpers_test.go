@@ -33,7 +33,7 @@ func extractResponseBody(t *testing.T, body io.Reader) []byte {
 
 var userID = uuid.New()
 
-func withUserLoggedUser(request **http.Request) {
+func withLoggedUser(request **http.Request) {
 	var ctx = context.WithValue((*request).Context(), types.ContextKey{}, types.JWTPayload{
 		UserID:   userID,
 		UserRole: types.RoleUser,
