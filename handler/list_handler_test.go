@@ -103,11 +103,11 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var (
-			requestBody          = marshal(t, JSON{"name": "list name", "description": "list description"})
+			next                 = &transfer.ListCreation{Name: "list name", Description: "list description"}
+			requestBody          = marshal(t, JSON{"name": next.Name, "description": next.Description})
 			insertedID           = uuid.New()
 			expectedStatusCode   = http.StatusCreated
 			expectedResponseBody = marshal(t, JSON{"insertedID": insertedID.String()})
-			next                 = &transfer.ListCreation{Name: "list name", Description: "list description"}
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withUserLoggedUser(&request)
@@ -215,6 +215,55 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 			Return(uuid.Nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
+		var response = recorder.Result()
+		defer response.Body.Close()
+		var responseBody = extractResponseBody(t, response.Body)
+		assert.Equal(t, expectedStatusCode, response.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}
+
+func TestListHandler_HandleScatteredListCreation(t *testing.T) {
+	const (
+		method = "POST"
+		target = "/me/lists"
+	)
+	var next = &transfer.ListCreation{Name: "list name", Description: "list description"}
+
+	t.Run("success", func(t *testing.T) {
+		var (
+			requestBody          = marshal(t, JSON{"name": next.Name, "description": next.Description})
+			insertedID           = uuid.New()
+			expectedStatusCode   = http.StatusCreated
+			expectedResponseBody = marshal(t, JSON{"insertedID": insertedID.String()})
+		)
+		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
+		withUserLoggedUser(&request)
+		var m = new(mockListService)
+		m.On("SaveList", userID, uuid.Nil, next).Return(insertedID, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(m).HandleScatteredListCreation(recorder, request)
+		var response = recorder.Result()
+		defer response.Body.Close()
+		var responseBody = extractResponseBody(t, response.Body)
+		assert.Equal(t, expectedStatusCode, response.StatusCode)
+		assert.Equal(t, string(expectedResponseBody), string(responseBody))
+		assert.Empty(t, response.Cookies(), "No cookie is expected, but got: %d.", len(response.Cookies()))
+		assert.Empty(t, response.Header, "No header is expected, but got: %d.", len(response.Header))
+	})
+
+	t.Run("got a service error", func(t *testing.T) {
+		var (
+			requestBody        = marshal(t, JSON{"name": next.Name, "description": next.Description})
+			expectedStatusCode = http.StatusInternalServerError
+			unexpected         = errors.New("unexpected error")
+		)
+		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
+		withUserLoggedUser(&request)
+		var m = new(mockListService)
+		m.On("SaveList", userID, uuid.Nil, next).Return(uuid.Nil, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(m).HandleScatteredListCreation(recorder, request)
 		var response = recorder.Result()
 		defer response.Body.Close()
 		var responseBody = extractResponseBody(t, response.Body)

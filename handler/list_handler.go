@@ -87,3 +87,7 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 func (h *ListHandler) HandleGroupedListCreation(w http.ResponseWriter, r *http.Request) {
 	h.doCreateList(grouped, w, r)
 }
+
+func (h *ListHandler) HandleScatteredListCreation(w http.ResponseWriter, r *http.Request) {
+	h.doCreateList(scattered, w, r)
+}
