@@ -392,3 +392,79 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		assert.Empty(t, string(responseBody), "No response body is expected.")
 	})
 }
+
+func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
+	var listID = uuid.New()
+	const (
+		method = "GET"
+		target = "/me/lists/{list_id}"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var (
+			list = &model.List{
+				ID:          listID,
+				OwnerID:     userID,
+				GroupID:     uuid.Nil,
+				Name:        "list name",
+				Description: "list description",
+				UpdatedAt:   time.Now(),
+				CreatedAt:   time.Now(),
+				ArchivedAt:  nil,
+				IsArchived:  false,
+			}
+			expectedStatusCode   = http.StatusOK
+			expectedResponseBody = marshal(t, list)
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": list.ID.String()})
+		var s = new(listServiceMock)
+		s.On("FindListByID", list.OwnerID, uuid.Nil, list.ID).Return(list, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Equal(t, string(expectedResponseBody), string(responseBody))
+		assert.Empty(t, result.Header, "No header is expected, but got: %d.", len(result.Header))
+		assert.Empty(t, result.Cookies(), "No cookie is expected, but got: %d.", len(result.Cookies()))
+	})
+
+	t.Run("got an expected service error", func(t *testing.T) {
+		var expectedError = noda.ErrUserNotFound
+		var expectedStatusCode = expectedError.Status()
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, expectedError)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedError.Details())
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var expectedStatusCode = http.StatusInternalServerError
+		var unexpected = errors.New("unexpected error")
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}

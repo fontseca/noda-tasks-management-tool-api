@@ -143,3 +143,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 func (h *ListHandler) HandleGroupedListRetrievalByID(w http.ResponseWriter, r *http.Request) {
 	h.doRetrieveListByID(grouped, w, r)
 }
+
+func (h *ListHandler) HandleScatteredListRetrievalByID(w http.ResponseWriter, r *http.Request) {
+	h.doRetrieveListByID(scattered, w, r)
+}
