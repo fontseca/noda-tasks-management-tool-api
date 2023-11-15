@@ -91,3 +91,55 @@ func (h *ListHandler) HandleGroupedListCreation(w http.ResponseWriter, r *http.R
 func (h *ListHandler) HandleScatteredListCreation(w http.ResponseWriter, r *http.Request) {
 	h.doCreateList(scattered, w, r)
 }
+
+func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *http.Request) {
+	var (
+		userID, _ = extractUserPayload(r)
+		groupID   = uuid.Nil
+		err       error
+	)
+	if grouped == t {
+		groupID, err = parsePathParameterToUUID(r, "group_id")
+		if nil != err {
+			var e *noda.Error
+			if errors.As(err, &e) {
+				noda.EmitError(w, e)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			return
+		}
+	}
+	listID, err := parsePathParameterToUUID(r, "list_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	list, err := h.s.FindListByID(userID, groupID, listID)
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	data, err := json.Marshal(list)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func (h *ListHandler) HandleGroupedListRetrievalByID(w http.ResponseWriter, r *http.Request) {
+	h.doRetrieveListByID(grouped, w, r)
+}
