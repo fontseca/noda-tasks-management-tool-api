@@ -243,12 +243,22 @@ func TestListService_FetchListByID(t *testing.T) {
 		}
 	)
 
-	t.Run("success", func(t *testing.T) {
+	t.Run("success for grouped list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("FetchListByID", mock.Anything, mock.Anything, mock.Anything).
+		m.On("FetchListByID", ownerID.String(), groupID.String(), listID.String()).
 			Return(actual, nil)
 		s = NewListService(m)
 		res, err = s.FindListByID(ownerID, groupID, listID)
+		assert.NoError(t, err)
+		assert.Equal(t, actual, res)
+	})
+
+	t.Run("success for scattered list", func(t *testing.T) {
+		m = new(listRepositoryMock)
+		m.On("FetchListByID", ownerID.String(), "", listID.String()).
+			Return(actual, nil)
+		s = NewListService(m)
+		res, err = s.FindListByID(ownerID, uuid.Nil, listID)
 		assert.NoError(t, err)
 		assert.Equal(t, actual, res)
 	})
