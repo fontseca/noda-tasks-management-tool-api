@@ -41,9 +41,13 @@ func withLoggedUser(request **http.Request) {
 	*request = (*request).Clone(ctx)
 }
 
-func withPathParameter(request **http.Request, key, value string) {
+type parameters map[string]string
+
+func withPathParameters(request **http.Request, params parameters) {
 	var rctx = chi.NewRouteContext()
-	rctx.URLParams.Add(key, value)
+	for key, value := range params {
+		rctx.URLParams.Add(key, value)
+	}
 	*request = (*request).WithContext(context.WithValue((*request).Context(), chi.RouteCtxKey, rctx))
 }
 
