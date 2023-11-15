@@ -263,16 +263,6 @@ func TestListService_FetchListByID(t *testing.T) {
 			noda.NewNilParameterError("FindListByID", "ownerID").Error())
 	})
 
-	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
-		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchListByID")
-		s = NewListService(m)
-		res, err = s.FindListByID(ownerID, uuid.Nil, listID)
-		assert.Nil(t, res)
-		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindListByID", "groupID").Error())
-	})
-
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
 		m.AssertNotCalled(t, "FetchListByID")

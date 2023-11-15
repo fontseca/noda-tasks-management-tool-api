@@ -66,13 +66,10 @@ func (s *listService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 }
 
 func (s *listService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
+	var groupIDStr = ""
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("FindListByID", "ownerID")
-		log.Println(err)
-		return nil, err
-	case uuid.Nil == groupID:
-		err = noda.NewNilParameterError("FindListByID", "groupID")
 		log.Println(err)
 		return nil, err
 	case uuid.Nil == listID:
@@ -80,7 +77,10 @@ func (s *listService) FindListByID(ownerID, groupID, listID uuid.UUID) (list *mo
 		log.Println(err)
 		return nil, err
 	}
-	return s.r.FetchListByID(ownerID.String(), groupID.String(), listID.String())
+	if uuid.Nil != groupID {
+		groupIDStr = groupID.String()
+	}
+	return s.r.FetchListByID(ownerID.String(), groupIDStr, listID.String())
 }
 
 func (s *listService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
