@@ -8,10 +8,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -54,7 +56,7 @@ func (o *listServiceMock) FindLists(ownerID uuid.UUID, pagination *types.Paginat
 }
 
 func (o *listServiceMock) FindGroupedLists(ownerID, groupID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
-	var args = o.Called(ownerID, pagination, needle, sortBy)
+	var args = o.Called(ownerID, groupID, pagination, needle, sortBy)
 	var arg1 = args.Get(0)
 	if nil != arg1 {
 		result = arg1.(*types.Result[model.List])
@@ -461,6 +463,149 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 			Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}
+
+func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
+	var groupID = uuid.New()
+	const (
+		method = "GET"
+		target = "/me/groups/{group_id}/lists"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var (
+			pagination = types.Pagination{Page: 1, RPP: 10}
+			search     = "a"
+			sortExpr   = "+name"
+			values     = url.Values{
+				"search":  []string{search},
+				"sort_by": []string{sortExpr},
+				"page":    []string{strconv.FormatInt(pagination.Page, 10)},
+				"rpp":     []string{strconv.FormatInt(pagination.RPP, 10)},
+			}
+			serviceResult = &types.Result[model.List]{
+				Page:      pagination.Page,
+				RPP:       pagination.RPP,
+				Payload:   make([]*model.List, 2),
+				Retrieved: 1,
+			}
+			expectedStatusCode   = http.StatusOK
+			expectedResponseBody = string(marshal(t, serviceResult))
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String()})
+		var s = new(listServiceMock)
+		s.On("FindGroupedLists", userID, groupID, &pagination, search, sortExpr).
+			Return(serviceResult, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedResponseBody, string(responseBody))
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, result.Header, "No header is expected, but got: %d.", len(result.Header))
+		assert.Empty(t, result.Cookies(), "No cookie is expected, but got: %d.", len(result.Cookies()))
+	})
+
+	t.Run("could not parse pagination: negative number", func(t *testing.T) {
+		var (
+			values               = url.Values{"page": []string{"-100"}}
+			expectedStatusCode   = http.StatusBadRequest
+			expectedResponseBody = "The parameter \\\"page\\\" must be a positive number."
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String()})
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, "FindGroupedLists")
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedResponseBody)
+	})
+
+	t.Run("could not parse sort expression", func(t *testing.T) {
+		var (
+			values               = url.Values{"sort_by": []string{"foo"}}
+			expectedStatusCode   = http.StatusBadRequest
+			expectedResponseBody = "[\"Must start with either one plus sign (+) or one minus sign (-).\",\"Must contain one or more word characters (alphanumeric characters and underscores).\"]"
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String()})
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, "FindGroupedLists")
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedResponseBody)
+	})
+
+	t.Run("parsing \"group_id\" failed: UUID is too short", func(t *testing.T) {
+		var (
+			expectedStatusCode     = http.StatusBadRequest
+			expectedInResponseBody = "Invalid UUID length."
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, "FindGroupedLists")
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedInResponseBody)
+	})
+
+	t.Run("got an expected service error", func(t *testing.T) {
+		var (
+			expectedError      = noda.ErrUserNotFound
+			expectedStatusCode = expectedError.Status()
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String()})
+		var s = new(listServiceMock)
+		s.On("FindGroupedLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, expectedError)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedError.Details())
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var (
+			unexpected         = errors.New("unexpected error")
+			expectedStatusCode = http.StatusInternalServerError
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String()})
+		var s = new(listServiceMock)
+		s.On("FindGroupedLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
 		var result = recorder.Result()
 		defer result.Body.Close()
 		var responseBody = extractResponseBody(t, result.Body)

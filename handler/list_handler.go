@@ -147,3 +147,44 @@ func (h *ListHandler) HandleGroupedListRetrievalByID(w http.ResponseWriter, r *h
 func (h *ListHandler) HandleScatteredListRetrievalByID(w http.ResponseWriter, r *http.Request) {
 	h.doRetrieveListByID(scattered, w, r)
 }
+
+func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http.Request) {
+	var ownerID, _ = extractUserPayload(r)
+	groupID, err := parsePathParameterToUUID(r, "group_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	var pagination = parsePagination(w, r)
+	if nil == pagination {
+		return
+	}
+	var search, sortExpr = parseQueryParameter(r, "search", ""), parseSorting(w, r)
+	if "?" == sortExpr {
+		return
+	}
+	result, err := h.s.FindGroupedLists(ownerID, groupID, pagination, search, sortExpr)
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	data, err := json.Marshal(result)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
