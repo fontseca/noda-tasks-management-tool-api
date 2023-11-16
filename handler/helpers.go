@@ -17,9 +17,9 @@ import (
 )
 
 func parseQueryParameter(r *http.Request, key, fallback string) string {
-	k := r.URL.Query().Get(key)
+	k := strings.Trim(r.URL.Query().Get(key), " \t\n")
 	if strings.Compare(k, "") == 0 {
-		k = fallback
+		return fallback
 	}
 	return k
 }
