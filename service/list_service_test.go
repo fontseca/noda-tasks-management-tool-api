@@ -111,13 +111,24 @@ func TestListService_SaveList(t *testing.T) {
 		}
 	)
 
-	t.Run("success", func(t *testing.T) {
+	t.Run("success for grouped list", func(t *testing.T) {
 		insertedID := uuid.New()
 		m = new(listRepositoryMock)
-		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("InsertList", ownerID.String(), groupID.String(), next).
 			Return(insertedID.String(), nil)
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
+		assert.Equal(t, insertedID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("success for scattered list", func(t *testing.T) {
+		insertedID := uuid.New()
+		m = new(listRepositoryMock)
+		m.On("InsertList", ownerID.String(), "", next).
+			Return(insertedID.String(), nil)
+		s = NewListService(m)
+		res, err = s.SaveList(ownerID, uuid.Nil, next)
 		assert.Equal(t, insertedID, res)
 		assert.NoError(t, err)
 	})
