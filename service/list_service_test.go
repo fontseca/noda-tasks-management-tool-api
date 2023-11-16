@@ -165,16 +165,6 @@ func TestListService_SaveList(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
-	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
-		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
-		s = NewListService(m)
-		res, err = s.SaveList(ownerID, uuid.Nil, next)
-		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("SaveList", "groupID").Error())
-		assert.Equal(t, uuid.Nil, res)
-	})
-
 	t.Run("parameter next cannot be nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
 		m.AssertNotCalled(t, "InsertList")

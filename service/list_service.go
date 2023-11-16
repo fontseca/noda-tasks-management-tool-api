@@ -36,13 +36,10 @@ func NewListService(r repository.IListRepository) ListService {
 }
 
 func (s *listService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
+	var groupIDStr = ""
 	switch {
 	case uuid.Nil == ownerID:
 		err = noda.NewNilParameterError("SaveList", "ownerID")
-		log.Println(err)
-		return uuid.Nil, err
-	case uuid.Nil == groupID:
-		err = noda.NewNilParameterError("SaveList", "groupID")
 		log.Println(err)
 		return uuid.Nil, err
 	case nil == next:
@@ -58,7 +55,10 @@ func (s *listService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 	case 50 < len(next.Name):
 		return uuid.Nil, errors.New("name too long for list: max length must be 50")
 	}
-	id, err := s.r.InsertList(ownerID.String(), groupID.String(), next)
+	if uuid.Nil != groupID {
+		groupIDStr = groupID.String()
+	}
+	id, err := s.r.InsertList(ownerID.String(), groupIDStr, next)
 	if nil != err {
 		return uuid.Nil, err
 	}
