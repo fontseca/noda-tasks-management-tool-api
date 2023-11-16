@@ -86,7 +86,10 @@ func parseSorting(w http.ResponseWriter, r *http.Request) string {
 		noda.EmitError(w, noda.ErrMultipleValuesForQueryParameter.
 			Clone().
 			FormatDetails("sort_by"))
-		return ""
+		return "?"
+	}
+	if "" == sortBy {
+		return sortBy
 	}
 	matched, err := regexp.MatchString(`^(?:(?:\+|-)[_a-zA-Z][_a-zA-Z0-9]+)$`, sortBy)
 	if err != nil {
@@ -100,7 +103,7 @@ func parseSorting(w http.ResponseWriter, r *http.Request) string {
 		"Must contain one or more word characters (alphanumeric characters and underscores).",
 	})
 	noda.EmitError(w, noda.ErrQueryParameterNotParsed.Clone().SetDetails(string(details)))
-	return ""
+	return "?"
 }
 
 func decodeJSONRequestBody(w http.ResponseWriter, r *http.Request, out any) error {
