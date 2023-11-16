@@ -7,8 +7,11 @@ import (
 	"log"
 	"net/http"
 	"noda"
+	"noda/data/model"
 	"noda/data/transfer"
+	"noda/data/types"
 	"noda/service"
+	"strings"
 )
 
 type ListHandler struct {
@@ -188,3 +191,42 @@ func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http
 	w.Write(data)
 }
 
+func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Request) {
+	var ownerID, _ = extractUserPayload(r)
+	var pagination = parsePagination(w, r)
+	if nil == pagination {
+		return
+	}
+	var search = parseQueryParameter(r, "search", "")
+	var sortExpr = parseSorting(w, r)
+	if "?" == sortExpr {
+		return
+	}
+	var (
+		all    = parseQueryParameter(r, "all", "")
+		result *types.Result[model.List]
+		err    error
+	)
+	if 0 == strings.Compare(all, "true") {
+		result, err = h.s.FindLists(ownerID, pagination, search, sortExpr)
+	} else {
+		result, err = h.s.FindScatteredLists(ownerID, pagination, search, sortExpr)
+	}
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	data, err := json.Marshal(result)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}

@@ -613,3 +613,157 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		assert.Empty(t, string(responseBody), "No response body is expected.")
 	})
 }
+
+func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
+	const (
+		method = "GET"
+		target = "/me/lists"
+	)
+
+	t.Run("success for scattered lists, where all=anything", func(t *testing.T) {
+		var (
+			pagination = types.Pagination{Page: 1, RPP: 10}
+			search     = "a"
+			sortExpr   = "+name"
+			values     = url.Values{
+				"search":  []string{search},
+				"sort_by": []string{sortExpr},
+				"page":    []string{strconv.FormatInt(pagination.Page, 10)},
+				"rpp":     []string{strconv.FormatInt(pagination.RPP, 10)},
+			}
+			serviceResult = &types.Result[model.List]{
+				Page:      pagination.Page,
+				RPP:       pagination.RPP,
+				Payload:   make([]*model.List, 2),
+				Retrieved: 1,
+			}
+			expectedStatusCode   = http.StatusOK
+			expectedResponseBody = string(marshal(t, serviceResult))
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.On("FindScatteredLists", userID, &pagination, search, sortExpr).
+			Return(serviceResult, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedResponseBody, string(responseBody))
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, result.Header, "No header is expected, but got: %d.", len(result.Header))
+		assert.Empty(t, result.Cookies(), "No cookie is expected, but got: %d.", len(result.Cookies()))
+	})
+
+	t.Run("success for all lists (scattered and grouped), where all=true", func(t *testing.T) {
+		var (
+			pagination = types.Pagination{Page: 1, RPP: 10}
+			search     = "a"
+			sortExpr   = "+name"
+			values     = url.Values{
+				"search":  []string{search},
+				"sort_by": []string{sortExpr},
+				"page":    []string{strconv.FormatInt(pagination.Page, 10)},
+				"rpp":     []string{strconv.FormatInt(pagination.RPP, 10)},
+				"all":     []string{"true"},
+			}
+			serviceResult = &types.Result[model.List]{
+				Page:      pagination.Page,
+				RPP:       pagination.RPP,
+				Payload:   make([]*model.List, 2),
+				Retrieved: 1,
+			}
+			expectedStatusCode   = http.StatusOK
+			expectedResponseBody = string(marshal(t, serviceResult))
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.On("FindLists", userID, &pagination, search, sortExpr).
+			Return(serviceResult, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedResponseBody, string(responseBody))
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+	})
+
+	t.Run("could not parse pagination: negative number", func(t *testing.T) {
+		var (
+			values               = url.Values{"page": []string{"-100"}}
+			expectedStatusCode   = http.StatusBadRequest
+			expectedResponseBody = "The parameter \\\"page\\\" must be a positive number."
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, "FindScatteredLists")
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedResponseBody)
+	})
+
+	t.Run("could not parse sort expression", func(t *testing.T) {
+		var (
+			values               = url.Values{"sort_by": []string{"foo"}}
+			expectedStatusCode   = http.StatusBadRequest
+			expectedResponseBody = "[\"Must start with either one plus sign (+) or one minus sign (-).\",\"Must contain one or more word characters (alphanumeric characters and underscores).\"]"
+		)
+		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, "FindScatteredLists")
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedResponseBody)
+	})
+
+	t.Run("got an expected service error", func(t *testing.T) {
+		var (
+			expectedError      = noda.ErrUserNotFound
+			expectedStatusCode = expectedError.Status()
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.On("FindScatteredLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, expectedError)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedError.Details())
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var (
+			unexpected         = errors.New("unexpected error")
+			expectedStatusCode = http.StatusInternalServerError
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		var s = new(listServiceMock)
+		s.On("FindScatteredLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}
