@@ -45,7 +45,7 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 	var userID, _ = extractUserPayload(r)
 	var insertedID uuid.UUID
 	if grouped == t {
-		groupID, err := parsePathParameterToUUID(r, "group_id")
+		groupID := parseParameterToUUID(w, r, "group_id")
 		if nil != err {
 			var e *noda.Error
 			if errors.As(err, &e) {
@@ -103,7 +103,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 		err       error
 	)
 	if grouped == t {
-		groupID, err = parsePathParameterToUUID(r, "group_id")
+		groupID = parseParameterToUUID(w, r, "group_id")
 		if nil != err {
 			var e *noda.Error
 			if errors.As(err, &e) {
@@ -114,7 +114,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 			return
 		}
 	}
-	listID, err := parsePathParameterToUUID(r, "list_id")
+	var listID = parseParameterToUUID(w, r, "list_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -154,7 +154,7 @@ func (h *ListHandler) HandleScatteredListRetrievalByID(w http.ResponseWriter, r 
 
 func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http.Request) {
 	var ownerID, _ = extractUserPayload(r)
-	groupID, err := parsePathParameterToUUID(r, "group_id")
+	groupID := parseParameterToUUID(w, r, "group_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -239,7 +239,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		err        error
 		target     string
 	)
-	listID, err := parsePathParameterToUUID(r, "list_id")
+	var listID = parseParameterToUUID(w, r, "list_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -250,7 +250,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		return
 	}
 	if grouped == t {
-		groupID, err = parsePathParameterToUUID(r, "group_id")
+		groupID = parseParameterToUUID(w, r, "group_id")
 		if nil != err {
 			var e *noda.Error
 			if errors.As(err, &e) {

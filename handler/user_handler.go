@@ -83,7 +83,7 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 }
 
 func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
-	userID, err := parsePathParameterToUUID(r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -111,7 +111,7 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request) {
-	userID, err := parsePathParameterToUUID(r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -146,7 +146,7 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
-	userID, err := parsePathParameterToUUID(r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -181,7 +181,7 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
-	userToBlock, err := parsePathParameterToUUID(r, "user_id")
+	var userToBlock = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -221,7 +221,7 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
-	userToUnblock, err := parsePathParameterToUUID(r, "user_id")
+	var userToUnblock = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -261,7 +261,7 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userToDelete, err := parsePathParameterToUUID(r, "user_id")
+	var userToDelete = parseParameterToUUID(w, r, "user_id")
 	if nil != err {
 		var e *noda.Error
 		if errors.As(err, &e) {

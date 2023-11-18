@@ -144,21 +144,24 @@ func parseRequestBody(w http.ResponseWriter, r *http.Request, target any) error 
 	return nil
 }
 
-func parsePathParameterToUUID(r *http.Request, parameter string) (uuid.UUID, error) {
+func parseParameterToUUID(w http.ResponseWriter, r *http.Request, parameter string) uuid.UUID {
 	var key = chi.URLParam(r, parameter)
 	id, err := uuid.Parse(key)
 	if nil != err {
 		switch {
 		default:
 			log.Println(err)
-			return uuid.Nil, err
+			w.WriteHeader(http.StatusInternalServerError)
+			return uuid.Nil
 		case strings.Contains(err.Error(), "invalid UUID format"):
-			return uuid.Nil, noda.ErrInvalidUUIDFormat
+			noda.EmitError(w, noda.ErrInvalidUUIDFormat)
+			return uuid.Nil
 		case strings.Contains(err.Error(), "invalid UUID length"):
-			return uuid.Nil, noda.ErrInvalidUUIDLength
+			noda.EmitError(w, noda.ErrInvalidUUIDLength)
+			return uuid.Nil
 		}
 	}
-	return id, nil
+	return id
 }
 
 func extractUserPayload(r *http.Request) (userID uuid.UUID, userRole types.Role) {
