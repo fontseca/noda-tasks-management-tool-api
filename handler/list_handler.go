@@ -199,6 +199,7 @@ func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var search = extractQueryParameter(r, "search", "")
+	var sortExpr = extractSorting(w, r)
 	if "?" == sortExpr {
 		return
 	}

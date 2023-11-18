@@ -80,7 +80,7 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 	return nil
 }
 
-func parseSorting(w http.ResponseWriter, r *http.Request) string {
+func extractSorting(w http.ResponseWriter, r *http.Request) string {
 	sortBy := extractQueryParameter(r, "sort_by", "")
 	if len(r.URL.Query()["sort_by"]) > 1 {
 		noda.EmitError(w, noda.ErrMultipleValuesForQueryParameter.

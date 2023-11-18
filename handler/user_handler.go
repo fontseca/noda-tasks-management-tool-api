@@ -45,7 +45,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	if pagination == nil {
 		return
 	}
-	sortExpr := parseSorting(w, r)
+	sortExpr := extractSorting(w, r)
 	if strings.Compare(sortExpr, "") == 0 {
 		return
 	}
