@@ -32,7 +32,7 @@ const (
 
 func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Request) {
 	var next = new(transfer.ListCreation)
-	var err = decodeJSONRequestBody(w, r, next)
+	var err = parseRequestBody(w, r, next)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
@@ -265,7 +265,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		target = fmt.Sprintf("/me/lists/%s", listID)
 	}
 	var up = new(transfer.ListUpdate)
-	err = decodeJSONRequestBody(w, r, up)
+	err = parseRequestBody(w, r, up)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return

@@ -106,11 +106,11 @@ func extractSorting(w http.ResponseWriter, r *http.Request) string {
 	return "?"
 }
 
-func decodeJSONRequestBody(w http.ResponseWriter, r *http.Request, out any) error {
+func parseRequestBody(w http.ResponseWriter, r *http.Request, target any) error {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var decoder = json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	var err = decoder.Decode(&out)
+	var err = decoder.Decode(&target)
 	if nil != err {
 		var syntaxError *json.SyntaxError
 		var unmarshalTypeError *json.UnmarshalTypeError

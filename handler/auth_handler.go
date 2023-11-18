@@ -19,7 +19,7 @@ func NewAuthenticationHandler(s *service.AuthenticationService) *AuthenticationH
 
 func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	next := &transfer.UserCreation{}
-	var err = decodeJSONRequestBody(w, r, next)
+	var err = parseRequestBody(w, r, next)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
@@ -52,7 +52,7 @@ func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	credentials := &transfer.UserCredentials{}
-	var err = decodeJSONRequestBody(w, r, credentials)
+	var err = parseRequestBody(w, r, credentials)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return

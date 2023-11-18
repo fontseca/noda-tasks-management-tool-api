@@ -21,7 +21,7 @@ func NewGroupHandler(service *service.GroupService) *GroupHandler {
 
 func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Request) {
 	var group = new(transfer.GroupCreation)
-	var err = decodeJSONRequestBody(w, r, group)
+	var err = parseRequestBody(w, r, group)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
@@ -111,7 +111,7 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 
 func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 	var up = new(transfer.GroupUpdate)
-	err := decodeJSONRequestBody(w, r, up)
+	err := parseRequestBody(w, r, up)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return

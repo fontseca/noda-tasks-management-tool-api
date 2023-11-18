@@ -372,7 +372,7 @@ func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *
 
 func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserSettingUpdate{}
-	var err = decodeJSONRequestBody(w, r, up)
+	var err = parseRequestBody(w, r, up)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
@@ -412,7 +412,7 @@ func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *h
 
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserUpdate{}
-	var err = decodeJSONRequestBody(w, r, up)
+	var err = parseRequestBody(w, r, up)
 	if nil != err {
 		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
