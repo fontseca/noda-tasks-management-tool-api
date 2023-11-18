@@ -294,3 +294,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 func (h *ListHandler) HandlePartialUpdateOfGroupedList(w http.ResponseWriter, r *http.Request) {
 	h.doUpdateList(grouped, w, r)
 }
+
+func (h *ListHandler) HandlePartialUpdateOfScatteredList(w http.ResponseWriter, r *http.Request) {
+	h.doUpdateList(scattered, w, r)
+}

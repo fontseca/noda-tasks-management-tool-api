@@ -917,3 +917,76 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		assert.Empty(t, string(responseBody), "No response body is expected.")
 	})
 }
+
+func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
+	var listID = uuid.New()
+	const (
+		method        = "PATCH"
+		target        = "/me/lists/{list_id}"
+		serviceMethod = "UpdateList"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var (
+			up                 = &transfer.ListUpdate{Name: "new list name", Description: "new list description"}
+			expectedStatusCode = http.StatusNoContent
+			requestBody        = marshal(t, up)
+		)
+		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, userID, uuid.Nil, listID, up).Return(true, nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandlePartialUpdateOfScatteredList(recorder, request)
+		var response = recorder.Result()
+		defer response.Body.Close()
+		var responseBody = string(extractResponseBody(t, response.Body))
+		assert.Equal(t, expectedStatusCode, response.StatusCode)
+		assert.Empty(t, responseBody, "No response body is expected.")
+		assert.Empty(t, response.Cookies(), "No cookie is expected, but got: %d.", len(response.Cookies()))
+		assert.Empty(t, response.Header, "No header is expected, but got: %d.", len(response.Header))
+	})
+
+	t.Run("got an expected service error", func(t *testing.T) {
+		var (
+			requestBody        = marshal(t, JSON{"name": "n", "description": "d"})
+			expectedError      = noda.ErrUserNotFound
+			expectedStatusCode = expectedError.Status()
+		)
+		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, userID, uuid.Nil, listID, mock.AnythingOfType("*transfer.ListUpdate")).
+			Return(false, expectedError)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandlePartialUpdateOfScatteredList(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedError.Details())
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var (
+			requestBody        = marshal(t, JSON{"name": "n", "description": "d"})
+			unexpected         = errors.New("unexpected error")
+			expectedStatusCode = http.StatusInternalServerError
+		)
+		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, userID, uuid.Nil, listID, mock.AnythingOfType("*transfer.ListUpdate")).
+			Return(false, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandlePartialUpdateOfScatteredList(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}
