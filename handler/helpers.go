@@ -165,3 +165,15 @@ func extractUserPayload(r *http.Request) (userID uuid.UUID, userRole types.Role)
 	payload := r.Context().Value(types.ContextKey{}).(types.JWTPayload)
 	return payload.UserID, payload.UserRole
 }
+
+func redirect(w http.ResponseWriter, r *http.Request, to string) {
+	var (
+		scheme = "http://"
+		host   = r.Host
+	)
+	if nil != r.TLS {
+		scheme = "https://"
+	}
+	w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, to))
+	w.WriteHeader(http.StatusSeeOther)
+}
