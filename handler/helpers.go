@@ -180,3 +180,7 @@ func redirect(w http.ResponseWriter, r *http.Request, to string) {
 	w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, to))
 	w.WriteHeader(http.StatusSeeOther)
 }
+
+func didNotParse(id uuid.UUID) bool {
+	return uuid.Nil == id
+}

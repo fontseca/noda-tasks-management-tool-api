@@ -56,13 +56,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
 	var groupID = parseParameterToUUID(w, r, "group_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(groupID) {
 		return
 	}
 	group, err := h.s.FindGroupByID(userID, groupID)
@@ -118,8 +112,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 	}
 	userID, _ := extractUserPayload(r)
 	var groupID = parseParameterToUUID(w, r, "group_id")
-	if nil != err {
-		w.WriteHeader(http.StatusInternalServerError)
+	if didNotParse(groupID) {
 		return
 	}
 	ok, err := h.s.UpdateGroup(userID, groupID, up)
@@ -150,8 +143,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 
 func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Request) {
 	var groupID = parseParameterToUUID(w, r, "group_id")
-	if nil != err {
-		w.WriteHeader(http.StatusInternalServerError)
+	if didNotParse(groupID) {
 		return
 	}
 	userID, _ := extractUserPayload(r)

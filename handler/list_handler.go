@@ -46,13 +46,7 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 	var insertedID uuid.UUID
 	if grouped == t {
 		groupID := parseParameterToUUID(w, r, "group_id")
-		if nil != err {
-			var e *noda.Error
-			if errors.As(err, &e) {
-				noda.EmitError(w, e)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+		if didNotParse(groupID) {
 			return
 		}
 		insertedID, err = h.s.SaveList(userID, groupID, next)
@@ -104,24 +98,12 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 	)
 	if grouped == t {
 		groupID = parseParameterToUUID(w, r, "group_id")
-		if nil != err {
-			var e *noda.Error
-			if errors.As(err, &e) {
-				noda.EmitError(w, e)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+		if didNotParse(groupID) {
 			return
 		}
 	}
 	var listID = parseParameterToUUID(w, r, "list_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(listID) {
 		return
 	}
 	list, err := h.s.FindListByID(userID, groupID, listID)
@@ -155,13 +137,7 @@ func (h *ListHandler) HandleScatteredListRetrievalByID(w http.ResponseWriter, r 
 func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http.Request) {
 	var ownerID, _ = extractUserPayload(r)
 	groupID := parseParameterToUUID(w, r, "group_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(groupID) {
 		return
 	}
 	var pagination = parsePagination(w, r)
@@ -240,24 +216,12 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		target     string
 	)
 	var listID = parseParameterToUUID(w, r, "list_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(listID) {
 		return
 	}
 	if grouped == t {
 		groupID = parseParameterToUUID(w, r, "group_id")
-		if nil != err {
-			var e *noda.Error
-			if errors.As(err, &e) {
-				noda.EmitError(w, e)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+		if didNotParse(groupID) {
 			return
 		}
 		target = fmt.Sprintf("/me/groups/%s/lists/%s", groupID, listID)

@@ -84,13 +84,8 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 
 func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userID) {
+		return
 	}
 	user, err := h.s.GetByID(userID)
 	if err != nil {
@@ -112,13 +107,8 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userID) {
+		return
 	}
 	userWasPromoted, err := h.s.PromoteToAdmin(userID)
 	if err != nil {
@@ -147,13 +137,8 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 
 func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userID) {
+		return
 	}
 	userWasPromoted, err := h.s.DegradeToNormalUser(userID)
 	if err != nil {
@@ -182,13 +167,8 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	var userToBlock = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userToBlock) {
+		return
 	}
 	userID, _ := extractUserPayload(r)
 	if userToBlock == userID {
@@ -222,13 +202,8 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 	var userToUnblock = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userToUnblock) {
+		return
 	}
 	userID, _ := extractUserPayload(r)
 	if userToUnblock == userID {
@@ -262,13 +237,8 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var userToDelete = parseParameterToUUID(w, r, "user_id")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if didNotParse(userToDelete) {
+		return
 	}
 	userID, _ := extractUserPayload(r)
 	if userToDelete == userID {
