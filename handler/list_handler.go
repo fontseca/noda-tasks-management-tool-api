@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"log"
 	"net/http"
@@ -229,4 +230,67 @@ func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Requ
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Request) {
+	var (
+		ownerID, _ = extractUserPayload(r)
+		groupID    = uuid.Nil
+		err        error
+		target     string
+	)
+	listID, err := parsePathParameterToUUID(r, "list_id")
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	if grouped == t {
+		groupID, err = parsePathParameterToUUID(r, "group_id")
+		if nil != err {
+			var e *noda.Error
+			if errors.As(err, &e) {
+				noda.EmitError(w, e)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			return
+		}
+		target = fmt.Sprintf("/me/groups/%s/lists/%s", groupID, listID)
+	} else {
+		target = fmt.Sprintf("/me/lists/%s", listID)
+	}
+	var up = new(transfer.ListUpdate)
+	err = decodeJSONRequestBody(w, r, up)
+	if nil != err {
+		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		return
+	}
+	if "" == up.Name && "" == up.Description {
+		redirect(w, r, target)
+		return
+	}
+	ok, err := h.s.UpdateList(ownerID, groupID, listID, up)
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	if ok {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	redirect(w, r, target)
+}
+
+func (h *ListHandler) HandlePartialUpdateOfGroupedList(w http.ResponseWriter, r *http.Request) {
+	h.doUpdateList(grouped, w, r)
 }
