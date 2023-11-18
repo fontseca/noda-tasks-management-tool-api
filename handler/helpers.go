@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func parseQueryParameter(r *http.Request, key, fallback string) string {
+func extractQueryParameter(r *http.Request, key, fallback string) string {
 	k := strings.Trim(r.URL.Query().Get(key), " \t\n")
 	if strings.Compare(k, "") == 0 {
 		return fallback
@@ -25,7 +25,7 @@ func parseQueryParameter(r *http.Request, key, fallback string) string {
 }
 
 func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
-	page, err := strconv.ParseInt(parseQueryParameter(r, "page", "1"), 10, 64)
+	page, err := strconv.ParseInt(extractQueryParameter(r, "page", "1"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
 		var e = noda.ErrBadQueryParameter.Clone()
@@ -48,7 +48,7 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 		agg.Append("The parameter \"page\" must be a positive number.")
 	}
 
-	rpp, err := strconv.ParseInt(parseQueryParameter(r, "rpp", "10"), 10, 64)
+	rpp, err := strconv.ParseInt(extractQueryParameter(r, "rpp", "10"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
 		var e = noda.ErrBadQueryParameter.Clone()
@@ -81,7 +81,7 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 }
 
 func parseSorting(w http.ResponseWriter, r *http.Request) string {
-	sortBy := parseQueryParameter(r, "sort_by", "")
+	sortBy := extractQueryParameter(r, "sort_by", "")
 	if len(r.URL.Query()["sort_by"]) > 1 {
 		noda.EmitError(w, noda.ErrMultipleValuesForQueryParameter.
 			Clone().

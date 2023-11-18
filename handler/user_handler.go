@@ -49,7 +49,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	if strings.Compare(sortExpr, "") == 0 {
 		return
 	}
-	needle := parseQueryParameter(r, "q", "")
+	needle := extractQueryParameter(r, "q", "")
 	res, err := h.s.SearchUsers(pagination, needle, sortExpr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -168,7 +168,7 @@ func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http
 	if nil == pagination {
 		return
 	}
-	var search, sortExpr = parseQueryParameter(r, "search", ""), parseSorting(w, r)
+	var search, sortExpr = extractQueryParameter(r, "search", ""), extractSorting(w, r)
 	if "?" == sortExpr {
 		return
 	}
@@ -198,13 +198,12 @@ func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Requ
 	if nil == pagination {
 		return
 	}
-	var search = parseQueryParameter(r, "search", "")
-	var sortExpr = parseSorting(w, r)
+	var search = extractQueryParameter(r, "search", "")
 	if "?" == sortExpr {
 		return
 	}
 	var (
-		all    = parseQueryParameter(r, "all", "")
+		all    = extractQueryParameter(r, "all", "")
 		result *types.Result[model.List]
 		err    error
 	)
