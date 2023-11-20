@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -33,13 +32,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 	}
 	userID, _ := extractUserPayload(r)
 	insertedID, err := h.s.SaveGroup(userID, group)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	var result = map[string]string{"insertedID": insertedID}
@@ -60,13 +53,7 @@ func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Re
 		return
 	}
 	group, err := h.s.FindGroupByID(userID, groupID)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(group)
@@ -85,13 +72,7 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	groups, err := h.s.FindGroups(userID, pagination, "", "")
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(groups)
@@ -116,13 +97,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ok, err := h.s.UpdateGroup(userID, groupID, up)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	if ok {
@@ -147,14 +122,8 @@ func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	_, err = h.s.DeleteGroup(userID, groupID)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	_, err := h.s.DeleteGroup(userID, groupID)
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

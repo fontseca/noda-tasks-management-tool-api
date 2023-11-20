@@ -27,13 +27,10 @@ func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 	if pagination == nil { /* Errors handled in parsePagination ocurred.  */
 		return
 	}
-
 	res, err := h.s.GetAll(pagination)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
-
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -51,8 +48,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	needle := extractQueryParameter(r, "q", "")
 	res, err := h.s.SearchUsers(pagination, needle, sortExpr)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(res)
@@ -71,8 +67,7 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 	}
 
 	res, err := h.s.GetAllBlocked(pagination)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 
@@ -88,13 +83,8 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user, err := h.s.GetByID(userID)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	data, err := json.Marshal(user)
 	if nil != err {
@@ -111,13 +101,8 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	userWasPromoted, err := h.s.PromoteToAdmin(userID)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
@@ -141,13 +126,8 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userWasPromoted, err := h.s.DegradeToNormalUser(userID)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
@@ -176,13 +156,8 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userWasBlocked, err := h.s.Block(userToBlock)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	if userWasBlocked {
 		w.WriteHeader(http.StatusNoContent)
@@ -211,13 +186,8 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userWasUnblocked, err := h.s.Unblock(userToUnblock)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	if userWasUnblocked {
 		w.WriteHeader(http.StatusNoContent)
@@ -245,14 +215,9 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		noda.EmitError(w, noda.ErrSelfOperation)
 		return
 	}
-	err = h.s.HardDelete(userToDelete)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	err := h.s.HardDelete(userToDelete)
+	if gotAndHandledServiceError(w, err) {
+		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -426,13 +391,7 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
 	id, err := h.s.SoftDelete(userID)
-	if err != nil {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(id)

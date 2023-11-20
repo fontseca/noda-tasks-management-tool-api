@@ -184,3 +184,16 @@ func redirect(w http.ResponseWriter, r *http.Request, to string) {
 func didNotParse(id uuid.UUID) bool {
 	return uuid.Nil == id
 }
+
+func gotAndHandledServiceError(w http.ResponseWriter, err error) bool {
+	if nil != err {
+		var e *noda.Error
+		if errors.As(err, &e) {
+			noda.EmitError(w, e)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return true
+	}
+	return false
+}

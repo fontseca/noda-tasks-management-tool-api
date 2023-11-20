@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"log"
@@ -50,24 +49,12 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 			return
 		}
 		insertedID, err = h.s.SaveList(userID, groupID, next)
-		if nil != err {
-			var e *noda.Error
-			if errors.As(err, &e) {
-				noda.EmitError(w, e)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+		if gotAndHandledServiceError(w, err) {
 			return
 		}
 	} else {
 		insertedID, err = h.s.SaveList(userID, uuid.Nil, next)
-		if nil != err {
-			var e *noda.Error
-			if errors.As(err, &e) {
-				noda.EmitError(w, e)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+		if gotAndHandledServiceError(w, err) {
 			return
 		}
 	}
@@ -107,13 +94,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 		return
 	}
 	list, err := h.s.FindListByID(userID, groupID, listID)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(list)
@@ -149,13 +130,7 @@ func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http
 		return
 	}
 	result, err := h.s.FindGroupedLists(ownerID, groupID, pagination, search, sortExpr)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(result)
@@ -189,13 +164,7 @@ func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Requ
 	} else {
 		result, err = h.s.FindScatteredLists(ownerID, pagination, search, sortExpr)
 	}
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	data, err := json.Marshal(result)
@@ -239,13 +208,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		return
 	}
 	ok, err := h.s.UpdateList(ownerID, groupID, listID, up)
-	if nil != err {
-		var e *noda.Error
-		if errors.As(err, &e) {
-			noda.EmitError(w, e)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	if gotAndHandledServiceError(w, err) {
 		return
 	}
 	if ok {
