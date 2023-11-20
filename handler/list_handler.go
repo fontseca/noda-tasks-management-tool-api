@@ -252,3 +252,6 @@ func (h *ListHandler) HandleGroupedListDeletion(w http.ResponseWriter, r *http.R
 	h.doDeleteList(grouped, w, r)
 }
 
+func (h *ListHandler) HandleScatteredListDeletion(w http.ResponseWriter, r *http.Request) {
+	h.doDeleteList(scattered, w, r)
+}
