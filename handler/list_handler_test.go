@@ -75,7 +75,7 @@ func (o *listServiceMock) FindScatteredLists(ownerID uuid.UUID, pagination *type
 
 func (o *listServiceMock) DeleteList(ownerID, groupID, listID uuid.UUID) error {
 	var args = o.Called(ownerID, groupID, listID)
-	return args.Error(1)
+	return args.Error(0)
 }
 
 func (o *listServiceMock) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
@@ -983,6 +983,112 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 			Return(false, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandlePartialUpdateOfScatteredList(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}
+
+func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
+	var listID, groupID = uuid.New(), uuid.New()
+	const (
+		method        = "DELETE"
+		target        = "/me/groups/{group_id}/lists/{list_id}"
+		serviceMethod = "DeleteList"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var expectedStatusCode = http.StatusNoContent
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, userID, groupID, listID).Return(nil)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListDeletion(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Empty(t, responseBody)
+		assert.Empty(t, result.Header, "No header is expected, but got: %d.", len(result.Header))
+		assert.Empty(t, result.Cookies(), "No cookie is expected, but got: %d.", len(result.Cookies()))
+	})
+
+	t.Run("parsing \"group_id\" failed: UUID is too short", func(t *testing.T) {
+		var (
+			expectedStatusCode     = http.StatusBadRequest
+			expectedInResponseBody = "Invalid UUID length."
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": "x"})
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, serviceMethod)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListDeletion(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedInResponseBody)
+	})
+
+	t.Run("parsing \"list_id\" failed: UUID is too short", func(t *testing.T) {
+		var (
+			expectedStatusCode     = http.StatusBadRequest
+			expectedInResponseBody = "Invalid UUID length."
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": "x"})
+		var s = new(listServiceMock)
+		s.AssertNotCalled(t, serviceMethod)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListDeletion(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedInResponseBody)
+	})
+
+	t.Run("got an expected service error", func(t *testing.T) {
+		var (
+			expectedError          = noda.ErrUserNotFound
+			expectedStatusCode     = expectedError.Status()
+			expectedInResponseBody = expectedError.Details()
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
+			Return(expectedError)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListDeletion(recorder, request)
+		var result = recorder.Result()
+		defer result.Body.Close()
+		var responseBody = extractResponseBody(t, result.Body)
+		assert.Equal(t, expectedStatusCode, result.StatusCode)
+		assert.Contains(t, string(responseBody), expectedInResponseBody)
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var (
+			expectedStatusCode = http.StatusInternalServerError
+			unexpected         = errors.New("unexpected error")
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": listID.String()})
+		var s = new(listServiceMock)
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
+			Return(unexpected)
+		var recorder = httptest.NewRecorder()
+		NewListHandler(s).HandleGroupedListDeletion(recorder, request)
 		var result = recorder.Result()
 		defer result.Body.Close()
 		var responseBody = extractResponseBody(t, result.Body)

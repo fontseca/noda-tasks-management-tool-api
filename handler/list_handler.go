@@ -225,3 +225,30 @@ func (h *ListHandler) HandlePartialUpdateOfGroupedList(w http.ResponseWriter, r 
 func (h *ListHandler) HandlePartialUpdateOfScatteredList(w http.ResponseWriter, r *http.Request) {
 	h.doUpdateList(scattered, w, r)
 }
+
+func (h *ListHandler) doDeleteList(t listType, w http.ResponseWriter, r *http.Request) {
+	var (
+		userID, _ = extractUserPayload(r)
+		groupID   = uuid.Nil
+	)
+	if grouped == t {
+		groupID = parseParameterToUUID(w, r, "group_id")
+		if didNotParse(groupID) {
+			return
+		}
+	}
+	var listID = parseParameterToUUID(w, r, "list_id")
+	if didNotParse(listID) {
+		return
+	}
+	err := h.s.DeleteList(userID, groupID, listID)
+	if gotAndHandledServiceError(w, err) {
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ListHandler) HandleGroupedListDeletion(w http.ResponseWriter, r *http.Request) {
+	h.doDeleteList(grouped, w, r)
+}
+
