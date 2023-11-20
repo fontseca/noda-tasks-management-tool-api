@@ -195,7 +195,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		}
 		target = fmt.Sprintf("/me/groups/%s/lists/%s", groupID, listID)
 	} else {
-		target = fmt.Sprintf("/me/lists/%s", listID)
+		target = "/me/lists/" + listID.String()
 	}
 	var up = new(transfer.ListUpdate)
 	err = parseRequestBody(w, r, up)

@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"noda"
@@ -106,18 +105,8 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			path   = fmt.Sprintf("/users/%s", userID)
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, "/users/"+userID.String())
 }
 
 func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
@@ -131,18 +120,8 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			path   = fmt.Sprintf("/users/%s", userID)
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, "/users/"+userID.String())
 }
 
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
@@ -161,18 +140,8 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if userWasBlocked {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			path   = fmt.Sprintf("/users/%s", userID)
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, "/users/"+userID.String())
 }
 
 func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
@@ -191,18 +160,8 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if userWasUnblocked {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			path   = fmt.Sprintf("/users/%s", userToUnblock)
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, "/users/"+userToUnblock.String())
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -331,18 +290,8 @@ func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *h
 	}
 	if wasUpdated {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			path   = fmt.Sprintf("/me/settings/%s", settingKey)
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, "/me/settings/"+settingKey)
 }
 
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -374,18 +323,8 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 	}
 	if userWasUpdated {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		var (
-			scheme = "http://"
-			host   = r.Host
-			self   = r.URL.Path
-		)
-		if r.TLS != nil { /* Running on HTTPS.  */
-			scheme = "https://"
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, self))
-		w.WriteHeader(http.StatusSeeOther)
 	}
+	redirect(w, r, r.URL.Path)
 }
 
 func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {

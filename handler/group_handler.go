@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"noda"
@@ -104,16 +103,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	var (
-		scheme = "http://"
-		host   = r.Host
-		path   = fmt.Sprintf("/me/groups/%s", groupID)
-	)
-	if nil != r.TLS {
-		scheme = "https://"
-	}
-	w.Header().Set("Location", fmt.Sprintf("%s%s%s", scheme, host, path))
-	w.WriteHeader(http.StatusSeeOther)
+	redirect(w, r, "/me/groups/"+groupID.String())
 }
 
 func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Request) {
