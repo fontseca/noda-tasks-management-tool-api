@@ -194,7 +194,8 @@ func TestListService_SaveList(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.SaveList(ownerID, groupID, next)
 		next.Name = previousName
-		assert.ErrorContains(t, err, "name too long")
+		assert.ErrorContains(t, err,
+			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 

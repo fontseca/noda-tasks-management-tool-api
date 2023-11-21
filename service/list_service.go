@@ -51,9 +51,11 @@ func (s *listService) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCr
 	next.Description = strings.Trim(next.Description, " \t\n")
 	switch {
 	case "" == next.Name:
-		return uuid.Nil, errors.New("name cannot be an empty string")
+		return uuid.Nil, errors.New("name cannot be an empty string") // must've been handled by validator
 	case 50 < len(next.Name):
-		return uuid.Nil, errors.New("name too long for list: max length must be 50")
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("name", "list", 50)
+	case 1<<9 < len(next.Description):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("description", "list", 1<<9)
 	}
 	if uuid.Nil != groupID {
 		groupIDStr = groupID.String()
