@@ -57,7 +57,7 @@ func (r *ListRepository) InsertList(
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			}
@@ -92,7 +92,7 @@ func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *m
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -122,7 +122,7 @@ func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err erro
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -147,7 +147,7 @@ func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err e
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -183,7 +183,7 @@ func (r *ListRepository) FetchLists(
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -228,7 +228,7 @@ func (r *ListRepository) FetchGroupedLists(
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			}
@@ -275,7 +275,7 @@ func (r *ListRepository) FetchScatteredLists(
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			}
 		} else if isContextDeadlineError(err) {
 			log.Println(err)
@@ -313,7 +313,7 @@ func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, e
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -342,7 +342,7 @@ func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -371,7 +371,7 @@ func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
 				err = noda.ErrListNotFound
 			}
@@ -398,7 +398,7 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
@@ -434,7 +434,7 @@ func (r *ListRepository) UpdateList(
 			default:
 				log.Println(noda.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				err = noda.ErrUserNotFound
+				err = noda.ErrUserNoLongerExists
 			case isNonexistentGroupError(pqerr):
 				err = noda.ErrGroupNotFound
 			case isNonexistentListError(pqerr):
