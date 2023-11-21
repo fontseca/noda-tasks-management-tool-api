@@ -18,7 +18,10 @@ RETURN QUERY
       SELECT *
         FROM "list" l
        WHERE l."owner_id" = p_owner_id AND
-             l."group_id" = CASE WHEN is_scattered_list THEN NULL ELSE p_group_id END AND
+             CASE WHEN is_scattered_list
+                  THEN TRUE
+                  ELSE l."group_id" = "p_group_id"
+             END AND
              l."list_id" = p_list_id;
 END;
 $$;
