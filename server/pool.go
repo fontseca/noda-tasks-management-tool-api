@@ -37,6 +37,21 @@ func getGroupService() *service.GroupService {
 }
 
 var (
+	listOnce    sync.Once
+	listService service.ListService
+)
+
+func getListService() service.ListService {
+	if nil == listService {
+		listOnce.Do(func() {
+			r := repository.NewListRepository(getDatabase())
+			listService = service.NewListService(r)
+		})
+	}
+	return listService
+}
+
+var (
 	taskOnce    sync.Once
 	taskService *service.TaskService
 )
