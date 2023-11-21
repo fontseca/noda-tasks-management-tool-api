@@ -20,6 +20,7 @@ func startRouter() *chi.Mux {
 	routeAuthentication(r)
 	routeUsers(r)
 	routeGroups(r)
+	routeLists(r)
 	routeTasks(r)
 	return r
 }
@@ -74,6 +75,25 @@ func routeGroups(router chi.Router) {
 			r.Get("/me/groups/{group_id}", h.HandleRetrieveGroupByID)
 			r.Patch("/me/groups/{group_id}", h.HandleGroupUpdate)
 			r.Delete("/me/groups/{group_id}", h.HandleGroupDeletion)
+		})
+}
+
+func routeLists(router chi.Router) {
+	s := getListService()
+	h := handler.NewListHandler(s)
+	router.
+		With(authorization).
+		Group(func(r chi.Router) {
+			r.Post("/me/lists", h.HandleScatteredListCreation)
+			r.Get("/me/lists", h.HandleRetrievalOfLists)
+			r.Get("/me/lists/{list_id}", h.HandleScatteredListRetrievalByID)
+			r.Patch("/me/lists/{list_id}", h.HandlePartialUpdateOfScatteredList)
+			r.Delete("/me/lists/{list_id}", h.HandleScatteredListDeletion)
+			r.Post("/me/groups/{group_id}/lists", h.HandleGroupedListCreation)
+			r.Get("/me/groups/{group_id}/lists", h.HandleGroupedListsRetrieval)
+			r.Get("/me/groups/{group_id}/lists/{list_id}", h.HandleGroupedListRetrievalByID)
+			r.Patch("/me/groups/{group_id}/lists/{list_id}", h.HandlePartialUpdateOfGroupedList)
+			r.Delete("/me/groups/{group_id}/lists/{list_id}", h.HandleGroupedListDeletion)
 		})
 }
 
