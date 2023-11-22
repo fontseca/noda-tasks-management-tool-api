@@ -21,15 +21,15 @@ func Run() {
 		IdleTimeout:       config.IdleTimeout,
 		Handler:           r,
 		ErrorLog:          log.New(os.Stderr, "\033[0;31mfatal: \033[0m", log.LstdFlags),
-		ConnState:         tcpConnStatLogger,
 	}
-
+	if logConnState {
+		server.ConnState = tcpConnStatLogger
+	}
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", config.Host, config.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer listener.Close()
-
 	fmt.Printf("Serving HTTP at \033[0;32m`%s'\033[0m ...\n", listener.Addr())
 	log.Fatal(server.Serve(listener))
 }

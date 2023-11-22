@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var logConnState bool = false
+
 type DatabaseConfig struct {
 	Name string
 	Host string
