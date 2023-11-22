@@ -11,7 +11,7 @@ DECLARE
   n_affected_rows INT;
 BEGIN
   CALL assert_user_exists (p_owner_id);
-  CALL assert_list_exists (p_owner_id, p_list_id);
+  CALL assert_list_exists_somewhere (p_owner_id, p_list_id);
   CALL assert_group_exists (p_owner_id, p_dst_group_id);
   SELECT l."group_id"
     INTO current_group_id
