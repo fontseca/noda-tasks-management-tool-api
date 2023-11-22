@@ -67,7 +67,6 @@ func main() {
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
 	}
-	dbRootConf.LogSuccess()
 
 	ExecuteScriptsOf("init", index.Init)
 
@@ -85,7 +84,6 @@ func main() {
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
 	}
-	dbAdminConf.LogSuccess()
 
 	ExecuteScriptsOf("extensions", index.Extensions)
 	ExecuteScriptsOf("domains", index.Domains)

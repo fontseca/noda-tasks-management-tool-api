@@ -34,10 +34,6 @@ func (db *DatabaseConfig) Conn() string {
 		db.User.Name, db.User.Password, db.Host, db.Name)
 }
 
-func (db *DatabaseConfig) LogSuccess() {
-	fmt.Printf("Connection established to database \033[0;32m`%s'\033[0m as user \033[0;34m`%s'\033[0m ...\n", db.Name, db.User.Name)
-}
-
 func getDatabaseConfig() *DatabaseConfig {
 	return &DatabaseConfig{
 		Name: getEnv("DB_NAME"),

@@ -25,7 +25,6 @@ func connectToDatabase() {
 			if err := db.Ping(); err != nil {
 				log.Fatal(err)
 			}
-			dbconfig.LogSuccess()
 		})
 		return
 	}
