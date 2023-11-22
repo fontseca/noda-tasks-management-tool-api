@@ -10,6 +10,7 @@ DECLARE
   new_list_id "list"."list_id"%TYPE;
 BEGIN
   CALL assert_user_exists (p_owner_id);
+  CALL assert_is_not_special_list (p_owner_id, p_list_id);
   CALL assert_list_exists_somewhere (p_owner_id, p_list_id);
   SELECT *
     INTO current_list

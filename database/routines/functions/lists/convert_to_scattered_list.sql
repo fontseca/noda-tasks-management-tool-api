@@ -10,6 +10,7 @@ DECLARE
   n_affected_rows INT;
 BEGIN
   CALL assert_user_exists (p_owner_id);
+  CALL assert_is_not_special_list (p_owner_id, p_list_id);
   CALL assert_list_exists_somewhere (p_owner_id, p_list_id);
   SELECT l."group_id"
     INTO current_group_id
@@ -30,6 +31,5 @@ END;
 $$;
 
 ALTER FUNCTION convert_to_scattered_list ("list"."owner_id"%TYPE,
-                                          "list"."group_id"%TYPE,
                                           "list"."list_id"%TYPE)
       OWNER TO "noda";
