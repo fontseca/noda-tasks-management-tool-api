@@ -15,10 +15,7 @@ DECLARE
   is_scattered_list CONSTANT BOOLEAN := p_group_id IS NULL;
 BEGIN
   CALL assert_user_exists (p_owner_id);
-  IF NOT is_scattered_list THEN
-    CALL assert_group_exists (p_owner_id, p_group_id);
-  END IF;
-  CALL assert_list_exists (p_owner_id, p_list_id);
+  CALL assert_list_exists (p_owner_id, p_group_id, p_list_id);
   SELECT l."name",
          l."description"
     INTO old_l_name,
@@ -43,7 +40,7 @@ BEGIN
          "updated_at" = 'now ()'
    WHERE "owner_id" = p_owner_id AND
          CASE WHEN is_scattered_list
-              THEN TRUE
+              THEN "group_id" IS NULL
               ELSE "group_id" = p_group_id
           END AND
          "list_id" = p_list_id;
