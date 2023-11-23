@@ -39,12 +39,12 @@ func routeUsers(router chi.Router) {
 	router.
 		With(authorization).
 		Group(func(r chi.Router) {
-			r.Get("/me", h.RetrieveCurrentUser)
-			r.Patch("/me", h.UpdateCurrentUser)
-			r.Delete("/me", h.RemoveCurrentUser)
-			r.Get("/me/settings", h.RetrieveCurrentUserSettings)
-			r.Get("/me/settings/{setting_key}", h.RetrieveOneSettingOfCurrentUser)
-			r.Put("/me/settings/{setting_key}", h.UpdateOneSettingForCurrentUser)
+			r.Get("/me", h.HandleRetrievalOfLoggedInUser)
+			r.Patch("/me", h.HandleUpdateForLoggedUser)
+			r.Delete("/me", h.HandleRemovalOfLoggedUser)
+			r.Get("/me/settings", h.HandleRetrievalOfLoggedUserSettings)
+			r.Get("/me/settings/{setting_key}", h.HandleRetrievalOfOneSettingOfLoggedUser)
+			r.Put("/me/settings/{setting_key}", h.HandleUpdateOneSettingForLoggedUser)
 			r.Post("/me/change_password", nil)
 		})
 	/* For administrator.  */
@@ -52,15 +52,15 @@ func routeUsers(router chi.Router) {
 		With(authorization).
 		With(adminPrivileges).
 		Group(func(r chi.Router) {
-			r.Get("/users", h.RetrieveAllUsers)
-			r.Get("/users/{user_id}", h.RetrieveUserByID)
-			r.Get("/users/search", h.SearchUsers)
-			r.Delete("/users/{user_id}", h.DeleteUser)
-			r.Put("/users/{user_id}/block", h.BlockUser)
-			r.Delete("/users/{user_id}/block", h.UnblockUser)
-			r.Get("/users/blocked", h.RetrieveAllBlockedUsers)
-			r.Put("/users/{user_id}/make_admin", h.PromoteUserToAdmin)
-			r.Delete("/users/{user_id}/make_admin", h.DegradeAdminUser)
+			r.Get("/users", h.HandleUsersRetrieval)
+			r.Get("/users/{user_id}", h.HandleRetrievalOfUserByID)
+			r.Get("/users/search", h.HandleUsersSearch)
+			r.Delete("/users/{user_id}", h.HandleUserDeletion)
+			r.Put("/users/{user_id}/block", h.HandleBlockUser)
+			r.Delete("/users/{user_id}/block", h.HandleUnblockUser)
+			r.Get("/users/blocked", h.HandleBlockedUsersRetrieval)
+			r.Put("/users/{user_id}/make_admin", h.HandleAdminPromotion)
+			r.Delete("/users/{user_id}/make_admin", h.HandleDegradeAdminToUser)
 		})
 }
 

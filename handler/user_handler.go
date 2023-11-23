@@ -21,9 +21,9 @@ func NewUserHandler(service service.UserService) *UserHandler {
 	return &UserHandler{service}
 }
 
-func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUsersRetrieval(w http.ResponseWriter, r *http.Request) {
 	pagination := parsePagination(w, r)
-	if pagination == nil { /* Errors handled in parsePagination ocurred.  */
+	if pagination == nil {
 		return
 	}
 	res, err := h.s.Fetch(pagination)
@@ -36,7 +36,7 @@ func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUsersSearch(w http.ResponseWriter, r *http.Request) {
 	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
@@ -59,7 +59,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleBlockedUsersRetrieval(w http.ResponseWriter, r *http.Request) {
 	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
@@ -76,7 +76,7 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userID) {
 		return
@@ -94,7 +94,7 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleAdminPromotion(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userID) {
 		return
@@ -109,7 +109,7 @@ func (h *UserHandler) PromoteUserToAdmin(w http.ResponseWriter, r *http.Request)
 	redirect(w, r, "/users/"+userID.String())
 }
 
-func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleDegradeAdminToUser(w http.ResponseWriter, r *http.Request) {
 	var userID = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userID) {
 		return
@@ -124,7 +124,7 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	redirect(w, r, "/users/"+userID.String())
 }
 
-func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleBlockUser(w http.ResponseWriter, r *http.Request) {
 	var userToBlock = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userToBlock) {
 		return
@@ -144,7 +144,7 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	redirect(w, r, "/users/"+userID.String())
 }
 
-func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUnblockUser(w http.ResponseWriter, r *http.Request) {
 	var userToUnblock = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userToUnblock) {
 		return
@@ -164,7 +164,7 @@ func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
 	redirect(w, r, "/users/"+userToUnblock.String())
 }
 
-func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUserDeletion(w http.ResponseWriter, r *http.Request) {
 	var userToDelete = parseParameterToUUID(w, r, "user_id")
 	if didNotParse(userToDelete) {
 		return
@@ -181,7 +181,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRetrievalOfLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
 	user, err := h.s.FetchByID(userID)
 	if err != nil {
@@ -207,7 +207,7 @@ func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request
 	w.Write(data)
 }
 
-func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter, r *http.Request) {
 	pagination := parsePagination(w, r)
 	if pagination == nil {
 		return
@@ -237,7 +237,7 @@ func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http
 	w.Write(data)
 }
 
-func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRetrievalOfOneSettingOfLoggedUser(w http.ResponseWriter, r *http.Request) {
 	settingKey := chi.URLParam(r, "setting_key")
 	userID, _ := extractUserPayload(r)
 	setting, err := h.s.FetchOneSetting(userID, settingKey)
@@ -264,7 +264,7 @@ func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *
 	w.Write(data)
 }
 
-func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUpdateOneSettingForLoggedUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserSettingUpdate{}
 	var err = parseRequestBody(w, r, up)
 	if nil != err {
@@ -294,7 +294,7 @@ func (h *UserHandler) UpdateOneSettingForCurrentUser(w http.ResponseWriter, r *h
 	redirect(w, r, "/me/settings/"+settingKey)
 }
 
-func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleUpdateForLoggedUser(w http.ResponseWriter, r *http.Request) {
 	up := &transfer.UserUpdate{}
 	var err = parseRequestBody(w, r, up)
 	if nil != err {
@@ -327,7 +327,7 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 	redirect(w, r, r.URL.Path)
 }
 
-func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRemovalOfLoggedUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
 	err := h.s.RemoveSoftly(userID)
 	if gotAndHandledServiceError(w, err) {
