@@ -55,7 +55,7 @@ func TestGroupService_SaveGroup(t *testing.T) {
 		m       *groupRepositoryMock
 		ownerID = uuid.New()
 		next    = new(transfer.GroupCreation)
-		s       *GroupService
+		s       GroupService
 		res     string
 		err     error
 	)
@@ -67,7 +67,7 @@ func TestGroupService_SaveGroup(t *testing.T) {
 		m.On("Save", ownerID.String(), next).
 			Return(ownerID.String(), nil)
 		s = NewGroupService(m)
-		res, err = s.SaveGroup(ownerID, next)
+		res, err = s.Save(ownerID, next)
 		assert.Equal(t, ownerID.String(), res)
 		assert.NoError(t, err)
 	})
@@ -80,7 +80,7 @@ func TestGroupService_SaveGroup(t *testing.T) {
 		m.On("Save", ownerID.String(), next).
 			Return("", unexpected)
 		s = NewGroupService(m)
-		res, err = s.SaveGroup(ownerID, next)
+		res, err = s.Save(ownerID, next)
 		assert.Empty(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
@@ -90,7 +90,7 @@ func TestGroupService_FindGroupByID(t *testing.T) {
 	var (
 		m                *groupRepositoryMock
 		ownerID, groupID = uuid.New(), uuid.New()
-		s                *GroupService
+		s                GroupService
 		res              *model.Group
 		err              error
 	)
@@ -103,7 +103,7 @@ func TestGroupService_FindGroupByID(t *testing.T) {
 		m.On("FetchByID", ownerID.String(), groupID.String()).
 			Return(current, nil)
 		s = NewGroupService(m)
-		res, err = s.FindGroupByID(ownerID, groupID)
+		res, err = s.FetchByID(ownerID, groupID)
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
@@ -116,7 +116,7 @@ func TestGroupService_FindGroupByID(t *testing.T) {
 		m.On("FetchByID", ownerID.String(), groupID.String()).
 			Return(nil, unexpected)
 		s = NewGroupService(m)
-		res, err = s.FindGroupByID(ownerID, groupID)
+		res, err = s.FetchByID(ownerID, groupID)
 		assert.Nil(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
@@ -126,7 +126,7 @@ func TestGroupService_FindGroups(t *testing.T) {
 	var (
 		m       *groupRepositoryMock
 		ownerID = uuid.New()
-		s       *GroupService
+		s       GroupService
 		err     error
 		res     *types.Result[model.Group]
 		pag     = &types.Pagination{Page: 1, RPP: 10}
@@ -146,7 +146,7 @@ func TestGroupService_FindGroups(t *testing.T) {
 		m.On("Fetch", ownerID.String(), pag.Page, pag.RPP, "", "").
 			Return(groups, nil)
 		s = NewGroupService(m)
-		res, err = s.FindGroups(ownerID, pag, "", "")
+		res, err = s.Fetch(ownerID, pag, "", "")
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
@@ -159,7 +159,7 @@ func TestGroupService_FindGroups(t *testing.T) {
 		m.On("Fetch", ownerID.String(), pag.Page, pag.RPP, "", "").
 			Return(nil, unexpected)
 		s = NewGroupService(m)
-		res, err = s.FindGroups(ownerID, pag, "", "")
+		res, err = s.Fetch(ownerID, pag, "", "")
 		assert.Nil(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
@@ -169,7 +169,7 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 	var (
 		m                *groupRepositoryMock
 		ownerID, groupID = uuid.New(), uuid.New()
-		s                *GroupService
+		s                GroupService
 		res              bool
 		err              error
 		up               = new(transfer.GroupUpdate)
@@ -182,7 +182,7 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 		m.On("Update", ownerID.String(), groupID.String(), up).
 			Return(true, nil)
 		s = NewGroupService(m)
-		res, err = s.UpdateGroup(ownerID, groupID, up)
+		res, err = s.Update(ownerID, groupID, up)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
@@ -195,7 +195,7 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 		m.On("Update", ownerID.String(), groupID.String(), up).
 			Return(false, unexpected)
 		s = NewGroupService(m)
-		res, err = s.UpdateGroup(ownerID, groupID, up)
+		res, err = s.Update(ownerID, groupID, up)
 		assert.False(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
@@ -205,7 +205,7 @@ func TestGroupService_DeleteGroup(t *testing.T) {
 	var (
 		m                *groupRepositoryMock
 		ownerID, groupID = uuid.New(), uuid.New()
-		s                *GroupService
+		s                GroupService
 		res              bool
 		err              error
 	)
@@ -217,7 +217,7 @@ func TestGroupService_DeleteGroup(t *testing.T) {
 		m.On("Remove", ownerID.String(), groupID.String()).
 			Return(true, nil)
 		s = NewGroupService(m)
-		res, err = s.DeleteGroup(ownerID, groupID)
+		res, err = s.Remove(ownerID, groupID)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
@@ -230,7 +230,7 @@ func TestGroupService_DeleteGroup(t *testing.T) {
 		m.On("Remove", ownerID.String(), groupID.String()).
 			Return(false, unexpected)
 		s = NewGroupService(m)
-		res, err = s.DeleteGroup(ownerID, groupID)
+		res, err = s.Remove(ownerID, groupID)
 		assert.False(t, res)
 		assert.ErrorIs(t, err, unexpected)
 	})

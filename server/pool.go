@@ -23,10 +23,10 @@ func getAuthenticationService() *service.AuthenticationService {
 
 var (
 	groupOnce    sync.Once
-	groupService *service.GroupService
+	groupService service.GroupService
 )
 
-func getGroupService() *service.GroupService {
+func getGroupService() service.GroupService {
 	if nil == groupService {
 		groupOnce.Do(func() {
 			r := repository.NewGroupRepository(getDatabase())

@@ -10,10 +10,10 @@ import (
 )
 
 type GroupHandler struct {
-	s *service.GroupService
+	s service.GroupService
 }
 
-func NewGroupHandler(service *service.GroupService) *GroupHandler {
+func NewGroupHandler(service service.GroupService) *GroupHandler {
 	return &GroupHandler{service}
 }
 
@@ -30,7 +30,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	insertedID, err := h.s.SaveGroup(userID, group)
+	insertedID, err := h.s.Save(userID, group)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -51,7 +51,7 @@ func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Re
 	if didNotParse(groupID) {
 		return
 	}
-	group, err := h.s.FindGroupByID(userID, groupID)
+	group, err := h.s.FetchByID(userID, groupID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -70,7 +70,7 @@ func (h *GroupHandler) HandleGroupsRetrieval(w http.ResponseWriter, r *http.Requ
 	if nil == pagination {
 		return
 	}
-	groups, err := h.s.FindGroups(userID, pagination, "", "")
+	groups, err := h.s.Fetch(userID, pagination, "", "")
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -95,7 +95,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 	if didNotParse(groupID) {
 		return
 	}
-	ok, err := h.s.UpdateGroup(userID, groupID, up)
+	ok, err := h.s.Update(userID, groupID, up)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -112,7 +112,7 @@ func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	_, err := h.s.DeleteGroup(userID, groupID)
+	_, err := h.s.Remove(userID, groupID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
