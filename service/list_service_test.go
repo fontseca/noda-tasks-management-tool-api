@@ -17,12 +17,12 @@ type listRepositoryMock struct {
 	mock.Mock
 }
 
-func (o *listRepositoryMock) InsertList(ownerID, groupID string, next *transfer.ListCreation) (string, error) {
+func (o *listRepositoryMock) Save(ownerID, groupID string, next *transfer.ListCreation) (string, error) {
 	args := o.Called(ownerID, groupID, next)
 	return args.String(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) FetchListByID(ownerID, groupID, listID string) (*model.List, error) {
+func (o *listRepositoryMock) FetchByID(ownerID, groupID, listID string) (*model.List, error) {
 	args := o.Called(ownerID, groupID, listID)
 	arg1 := args.Get(0)
 	var list *model.List
@@ -42,7 +42,7 @@ func (o *listRepositoryMock) GetTomorrowListID(ownerID string) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) FetchLists(ownerID string, page, rpp int64, needle, sortExpr string) ([]*model.List, error) {
+func (o *listRepositoryMock) Fetch(ownerID string, page, rpp int64, needle, sortExpr string) ([]*model.List, error) {
 	args := o.Called(ownerID, page, rpp, needle, sortExpr)
 	arg1 := args.Get(0)
 	var lists []*model.List
@@ -52,8 +52,8 @@ func (o *listRepositoryMock) FetchLists(ownerID string, page, rpp int64, needle,
 	return lists, args.Error(1)
 }
 
-func (o *listRepositoryMock) FetchGroupedLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
-	args := o.Called(ownerID, groupID, page, rpp, needle, sortBy)
+func (o *listRepositoryMock) FetchGrouped(ownerID, groupID string, page, rpp int64, needle, sortExpr string) ([]*model.List, error) {
+	args := o.Called(ownerID, groupID, page, rpp, needle, sortExpr)
 	arg1 := args.Get(0)
 	var lists []*model.List
 	if nil != arg1 {
@@ -62,8 +62,8 @@ func (o *listRepositoryMock) FetchGroupedLists(ownerID, groupID string, page, rp
 	return lists, args.Error(1)
 }
 
-func (o *listRepositoryMock) FetchScatteredLists(ownerID string, page, rpp int64, needle, sortBy string) ([]*model.List, error) {
-	args := o.Called(ownerID, page, rpp, needle, sortBy)
+func (o *listRepositoryMock) FetchScattered(ownerID string, page, rpp int64, needle, sortExpr string) ([]*model.List, error) {
+	args := o.Called(ownerID, page, rpp, needle, sortExpr)
 	arg1 := args.Get(0)
 	var lists []*model.List
 	if nil != arg1 {
@@ -72,32 +72,32 @@ func (o *listRepositoryMock) FetchScatteredLists(ownerID string, page, rpp int64
 	return lists, args.Error(1)
 }
 
-func (o *listRepositoryMock) DeleteList(ownerID, groupID, listID string) (bool, error) {
+func (o *listRepositoryMock) Remove(ownerID, groupID, listID string) (bool, error) {
 	args := o.Called(ownerID, groupID, listID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) DuplicateList(ownerID, listID string) (string, error) {
+func (o *listRepositoryMock) Duplicate(ownerID, listID string) (string, error) {
 	args := o.Called(ownerID, listID)
 	return args.String(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) ConvertToScatteredList(ownerID, listID string) (bool, error) {
+func (o *listRepositoryMock) Scatter(ownerID, listID string) (bool, error) {
 	args := o.Called(ownerID, listID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) MoveList(ownerID, listID, targetGroupID string) (bool, error) {
+func (o *listRepositoryMock) Move(ownerID, listID, targetGroupID string) (bool, error) {
 	args := o.Called(ownerID, listID, targetGroupID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (o *listRepositoryMock) UpdateList(ownerID, groupID, listID string, up *transfer.ListUpdate) (bool, error) {
+func (o *listRepositoryMock) Update(ownerID, groupID, listID string, up *transfer.ListUpdate) (bool, error) {
 	args := o.Called(ownerID, groupID, listID, up)
 	return args.Bool(0), args.Error(1)
 }
 
-func TestListService_SaveList(t *testing.T) {
+func TestListService_Save(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                *listRepositoryMock
@@ -114,10 +114,10 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("success for grouped list", func(t *testing.T) {
 		insertedID := uuid.New()
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), groupID.String(), next).
+		m.On("Save", ownerID.String(), groupID.String(), next).
 			Return(insertedID.String(), nil)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		assert.Equal(t, insertedID, res)
 		assert.NoError(t, err)
 	})
@@ -125,20 +125,20 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("success for scattered list", func(t *testing.T) {
 		insertedID := uuid.New()
 		m = new(listRepositoryMock)
-		m.On("InsertList", ownerID.String(), "", next).
+		m.On("Save", ownerID.String(), "", next).
 			Return(insertedID.String(), nil)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, uuid.Nil, next)
+		res, err = s.Save(ownerID, uuid.Nil, next)
 		assert.Equal(t, insertedID, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("got UUID parsing error", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Save", mock.Anything, mock.Anything, mock.Anything).
 			Return("x", nil)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		assert.ErrorContains(t, err, "invalid UUID length: 1")
 		assert.Equal(t, uuid.Nil, res)
 	})
@@ -146,10 +146,10 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("did parse UUID", func(t *testing.T) {
 		parsed := uuid.MustParse("4fedb41f-5e44-4e63-9266-4b094bd7ba2d")
 		m = new(listRepositoryMock)
-		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Save", mock.Anything, mock.Anything, mock.Anything).
 			Return(parsed.String(), nil)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		assert.Equal(t, parsed, res)
 		assert.NoError(t, err)
 	})
@@ -158,9 +158,9 @@ func TestListService_SaveList(t *testing.T) {
 		var previousName = next.Name
 		next.Name = "  		  \n"
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
+		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		next.Name = previousName
 		assert.ErrorContains(t, err, "name cannot be an empty string")
 		assert.Equal(t, uuid.Nil, res)
@@ -168,21 +168,21 @@ func TestListService_SaveList(t *testing.T) {
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
+		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
-		res, err = s.SaveList(uuid.Nil, groupID, next)
+		res, err = s.Save(uuid.Nil, groupID, next)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("SaveList", "ownerID").Error())
+			noda.NewNilParameterError("Save", "ownerID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
 	t.Run("parameter next cannot be nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
+		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, nil)
+		res, err = s.Save(ownerID, groupID, nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("SaveList", "next").Error())
+			noda.NewNilParameterError("Save", "creation").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -190,9 +190,9 @@ func TestListService_SaveList(t *testing.T) {
 		var previousName = next.Name
 		next.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
+		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		next.Name = previousName
 		assert.ErrorContains(t, err,
 			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
@@ -203,12 +203,12 @@ func TestListService_SaveList(t *testing.T) {
 		var previousName, previousDesc = next.Name, next.Description
 		var insertedID = uuid.New()
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "InsertList")
+		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
-		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Save", mock.Anything, mock.Anything, mock.Anything).
 			Return(insertedID.String(), nil)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		assert.Equal(t, "list name", next.Name)
 		assert.Equal(t, "description", next.Description)
 		next.Name, next.Description = previousName, previousDesc
@@ -219,16 +219,16 @@ func TestListService_SaveList(t *testing.T) {
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("InsertList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Save", mock.Anything, mock.Anything, mock.Anything).
 			Return("", unexpected)
 		s = NewListService(m)
-		res, err = s.SaveList(ownerID, groupID, next)
+		res, err = s.Save(ownerID, groupID, next)
 		assert.ErrorIs(t, err, unexpected)
 		assert.Equal(t, uuid.Nil, res)
 	})
 }
 
-func TestListService_FetchListByID(t *testing.T) {
+func TestListService_FetchByID(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
@@ -247,51 +247,51 @@ func TestListService_FetchListByID(t *testing.T) {
 
 	t.Run("success for grouped list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("FetchListByID", ownerID.String(), groupID.String(), listID.String()).
+		m.On("FetchByID", ownerID.String(), groupID.String(), listID.String()).
 			Return(actual, nil)
 		s = NewListService(m)
-		res, err = s.FindListByID(ownerID, groupID, listID)
+		res, err = s.FetchByID(ownerID, groupID, listID)
 		assert.NoError(t, err)
 		assert.Equal(t, actual, res)
 	})
 
 	t.Run("success for scattered list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("FetchListByID", ownerID.String(), "", listID.String()).
+		m.On("FetchByID", ownerID.String(), "", listID.String()).
 			Return(actual, nil)
 		s = NewListService(m)
-		res, err = s.FindListByID(ownerID, uuid.Nil, listID)
+		res, err = s.FetchByID(ownerID, uuid.Nil, listID)
 		assert.NoError(t, err)
 		assert.Equal(t, actual, res)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchListByID")
+		m.AssertNotCalled(t, "FetchByID")
 		s = NewListService(m)
-		res, err = s.FindListByID(uuid.Nil, groupID, listID)
+		res, err = s.FetchByID(uuid.Nil, groupID, listID)
 		assert.Nil(t, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindListByID", "ownerID").Error())
+			noda.NewNilParameterError("FetchByID", "ownerID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchListByID")
+		m.AssertNotCalled(t, "FetchByID")
 		s = NewListService(m)
-		res, err = s.FindListByID(ownerID, groupID, uuid.Nil)
+		res, err = s.FetchByID(ownerID, groupID, uuid.Nil)
 		assert.Nil(t, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindListByID", "listID").Error())
+			noda.NewNilParameterError("FetchByID", "listID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("FetchListByID", mock.Anything, mock.Anything, mock.Anything).
+		m.On("FetchByID", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		s = NewListService(m)
-		res, err = s.FindListByID(ownerID, groupID, listID)
+		res, err = s.FetchByID(ownerID, groupID, listID)
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
@@ -423,7 +423,7 @@ func TestListService_GetTomorrowListID(t *testing.T) {
 	})
 }
 
-func TestListService_FindLists(t *testing.T) {
+func TestListService_Fetch(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m          *listRepositoryMock
@@ -443,49 +443,49 @@ func TestListService_FindLists(t *testing.T) {
 			Payload:   lists,
 		}
 		m = new(listRepositoryMock)
-		m.On("FetchLists",
+		m.On("Fetch",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindLists(ownerID, pagination, "", "")
+		res, err = s.Fetch(ownerID, pagination, "", "")
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchLists")
+		m.AssertNotCalled(t, "Fetch")
 		s = NewListService(m)
-		res, err = s.FindLists(uuid.Nil, pagination, "", "")
+		res, err = s.Fetch(uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindLists", "ownerID").Error())
+			noda.NewNilParameterError("Fetch", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
 	t.Run("parameter pagination cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchLists")
+		m.AssertNotCalled(t, "Fetch")
 		s = NewListService(m)
-		res, err = s.FindLists(ownerID, nil, "", "")
+		res, err = s.Fetch(ownerID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindLists", "pagination").Error())
+			noda.NewNilParameterError("Fetch", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("FetchLists",
+		m.On("Fetch",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		s = NewListService(m)
-		res, err = s.FindLists(ownerID, pagination, "", "")
+		res, err = s.Fetch(ownerID, pagination, "", "")
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
 }
 
-func TestListService_FindGroupedLists(t *testing.T) {
+func TestListService_FetchGrouped(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                *listRepositoryMock
@@ -505,42 +505,42 @@ func TestListService_FindGroupedLists(t *testing.T) {
 			Payload:   lists,
 		}
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pagination, "", "")
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchGroupedLists")
+		m.AssertNotCalled(t, "FetchGrouped")
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(uuid.Nil, groupID, pagination, "", "")
+		res, err = s.FetchGrouped(uuid.Nil, groupID, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindGroupedLists", "ownerID").Error())
+			noda.NewNilParameterError("FetchGrouped", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
 	t.Run("parameter groupID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchGroupedLists")
+		m.AssertNotCalled(t, "FetchGrouped")
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, uuid.Nil, pagination, "", "")
+		res, err = s.FetchGrouped(ownerID, uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindGroupedLists", "groupID").Error())
+			noda.NewNilParameterError("FetchGrouped", "groupID").Error())
 		assert.Nil(t, res)
 	})
 
 	t.Run("parameter pagination cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchGroupedLists")
+		m.AssertNotCalled(t, "FetchGrouped")
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, nil, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindGroupedLists", "pagination").Error())
+			noda.NewNilParameterError("FetchGrouped", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -550,12 +550,12 @@ func TestListService_FindGroupedLists(t *testing.T) {
 			needle = "\n		needle 		\n"
 		)
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), pagination.Page, pagination.RPP,
 			strings.Trim(needle, " \n\t"), "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pagination, needle, "")
+		res, err = s.FetchGrouped(ownerID, groupID, pagination, needle, "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -570,11 +570,11 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		/* when page=0 */
 
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), expectedPageNumber, pag.RPP, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 
@@ -582,11 +582,11 @@ func TestListService_FindGroupedLists(t *testing.T) {
 
 		pag.Page = -1
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), expectedPageNumber, pag.RPP, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -601,11 +601,11 @@ func TestListService_FindGroupedLists(t *testing.T) {
 		/* when RPP=0 */
 
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), pag.Page, expectedRPPNumber, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 
@@ -613,27 +613,27 @@ func TestListService_FindGroupedLists(t *testing.T) {
 
 		pag.RPP = -1
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), pag.Page, expectedRPPNumber, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pag, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
 
-	t.Run("parameter sortBy must be trimmed", func(t *testing.T) {
+	t.Run("parameter sortExpr must be trimmed", func(t *testing.T) {
 		var (
-			lists  = make([]*model.List, 0)
-			sortBy = "\n		+first_name 		\n"
+			lists    = make([]*model.List, 0)
+			sortExpr = "\n		+first_name 		\n"
 		)
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, "",
-			strings.Trim(sortBy, " \n\t")).
+			strings.Trim(sortExpr, " \n\t")).
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", sortBy)
+		res, err = s.FetchGrouped(ownerID, groupID, pagination, "", sortExpr)
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -641,17 +641,17 @@ func TestListService_FindGroupedLists(t *testing.T) {
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("FetchGroupedLists",
+		m.On("FetchGrouped",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		s = NewListService(m)
-		res, err = s.FindGroupedLists(ownerID, groupID, pagination, "", "")
+		res, err = s.FetchGrouped(ownerID, groupID, pagination, "", "")
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
 }
 
-func TestListService_FindScatteredLists(t *testing.T) {
+func TestListService_FetchScattered(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m          *listRepositoryMock
@@ -671,32 +671,32 @@ func TestListService_FindScatteredLists(t *testing.T) {
 			Payload:   lists,
 		}
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pagination, "", "")
+		res, err = s.FetchScattered(ownerID, pagination, "", "")
 		assert.Equal(t, current, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchScatteredLists")
+		m.AssertNotCalled(t, "FetchScattered")
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(uuid.Nil, pagination, "", "")
+		res, err = s.FetchScattered(uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindScatteredLists", "ownerID").Error())
+			noda.NewNilParameterError("FetchScattered", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
 	t.Run("parameter pagination cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "FetchScatteredLists")
+		m.AssertNotCalled(t, "FetchScattered")
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, nil, "", "")
+		res, err = s.FetchScattered(ownerID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FindScatteredLists", "pagination").Error())
+			noda.NewNilParameterError("FetchScattered", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -706,12 +706,12 @@ func TestListService_FindScatteredLists(t *testing.T) {
 			needle = "\n		needle 		\n"
 		)
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), pagination.Page, pagination.RPP,
 			strings.Trim(needle, " \n\t"), "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pagination, needle, "")
+		res, err = s.FetchScattered(ownerID, pagination, needle, "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -726,11 +726,11 @@ func TestListService_FindScatteredLists(t *testing.T) {
 		/* when page=0 */
 
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), expectedPageNumber, pag.RPP, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		res, err = s.FetchScattered(ownerID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 
@@ -738,11 +738,11 @@ func TestListService_FindScatteredLists(t *testing.T) {
 
 		pag.Page = -1
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), expectedPageNumber, pag.RPP, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		res, err = s.FetchScattered(ownerID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -757,11 +757,11 @@ func TestListService_FindScatteredLists(t *testing.T) {
 		/* when RPP=0 */
 
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), pag.Page, expectedRPPNumber, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		res, err = s.FetchScattered(ownerID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 
@@ -769,27 +769,27 @@ func TestListService_FindScatteredLists(t *testing.T) {
 
 		pag.RPP = -1
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), pag.Page, expectedRPPNumber, "", "").
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pag, "", "")
+		res, err = s.FetchScattered(ownerID, pag, "", "")
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
 
-	t.Run("parameter sortBy must be trimmed", func(t *testing.T) {
+	t.Run("parameter sortExpr must be trimmed", func(t *testing.T) {
 		var (
-			lists  = make([]*model.List, 0)
-			sortBy = "\n		+first_name 		\n"
+			lists    = make([]*model.List, 0)
+			sortExpr = "\n		+first_name 		\n"
 		)
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			ownerID.String(), pagination.Page, pagination.RPP, "",
-			strings.Trim(sortBy, " \n\t")).
+			strings.Trim(sortExpr, " \n\t")).
 			Return(lists, nil)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pagination, "", sortBy)
+		res, err = s.FetchScattered(ownerID, pagination, "", sortExpr)
 		assert.NotNil(t, res)
 		assert.NoError(t, err)
 	})
@@ -797,17 +797,17 @@ func TestListService_FindScatteredLists(t *testing.T) {
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("FetchScatteredLists",
+		m.On("FetchScattered",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		s = NewListService(m)
-		res, err = s.FindScatteredLists(ownerID, pagination, "", "")
+		res, err = s.FetchScattered(ownerID, pagination, "", "")
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
 }
 
-func TestListService_DeleteList(t *testing.T) {
+func TestListService_Remove(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
@@ -818,52 +818,52 @@ func TestListService_DeleteList(t *testing.T) {
 
 	t.Run("success for grouped list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("DeleteList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Remove", mock.Anything, mock.Anything, mock.Anything).
 			Return(true, nil)
 		s = NewListService(m)
-		err = s.DeleteList(ownerID, groupID, listID)
+		err = s.Remove(ownerID, groupID, listID)
 		assert.NoError(t, err)
 	})
 
 	t.Run("success for scattered list (groupID=uuid.Nil)", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("DeleteList", ownerID.String(), "", listID.String()).
+		m.On("Remove", ownerID.String(), "", listID.String()).
 			Return(true, nil)
 		s = NewListService(m)
-		err = s.DeleteList(ownerID, uuid.Nil, listID)
+		err = s.Remove(ownerID, uuid.Nil, listID)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "DeleteList")
+		m.AssertNotCalled(t, "Remove")
 		s = NewListService(m)
-		err = s.DeleteList(uuid.Nil, groupID, listID)
+		err = s.Remove(uuid.Nil, groupID, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("DeleteList", "ownerID").Error())
+			noda.NewNilParameterError("Remove", "ownerID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "DeleteList")
+		m.AssertNotCalled(t, "Remove")
 		s = NewListService(m)
-		err = s.DeleteList(ownerID, groupID, uuid.Nil)
+		err = s.Remove(ownerID, groupID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("DeleteList", "listID").Error())
+			noda.NewNilParameterError("Remove", "listID").Error())
 	})
 
 	t.Run("got a repository error (list could not be deleted)", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("DeleteList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Remove", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, unexpected)
 		s = NewListService(m)
-		err = s.DeleteList(ownerID, groupID, listID)
+		err = s.Remove(ownerID, groupID, listID)
 		assert.ErrorIs(t, err, unexpected)
 	})
 }
 
-func TestListService_DuplicateList(t *testing.T) {
+func TestListService_Duplicate(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
@@ -876,20 +876,20 @@ func TestListService_DuplicateList(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		var replicaID = uuid.New()
 		m = new(listRepositoryMock)
-		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Duplicate", mock.Anything, mock.Anything, mock.Anything).
 			Return(replicaID.String(), nil)
 		s = NewListService(m)
-		res, err = s.DuplicateList(ownerID, listID)
+		res, err = s.Duplicate(ownerID, listID)
 		assert.Equal(t, replicaID, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("got UUID parsing error", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Duplicate", mock.Anything, mock.Anything, mock.Anything).
 			Return("x", nil)
 		s = NewListService(m)
-		res, err = s.DuplicateList(ownerID, listID)
+		res, err = s.Duplicate(ownerID, listID)
 		assert.ErrorContains(t, err, "invalid UUID length: 1")
 		assert.Equal(t, uuid.Nil, res)
 	})
@@ -897,47 +897,47 @@ func TestListService_DuplicateList(t *testing.T) {
 	t.Run("did parse UUID", func(t *testing.T) {
 		var id = uuid.New()
 		m = new(listRepositoryMock)
-		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Duplicate", mock.Anything, mock.Anything, mock.Anything).
 			Return(id.String(), nil)
 		s = NewListService(m)
-		res, err = s.DuplicateList(ownerID, listID)
+		res, err = s.Duplicate(ownerID, listID)
 		assert.Equal(t, id, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "DuplicateList")
+		m.AssertNotCalled(t, "Duplicate")
 		s = NewListService(m)
-		res, err = s.DuplicateList(uuid.Nil, listID)
+		res, err = s.Duplicate(uuid.Nil, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("DuplicateList", "ownerID").Error())
+			noda.NewNilParameterError("Duplicate", "ownerID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "DuplicateList")
+		m.AssertNotCalled(t, "Duplicate")
 		s = NewListService(m)
-		res, err = s.DuplicateList(ownerID, uuid.Nil)
+		res, err = s.Duplicate(ownerID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("DuplicateList", "listID").Error())
+			noda.NewNilParameterError("Duplicate", "listID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("DuplicateList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Duplicate", mock.Anything, mock.Anything, mock.Anything).
 			Return("", unexpected)
 		s = NewListService(m)
-		res, err = s.DuplicateList(ownerID, listID)
+		res, err = s.Duplicate(ownerID, listID)
 		assert.Equal(t, uuid.Nil, res)
 		assert.ErrorIs(t, err, unexpected)
 	})
 }
 
-func TestListService_ConvertToScatteredList(t *testing.T) {
+func TestListService_Scatter(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m               *listRepositoryMock
@@ -949,47 +949,47 @@ func TestListService_ConvertToScatteredList(t *testing.T) {
 
 	t.Run("success list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("ConvertToScatteredList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Scatter", mock.Anything, mock.Anything, mock.Anything).
 			Return(true, nil)
 		s = NewListService(m)
-		res, err = s.ConvertToScatteredList(ownerID, listID)
+		res, err = s.Scatter(ownerID, listID)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "ConvertToScatteredList")
+		m.AssertNotCalled(t, "Scatter")
 		s = NewListService(m)
-		res, err = s.ConvertToScatteredList(uuid.Nil, listID)
+		res, err = s.Scatter(uuid.Nil, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("ConvertToScatteredList", "ownerID").Error())
+			noda.NewNilParameterError("Scatter", "ownerID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "ConvertToScatteredList")
+		m.AssertNotCalled(t, "Scatter")
 		s = NewListService(m)
-		res, err = s.ConvertToScatteredList(ownerID, uuid.Nil)
+		res, err = s.Scatter(ownerID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("ConvertToScatteredList", "listID").Error())
+			noda.NewNilParameterError("Scatter", "listID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("ConvertToScatteredList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Scatter", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, unexpected)
 		s = NewListService(m)
-		res, err = s.ConvertToScatteredList(ownerID, listID)
+		res, err = s.Scatter(ownerID, listID)
 		assert.ErrorIs(t, err, unexpected)
 		assert.False(t, res)
 	})
 }
 
-func TestListService_MoveList(t *testing.T) {
+func TestListService_Move(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
@@ -1001,57 +1001,57 @@ func TestListService_MoveList(t *testing.T) {
 
 	t.Run("success list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("MoveList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Move", mock.Anything, mock.Anything, mock.Anything).
 			Return(true, nil)
 		s = NewListService(m)
-		res, err = s.MoveList(ownerID, listID, groupID)
+		res, err = s.Move(ownerID, listID, groupID)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "MoveList")
+		m.AssertNotCalled(t, "Move")
 		s = NewListService(m)
-		res, err = s.MoveList(uuid.Nil, listID, groupID)
+		res, err = s.Move(uuid.Nil, listID, groupID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("MoveList", "ownerID").Error())
+			noda.NewNilParameterError("Move", "ownerID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "MoveList")
+		m.AssertNotCalled(t, "Move")
 		s = NewListService(m)
-		res, err = s.MoveList(ownerID, uuid.Nil, groupID)
+		res, err = s.Move(ownerID, uuid.Nil, groupID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("MoveList", "listID").Error())
+			noda.NewNilParameterError("Move", "listID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("parameter targetGroupID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "MoveList")
+		m.AssertNotCalled(t, "Move")
 		s = NewListService(m)
-		res, err = s.MoveList(ownerID, listID, uuid.Nil)
+		res, err = s.Move(ownerID, listID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("MoveList", "targetGroupID").Error())
+			noda.NewNilParameterError("Move", "targetGroupID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("MoveList", mock.Anything, mock.Anything, mock.Anything).
+		m.On("Move", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, unexpected)
 		s = NewListService(m)
-		res, err = s.MoveList(ownerID, listID, groupID)
+		res, err = s.Move(ownerID, listID, groupID)
 		assert.ErrorIs(t, err, unexpected)
 		assert.False(t, res)
 	})
 }
 
-func TestListService_UpdateList(t *testing.T) {
+func TestListService_Update(t *testing.T) {
 	defer beQuiet()()
 	var (
 		m                        *listRepositoryMock
@@ -1067,53 +1067,53 @@ func TestListService_UpdateList(t *testing.T) {
 
 	t.Run("success for grouped list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("UpdateList",
+		m.On("Update",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(true, nil)
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		res, err = s.Update(ownerID, groupID, listID, up)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("success for scattered list", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.On("UpdateList",
+		m.On("Update",
 			ownerID.String(), "", listID.String(), up).
 			Return(true, nil)
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, uuid.Nil, listID, up)
+		res, err = s.Update(ownerID, uuid.Nil, listID, up)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("parameter ownerID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "UpdateList")
+		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
-		res, err = s.UpdateList(uuid.Nil, groupID, listID, up)
+		res, err = s.Update(uuid.Nil, groupID, listID, up)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("UpdateList", "ownerID").Error())
+			noda.NewNilParameterError("Update", "ownerID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "UpdateList")
+		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, uuid.Nil, up)
+		res, err = s.Update(ownerID, groupID, uuid.Nil, up)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("UpdateList", "listID").Error())
+			noda.NewNilParameterError("Update", "listID").Error())
 		assert.False(t, res)
 	})
 
 	t.Run("parameter up cannot be nil", func(t *testing.T) {
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "UpdateList")
+		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, listID, nil)
+		res, err = s.Update(ownerID, groupID, listID, nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("UpdateList", "up").Error())
+			noda.NewNilParameterError("Update", "up").Error())
 		assert.False(t, res)
 	})
 
@@ -1121,9 +1121,9 @@ func TestListService_UpdateList(t *testing.T) {
 		var previousName = up.Name
 		up.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "UpdateList")
+		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		res, err = s.Update(ownerID, groupID, listID, up)
 		up.Name = previousName
 		assert.ErrorContains(t, err,
 			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
@@ -1133,13 +1133,13 @@ func TestListService_UpdateList(t *testing.T) {
 	t.Run("next.Name and next.Description must be trimmed", func(t *testing.T) {
 		var previousName, previousDesc = up.Name, up.Description
 		m = new(listRepositoryMock)
-		m.AssertNotCalled(t, "UpdateList")
+		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
-		m.On("UpdateList",
+		m.On("Update",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(false, nil)
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		res, err = s.Update(ownerID, groupID, listID, up)
 		assert.Equal(t, "list name", up.Name)
 		assert.Equal(t, "description", up.Description)
 		up.Name, up.Description = previousName, previousDesc
@@ -1150,11 +1150,11 @@ func TestListService_UpdateList(t *testing.T) {
 	t.Run("got a repository error", func(t *testing.T) {
 		unexpected := errors.New("unexpected error")
 		m = new(listRepositoryMock)
-		m.On("UpdateList",
+		m.On("Update",
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(false, unexpected)
 		s = NewListService(m)
-		res, err = s.UpdateList(ownerID, groupID, listID, up)
+		res, err = s.Update(ownerID, groupID, listID, up)
 		assert.ErrorIs(t, err, unexpected)
 		assert.False(t, res)
 	})

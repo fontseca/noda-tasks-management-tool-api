@@ -17,7 +17,7 @@ import (
 
 const listID = "7d7b997f-a593-4ecd-a09f-039453321a51"
 
-func TestListRepository_InsertList(t *testing.T) {
+func TestListRepository_Save(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -37,7 +37,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"make_list"}).
 			AddRow(listID))
-	res, err = r.InsertList(userID, groupID, next)
+	res, err = r.Save(userID, groupID, next)
 	assert.NoError(t, err)
 	assert.Equal(t, listID, res)
 
@@ -49,7 +49,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"make_list"}).
 			AddRow(listID))
-	res, err = r.InsertList(userID, "", next)
+	res, err = r.Save(userID, "", next)
 	assert.NoError(t, err)
 	assert.Equal(t, listID, res)
 
@@ -59,7 +59,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.InsertList(userID, groupID, next)
+	res, err = r.Save(userID, groupID, next)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
 
@@ -69,7 +69,7 @@ func TestListRepository_InsertList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.InsertList(userID, groupID, next)
+	res, err = r.Save(userID, groupID, next)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
 
@@ -79,12 +79,12 @@ func TestListRepository_InsertList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, next.Name, next.Description).
 		WillReturnError(&pq.Error{})
-	res, err = r.InsertList(userID, groupID, next)
+	res, err = r.Save(userID, groupID, next)
 	assert.Error(t, err)
 	assert.Equal(t, "", res)
 }
 
-func TestListRepository_FetchListByID(t *testing.T) {
+func TestListRepository_FetchByID(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -114,7 +114,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
 
@@ -126,7 +126,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchListByID(userID, "", listID)
+	res, err = r.FetchByID(userID, "", listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
 
@@ -136,7 +136,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
@@ -146,7 +146,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
 
@@ -156,17 +156,17 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
-	/* Scattered list not found.  */
+	/* Scatter list not found.  */
 
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, nil, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.FetchListByID(userID, "", listID)
+	res, err = r.FetchByID(userID, "", listID)
 	assert.Error(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
@@ -176,7 +176,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
@@ -186,7 +186,7 @@ func TestListRepository_FetchListByID(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchListByID(userID, groupID, listID)
+	res, err = r.FetchByID(userID, groupID, listID)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -299,7 +299,7 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	assert.Empty(t, res)
 }
 
-func TestListRepository_FetchLists(t *testing.T) {
+func TestListRepository_Fetch(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -344,7 +344,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
@@ -366,7 +366,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
 
@@ -383,7 +383,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
 
@@ -402,7 +402,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
 
@@ -414,7 +414,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
@@ -426,7 +426,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
@@ -437,7 +437,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
@@ -447,7 +447,7 @@ func TestListRepository_FetchLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
@@ -461,12 +461,12 @@ func TestListRepository_FetchLists(t *testing.T) {
 				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
 				"archived_at", "created_at", "updated_at"}).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchLists(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
-func TestListRepository_FetchGroupedLists(t *testing.T) {
+func TestListRepository_FetchGrouped(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -511,7 +511,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
@@ -533,7 +533,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
 
@@ -550,7 +550,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
 
@@ -569,7 +569,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
 
@@ -581,7 +581,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
@@ -593,7 +593,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
@@ -604,7 +604,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
 
@@ -615,7 +615,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
@@ -625,7 +625,7 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
@@ -639,12 +639,12 @@ func TestListRepository_FetchGroupedLists(t *testing.T) {
 				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
 				"archived_at", "created_at", "updated_at"}).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGroupedLists(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
-func TestListRepository_FetchScatteredLists(t *testing.T) {
+func TestListRepository_FetchScattered(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -689,7 +689,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			NewRows(columns).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
@@ -711,7 +711,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
 
@@ -728,7 +728,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
 
@@ -747,7 +747,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
 
@@ -759,7 +759,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
@@ -771,7 +771,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
@@ -782,7 +782,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
@@ -792,7 +792,7 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
@@ -806,12 +806,12 @@ func TestListRepository_FetchScatteredLists(t *testing.T) {
 				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
 				"archived_at", "created_at", "updated_at"}).
 			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScatteredLists(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
-func TestGroupRepository_DeleteList(t *testing.T) {
+func TestListRepository_Remove(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -830,7 +830,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"delete_list"}).
 			AddRow(true))
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -842,7 +842,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"delete_list"}).
 			AddRow(true))
-	res, err = r.DeleteList(userID, "", listID)
+	res, err = r.Remove(userID, "", listID)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -854,7 +854,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"delete_list"}).
 			AddRow(false))
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.False(t, res)
 	assert.NoError(t, err)
 
@@ -864,7 +864,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
@@ -874,7 +874,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
@@ -884,7 +884,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
@@ -894,7 +894,7 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
@@ -904,12 +904,12 @@ func TestGroupRepository_DeleteList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{})
-	res, err = r.DeleteList(userID, groupID, listID)
+	res, err = r.Remove(userID, groupID, listID)
 	assert.Error(t, err)
 	assert.False(t, res)
 }
 
-func TestGroupRepository_DuplicateList(t *testing.T) {
+func TestListRepository_Duplicate(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -929,7 +929,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"duplicate_list"}).
 			AddRow(replicaID))
-	res, err = r.DuplicateList(userID, listID)
+	res, err = r.Duplicate(userID, listID)
 	assert.Equal(t, replicaID, res)
 	assert.NoError(t, err)
 
@@ -939,7 +939,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.DuplicateList(userID, listID)
+	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Empty(t, res)
 
@@ -949,7 +949,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.DuplicateList(userID, listID)
+	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Empty(t, res)
 
@@ -959,7 +959,7 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.DuplicateList(userID, listID)
+	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
 
@@ -969,12 +969,12 @@ func TestGroupRepository_DuplicateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{})
-	res, err = r.DuplicateList(userID, listID)
+	res, err = r.Duplicate(userID, listID)
 	assert.Error(t, err)
 	assert.Empty(t, res)
 }
 
-func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
+func TestListRepository_Scatter(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -993,7 +993,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"convert_to_scattered_list"}).
 			AddRow(true))
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -1003,7 +1003,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
@@ -1013,7 +1013,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.False(t, res)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 
@@ -1025,7 +1025,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"convert_to_scattered_list"}).
 			AddRow(false))
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.False(t, res)
 	assert.NoError(t, err)
 
@@ -1035,7 +1035,7 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
@@ -1045,12 +1045,12 @@ func TestGroupRepository_ConvertToScatteredList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{})
-	res, err = r.ConvertToScatteredList(userID, listID)
+	res, err = r.Scatter(userID, listID)
 	assert.Error(t, err)
 	assert.False(t, res)
 }
 
-func TestGroupRepository_MoveList(t *testing.T) {
+func TestListRepository_Move(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -1069,7 +1069,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"move_list"}).
 			AddRow(true))
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -1081,7 +1081,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"move_list"}).
 			AddRow(false))
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.False(t, res)
 	assert.NoError(t, err)
 
@@ -1091,7 +1091,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
@@ -1101,7 +1101,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.False(t, res)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 
@@ -1111,7 +1111,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
@@ -1123,7 +1123,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"move_list"}).
 			AddRow(false))
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.False(t, res)
 	assert.NoError(t, err)
 
@@ -1133,7 +1133,7 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
@@ -1143,12 +1143,12 @@ func TestGroupRepository_MoveList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{})
-	res, err = r.MoveList(userID, listID, groupID)
+	res, err = r.Move(userID, listID, groupID)
 	assert.Error(t, err)
 	assert.False(t, res)
 }
 
-func TestGroupRepository_UpdateList(t *testing.T) {
+func TestListRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -1168,7 +1168,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"update_list"}).
 			AddRow(true))
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -1180,7 +1180,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"update_list"}).
 			AddRow(true))
-	res, err = r.UpdateList(userID, "", listID, up)
+	res, err = r.Update(userID, "", listID, up)
 	assert.True(t, res)
 	assert.NoError(t, err)
 
@@ -1192,7 +1192,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"update_list"}).
 			AddRow(false))
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.False(t, res)
 	assert.NoError(t, err)
 
@@ -1202,7 +1202,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
@@ -1212,7 +1212,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
@@ -1222,7 +1222,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
@@ -1232,7 +1232,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
 
@@ -1242,7 +1242,7 @@ func TestGroupRepository_UpdateList(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
 		WillReturnError(new(pq.Error))
-	res, err = r.UpdateList(userID, groupID, listID, up)
+	res, err = r.Update(userID, groupID, listID, up)
 	assert.Error(t, err)
 	assert.False(t, res)
 }

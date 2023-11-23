@@ -22,12 +22,12 @@ type listServiceMock struct {
 	mock.Mock
 }
 
-func (o *listServiceMock) SaveList(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
+func (o *listServiceMock) Save(ownerID, groupID uuid.UUID, next *transfer.ListCreation) (insertedID uuid.UUID, err error) {
 	var args = o.Called(ownerID, groupID, next)
 	return args.Get(0).(uuid.UUID), args.Error(1)
 }
 
-func (o *listServiceMock) FindListByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
+func (o *listServiceMock) FetchByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
 	var args = o.Called(ownerID, groupID, listID)
 	var arg1 = args.Get(0)
 	if nil != arg1 {
@@ -46,7 +46,7 @@ func (o *listServiceMock) GetTomorrowListID(ownerID uuid.UUID) (listID uuid.UUID
 	return args.Get(0).(uuid.UUID), args.Error(1)
 }
 
-func (o *listServiceMock) FindLists(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
+func (o *listServiceMock) Fetch(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (lists *types.Result[model.List], err error) {
 	var args = o.Called(ownerID, pagination, needle, sortBy)
 	var arg1 = args.Get(0)
 	if nil != arg1 {
@@ -55,7 +55,7 @@ func (o *listServiceMock) FindLists(ownerID uuid.UUID, pagination *types.Paginat
 	return lists, args.Error(1)
 }
 
-func (o *listServiceMock) FindGroupedLists(ownerID, groupID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
+func (o *listServiceMock) FetchGrouped(ownerID, groupID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
 	var args = o.Called(ownerID, groupID, pagination, needle, sortBy)
 	var arg1 = args.Get(0)
 	if nil != arg1 {
@@ -64,7 +64,7 @@ func (o *listServiceMock) FindGroupedLists(ownerID, groupID uuid.UUID, paginatio
 	return result, args.Error(1)
 }
 
-func (o *listServiceMock) FindScatteredLists(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
+func (o *listServiceMock) FetchScattered(ownerID uuid.UUID, pagination *types.Pagination, needle, sortBy string) (result *types.Result[model.List], err error) {
 	var args = o.Called(ownerID, pagination, needle, sortBy)
 	var arg1 = args.Get(0)
 	if nil != arg1 {
@@ -73,27 +73,27 @@ func (o *listServiceMock) FindScatteredLists(ownerID uuid.UUID, pagination *type
 	return result, args.Error(1)
 }
 
-func (o *listServiceMock) DeleteList(ownerID, groupID, listID uuid.UUID) error {
+func (o *listServiceMock) Remove(ownerID, groupID, listID uuid.UUID) error {
 	var args = o.Called(ownerID, groupID, listID)
 	return args.Error(0)
 }
 
-func (o *listServiceMock) DuplicateList(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
+func (o *listServiceMock) Duplicate(ownerID, listID uuid.UUID) (replicaID uuid.UUID, err error) {
 	var args = o.Called(ownerID, listID)
 	return args.Get(0).(uuid.UUID), args.Error(1)
 }
 
-func (o *listServiceMock) ConvertToScatteredList(ownerID, listID uuid.UUID) (ok bool, err error) {
+func (o *listServiceMock) Scatter(ownerID, listID uuid.UUID) (ok bool, err error) {
 	var args = o.Called(ownerID, listID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (o *listServiceMock) MoveList(ownerID, listID, targetGroupID uuid.UUID) (ok bool, err error) {
+func (o *listServiceMock) Move(ownerID, listID, targetGroupID uuid.UUID) (ok bool, err error) {
 	var args = o.Called(ownerID, listID, targetGroupID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (o *listServiceMock) UpdateList(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error) {
+func (o *listServiceMock) Update(ownerID, groupID, listID uuid.UUID, up *transfer.ListUpdate) (ok bool, err error) {
 	var args = o.Called(ownerID, groupID, listID, up)
 	return args.Bool(0), args.Error(1)
 }
@@ -101,8 +101,9 @@ func (o *listServiceMock) UpdateList(ownerID, groupID, listID uuid.UUID, up *tra
 func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 	var groupID = uuid.New()
 	const (
-		method = "POST"
-		target = "/me/groups/{group_id}/lists"
+		method        = "POST"
+		target        = "/me/groups/{group_id}/lists"
+		serviceMethod = "Save"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -117,7 +118,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var m = new(listServiceMock)
-		m.On("SaveList", userID, groupID, next).Return(insertedID, nil)
+		m.On(serviceMethod, userID, groupID, next).Return(insertedID, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
 		var response = recorder.Result()
@@ -137,7 +138,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		var m = new(listServiceMock)
-		m.AssertNotCalled(t, "SaveList")
+		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
 		var response = recorder.Result()
@@ -155,7 +156,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		var m = new(listServiceMock)
-		m.AssertNotCalled(t, "SaveList")
+		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
 		var response = recorder.Result()
@@ -175,7 +176,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": "x"})
 		var m = new(listServiceMock)
-		m.AssertNotCalled(t, "SaveList")
+		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
 		var response = recorder.Result()
@@ -195,7 +196,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": "a0e2240b-8f5b-4b1e-88a9-c6d9284a6afX"})
 		var m = new(listServiceMock)
-		m.AssertNotCalled(t, "SaveList")
+		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
 		var response = recorder.Result()
@@ -215,7 +216,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var m = new(listServiceMock)
-		m.On("SaveList", mock.Anything, mock.Anything, mock.AnythingOfType("*transfer.ListCreation")).
+		m.On(serviceMethod, mock.Anything, mock.Anything, mock.AnythingOfType("*transfer.ListCreation")).
 			Return(uuid.Nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleGroupedListCreation(recorder, request)
@@ -229,8 +230,9 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 
 func TestListHandler_HandleScatteredListCreation(t *testing.T) {
 	const (
-		method = "POST"
-		target = "/me/lists"
+		method        = "POST"
+		target        = "/me/lists"
+		serviceMethod = "Save"
 	)
 	var next = &transfer.ListCreation{Name: "list name", Description: "list description"}
 
@@ -244,7 +246,7 @@ func TestListHandler_HandleScatteredListCreation(t *testing.T) {
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
 		var m = new(listServiceMock)
-		m.On("SaveList", userID, uuid.Nil, next).Return(insertedID, nil)
+		m.On(serviceMethod, userID, uuid.Nil, next).Return(insertedID, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleScatteredListCreation(recorder, request)
 		var response = recorder.Result()
@@ -265,7 +267,7 @@ func TestListHandler_HandleScatteredListCreation(t *testing.T) {
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
 		var m = new(listServiceMock)
-		m.On("SaveList", userID, uuid.Nil, next).Return(uuid.Nil, unexpected)
+		m.On(serviceMethod, userID, uuid.Nil, next).Return(uuid.Nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(m).HandleScatteredListCreation(recorder, request)
 		var response = recorder.Result()
@@ -279,8 +281,9 @@ func TestListHandler_HandleScatteredListCreation(t *testing.T) {
 func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 	var listID, groupID = uuid.New(), uuid.New()
 	const (
-		method = "GET"
-		target = "/me/groups/{group_id}/lists/{list_id}"
+		method        = "GET"
+		target        = "/me/groups/{group_id}/lists/{list_id}"
+		serviceMethod = "FetchByID"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -303,7 +306,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": list.GroupID.String(), "list_id": list.ID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", list.OwnerID, list.GroupID, list.ID).Return(list, nil)
+		s.On(serviceMethod, list.OwnerID, list.GroupID, list.ID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
 		var result = recorder.Result()
@@ -324,7 +327,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": "x"})
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindListByID")
+		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
 		var result = recorder.Result()
@@ -343,7 +346,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": "x"})
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindListByID")
+		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
 		var result = recorder.Result()
@@ -363,7 +366,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": listID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
@@ -383,7 +386,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String(), "list_id": listID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
@@ -398,8 +401,9 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 	var listID = uuid.New()
 	const (
-		method = "GET"
-		target = "/me/lists/{list_id}"
+		method        = "GET"
+		target        = "/me/lists/{list_id}"
+		serviceMethod = "FetchByID"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -422,7 +426,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"list_id": list.ID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", list.OwnerID, uuid.Nil, list.ID).Return(list, nil)
+		s.On(serviceMethod, list.OwnerID, uuid.Nil, list.ID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
 		var result = recorder.Result()
@@ -441,7 +445,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"list_id": listID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
@@ -459,7 +463,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"list_id": listID.String()})
 		var s = new(listServiceMock)
-		s.On("FindListByID", mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
@@ -474,8 +478,9 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 	var groupID = uuid.New()
 	const (
-		method = "GET"
-		target = "/me/groups/{group_id}/lists"
+		method        = "GET"
+		target        = "/me/groups/{group_id}/lists"
+		serviceMethod = "FetchGrouped"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -502,7 +507,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var s = new(listServiceMock)
-		s.On("FindGroupedLists", userID, groupID, &pagination, search, sortExpr).
+		s.On(serviceMethod, userID, groupID, &pagination, search, sortExpr).
 			Return(serviceResult, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
@@ -525,7 +530,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindGroupedLists")
+		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
 		var result = recorder.Result()
@@ -545,7 +550,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindGroupedLists")
+		s.AssertNotCalled(t, "FetchGrouped")
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
 		var result = recorder.Result()
@@ -563,7 +568,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindGroupedLists")
+		s.AssertNotCalled(t, "FetchGrouped")
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
 		var result = recorder.Result()
@@ -582,7 +587,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var s = new(listServiceMock)
-		s.On("FindGroupedLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
@@ -602,7 +607,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 		withLoggedUser(&request)
 		withPathParameters(&request, parameters{"group_id": groupID.String()})
 		var s = new(listServiceMock)
-		s.On("FindGroupedLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListsRetrieval(recorder, request)
@@ -616,8 +621,9 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 
 func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 	const (
-		method = "GET"
-		target = "/me/lists"
+		method        = "GET"
+		target        = "/me/lists"
+		serviceMethod = "FetchScattered"
 	)
 
 	t.Run("success for scattered lists, where all=anything", func(t *testing.T) {
@@ -643,7 +649,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.On("FindScatteredLists", userID, &pagination, search, sortExpr).
+		s.On(serviceMethod, userID, &pagination, search, sortExpr).
 			Return(serviceResult, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
@@ -680,7 +686,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.On("FindLists", userID, &pagination, search, sortExpr).
+		s.On("Fetch", userID, &pagination, search, sortExpr).
 			Return(serviceResult, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
@@ -700,7 +706,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindScatteredLists")
+		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
 		var result = recorder.Result()
@@ -719,7 +725,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target+"?"+values.Encode(), nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.AssertNotCalled(t, "FindScatteredLists")
+		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
 		var result = recorder.Result()
@@ -737,7 +743,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.On("FindScatteredLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
@@ -756,7 +762,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
 		var s = new(listServiceMock)
-		s.On("FindScatteredLists", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleRetrievalOfLists(recorder, request)
@@ -773,7 +779,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 	const (
 		method        = "PATCH"
 		target        = "/me/groups/{group_id}/lists/{list_id}"
-		serviceMethod = "UpdateList"
+		serviceMethod = "Update"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -923,7 +929,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 	const (
 		method        = "PATCH"
 		target        = "/me/lists/{list_id}"
-		serviceMethod = "UpdateList"
+		serviceMethod = "Update"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -996,7 +1002,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 	const (
 		method        = "DELETE"
 		target        = "/me/groups/{group_id}/lists/{list_id}"
-		serviceMethod = "DeleteList"
+		serviceMethod = "Remove"
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -1102,7 +1108,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 	const (
 		method        = "DELETE"
 		target        = "/me/lists/{list_id}"
-		serviceMethod = "DeleteList"
+		serviceMethod = "Remove"
 	)
 
 	t.Run("success", func(t *testing.T) {

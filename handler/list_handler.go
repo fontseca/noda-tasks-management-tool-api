@@ -48,12 +48,12 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 		if didNotParse(groupID) {
 			return
 		}
-		insertedID, err = h.s.SaveList(userID, groupID, next)
+		insertedID, err = h.s.Save(userID, groupID, next)
 		if gotAndHandledServiceError(w, err) {
 			return
 		}
 	} else {
-		insertedID, err = h.s.SaveList(userID, uuid.Nil, next)
+		insertedID, err = h.s.Save(userID, uuid.Nil, next)
 		if gotAndHandledServiceError(w, err) {
 			return
 		}
@@ -93,7 +93,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 	if didNotParse(listID) {
 		return
 	}
-	list, err := h.s.FindListByID(userID, groupID, listID)
+	list, err := h.s.FetchByID(userID, groupID, listID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -129,7 +129,7 @@ func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http
 	if "?" == sortExpr {
 		return
 	}
-	result, err := h.s.FindGroupedLists(ownerID, groupID, pagination, search, sortExpr)
+	result, err := h.s.FetchGrouped(ownerID, groupID, pagination, search, sortExpr)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -160,9 +160,9 @@ func (h *ListHandler) HandleRetrievalOfLists(w http.ResponseWriter, r *http.Requ
 		err    error
 	)
 	if 0 == strings.Compare(all, "true") {
-		result, err = h.s.FindLists(ownerID, pagination, search, sortExpr)
+		result, err = h.s.Fetch(ownerID, pagination, search, sortExpr)
 	} else {
-		result, err = h.s.FindScatteredLists(ownerID, pagination, search, sortExpr)
+		result, err = h.s.FetchScattered(ownerID, pagination, search, sortExpr)
 	}
 	if gotAndHandledServiceError(w, err) {
 		return
@@ -207,7 +207,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		redirect(w, r, target)
 		return
 	}
-	ok, err := h.s.UpdateList(ownerID, groupID, listID, up)
+	ok, err := h.s.Update(ownerID, groupID, listID, up)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -241,7 +241,7 @@ func (h *ListHandler) doDeleteList(t listType, w http.ResponseWriter, r *http.Re
 	if didNotParse(listID) {
 		return
 	}
-	err := h.s.DeleteList(userID, groupID, listID)
+	err := h.s.Remove(userID, groupID, listID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}

@@ -14,40 +14,38 @@ import (
 	"time"
 )
 
-type IListRepository interface {
-	InsertList(ownerID, groupID string, next *transfer.ListCreation) (insertedID string, err error)
-	FetchListByID(ownerID, groupID, listID string) (list *model.List, err error)
+type ListRepository interface {
+	Save(ownerID, groupID string, creation *transfer.ListCreation) (insertedID string, err error)
 	GetTodayListID(ownerID string) (listID string, err error)
 	GetTomorrowListID(ownerID string) (listID string, err error)
-	FetchLists(ownerID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
-	FetchGroupedLists(ownerID, groupID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
-	FetchScatteredLists(ownerID string, page, rpp int64, needle, sortBy string) (lists []*model.List, err error)
-	DeleteList(ownerID, groupID, listID string) (ok bool, err error)
-	DuplicateList(ownerID, listID string) (replicaID string, err error)
-	ConvertToScatteredList(ownerID, listID string) (ok bool, err error)
-	MoveList(ownerID, listID, targetGroupID string) (ok bool, err error)
-	UpdateList(ownerID, groupID, listID string, up *transfer.ListUpdate) (ok bool, err error)
+	FetchByID(ownerID, groupID, listID string) (list *model.List, err error)
+	Fetch(ownerID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
+	FetchGrouped(ownerID, groupID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
+	FetchScattered(ownerID string, page, rpp int64, needle, sortExpr string) (lists []*model.List, err error)
+	Update(ownerID, groupID, listID string, update *transfer.ListUpdate) (ok bool, err error)
+	Duplicate(ownerID, listID string) (replicaID string, err error)
+	Move(ownerID, listID, targetGroupID string) (ok bool, err error)
+	Scatter(ownerID, listID string) (ok bool, err error)
+	Remove(ownerID, groupID, listID string) (ok bool, err error)
 }
 
-type ListRepository struct {
+type listRepository struct {
 	db *sql.DB
 }
 
-func NewListRepository(db *sql.DB) *ListRepository {
-	return &ListRepository{db}
+func NewListRepository(db *sql.DB) ListRepository {
+	return &listRepository{db}
 }
 
-func (r *ListRepository) InsertList(
-	ownerID, groupID string,
-	next *transfer.ListCreation) (insertedID string, err error) {
+func (r *listRepository) Save(ownerID, groupID string, creation *transfer.ListCreation) (insertedID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT make_list ($1, $2, $3, $4);`
 	var row *sql.Row
 	if groupID != "" {
-		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, next.Name, next.Description)
+		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, creation.Name, creation.Description)
 	} else {
-		row = r.db.QueryRowContext(ctx, query, ownerID, nil, next.Name, next.Description)
+		row = r.db.QueryRowContext(ctx, query, ownerID, nil, creation.Name, creation.Description)
 	}
 	err = row.Scan(&insertedID)
 	if err != nil {
@@ -71,7 +69,7 @@ func (r *ListRepository) InsertList(
 	return
 }
 
-func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *model.List, err error) {
+func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT * FROM fetch_list_by_id ($1, $2, $3);`
@@ -109,7 +107,7 @@ func (r *ListRepository) FetchListByID(ownerID, groupID, listID string) (list *m
 	return
 }
 
-func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err error) {
+func (r *listRepository) GetTodayListID(ownerID string) (listID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT get_today_list_id ($1);`
@@ -134,7 +132,7 @@ func (r *ListRepository) GetTodayListID(ownerID string) (listID string, err erro
 	return
 }
 
-func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err error) {
+func (r *listRepository) GetTomorrowListID(ownerID string) (listID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT get_tomorrow_list_id ($1);`
@@ -159,10 +157,11 @@ func (r *ListRepository) GetTomorrowListID(ownerID string) (listID string, err e
 	return
 }
 
-func (r *ListRepository) FetchLists(
+func (r *listRepository) Fetch(
 	ownerID string,
 	page, rpp int64,
-	needle, sortExpr string) (lists []*model.List, err error) {
+	needle, sortExpr string,
+) (lists []*model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT "list_id" AS "id",
@@ -203,10 +202,11 @@ func (r *ListRepository) FetchLists(
 	return
 }
 
-func (r *ListRepository) FetchGroupedLists(
+func (r *listRepository) FetchGrouped(
 	ownerID, groupID string,
 	page, rpp int64,
-	needle, sortBy string) (lists []*model.List, err error) {
+	needle, sortExpr string,
+) (lists []*model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -220,7 +220,7 @@ func (r *ListRepository) FetchGroupedLists(
 		       "created_at",
 		       "updated_at"
       FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortBy)
+	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortExpr)
 	if err != nil {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -250,10 +250,11 @@ func (r *ListRepository) FetchGroupedLists(
 	return
 }
 
-func (r *ListRepository) FetchScatteredLists(
+func (r *listRepository) FetchScattered(
 	ownerID string,
 	page, rpp int64,
-	needle, sortBy string) (lists []*model.List, err error) {
+	needle, sortExpr string,
+) (lists []*model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -267,7 +268,7 @@ func (r *ListRepository) FetchScatteredLists(
 		     "created_at",
 		     "updated_at"
     FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortBy)
+	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -295,7 +296,7 @@ func (r *ListRepository) FetchScatteredLists(
 	return
 }
 
-func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, err error) {
+func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT delete_list ($1, $2, $3);`
@@ -329,7 +330,7 @@ func (r *ListRepository) DeleteList(ownerID, groupID, listID string) (ok bool, e
 	return
 }
 
-func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string, err error) {
+func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT duplicate_list ($1, $2);`
@@ -358,7 +359,7 @@ func (r *ListRepository) DuplicateList(ownerID, listID string) (replicaID string
 	return
 }
 
-func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool, err error) {
+func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT convert_to_scattered_list ($1, $2);`
@@ -385,7 +386,7 @@ func (r *ListRepository) ConvertToScatteredList(ownerID, listID string) (ok bool
 	return
 }
 
-func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok bool, err error) {
+func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT move_list ($1, $2, $3);`
@@ -414,17 +415,15 @@ func (r *ListRepository) MoveList(ownerID, listID, targetGroupID string) (ok boo
 	return
 }
 
-func (r *ListRepository) UpdateList(
-	ownerID, groupID, listID string,
-	up *transfer.ListUpdate) (ok bool, err error) {
+func (r *listRepository) Update(ownerID, groupID, listID string, update *transfer.ListUpdate) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT update_list ($1, $2, $3, $4, $5);`
 	var row *sql.Row
 	if "" != strings.Trim(groupID, " ") {
-		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID, up.Name, up.Description)
+		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID, update.Name, update.Description)
 	} else {
-		row = r.db.QueryRowContext(ctx, query, ownerID, nil, listID, up.Name, up.Description)
+		row = r.db.QueryRowContext(ctx, query, ownerID, nil, listID, update.Name, update.Description)
 	}
 	err = row.Scan(&ok)
 	if nil != err {
