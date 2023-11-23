@@ -14,23 +14,23 @@ import (
 	"github.com/lib/pq"
 )
 
-type IGroupRepository interface {
-	InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error)
-	FetchGroupByID(ownerID, groupID string) (group *model.Group, err error)
-	FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error)
-	UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error)
-	DeleteGroup(ownerID, groupID string) (ok bool, err error)
+type GroupRepository interface {
+	Save(ownerID string, creation *transfer.GroupCreation) (insertedID string, err error)
+	FetchByID(ownerID, groupID string) (group *model.Group, err error)
+	Fetch(ownerID string, page, rpp int64, needle, sortExpr string) (groups []*model.Group, err error)
+	Update(ownerID, groupID string, update *transfer.GroupUpdate) (ok bool, err error)
+	Remove(ownerID, groupID string) (ok bool, err error)
 }
 
-type GroupRepository struct {
+type groupRepository struct {
 	db *sql.DB
 }
 
-func NewGroupRepository(db *sql.DB) *GroupRepository {
-	return &GroupRepository{db}
+func NewGroupRepository(db *sql.DB) GroupRepository {
+	return &groupRepository{db}
 }
 
-func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error) {
+func (r *groupRepository) Save(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	result := r.db.QueryRowContext(ctx, "SELECT make_group ($1, $2, $3);",
@@ -55,7 +55,7 @@ func (r *GroupRepository) InsertGroup(ownerID string, newGroup *transfer.GroupCr
 	return
 }
 
-func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.Group, err error) {
+func (r *groupRepository) FetchByID(ownerID, groupID string) (group *model.Group, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT * FROM fetch_group_by_id ($1, $2);`
@@ -87,7 +87,7 @@ func (r *GroupRepository) FetchGroupByID(ownerID, groupID string) (group *model.
 	return
 }
 
-func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error) {
+func (r *groupRepository) Fetch(ownerID string, page, rpp int64, needle, sortBy string) (groups []*model.Group, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -128,7 +128,7 @@ func (r *GroupRepository) FetchGroups(ownerID string, page, rpp int64, needle, s
 	return
 }
 
-func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
+func (r *groupRepository) Update(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT update_group ($1, $2, $3, $4);`
@@ -155,7 +155,7 @@ func (r *GroupRepository) UpdateGroup(ownerID, groupID string, up *transfer.Grou
 	return
 }
 
-func (r *GroupRepository) DeleteGroup(ownerID, groupID string) (ok bool, err error) {
+func (r *groupRepository) Remove(ownerID, groupID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT delete_group ($1, $2);`

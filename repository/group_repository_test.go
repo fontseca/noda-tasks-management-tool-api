@@ -15,7 +15,7 @@ import (
 
 const groupID string = "942d76f4-28b2-44be-8339-232b62c0ef22"
 
-func TestGroupRepository_InsertGroup(t *testing.T) {
+func TestGroupRepository_Save(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -36,7 +36,7 @@ func TestGroupRepository_InsertGroup(t *testing.T) {
 			WillReturnRows(sqlmock.
 				NewRows([]string{"make_group"}).
 				AddRow(groupID))
-		res, err = r.InsertGroup(userID, next)
+		res, err = r.Save(userID, next)
 		assert.NoError(t, err)
 		assert.Equal(t, groupID, res)
 	})
@@ -48,7 +48,7 @@ func TestGroupRepository_InsertGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, next.Name, next.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-		res, err = r.InsertGroup(userID, next)
+		res, err = r.Save(userID, next)
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Equal(t, "", res)
 	})
@@ -60,13 +60,13 @@ func TestGroupRepository_InsertGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, next.Name, next.Description).
 			WillReturnError(&pq.Error{})
-		res, err = r.InsertGroup(userID, next)
+		res, err = r.Save(userID, next)
 		assert.Error(t, err)
 		assert.Equal(t, "", res)
 	})
 }
 
-func TestGroupRepository_FetchGroupByID(t *testing.T) {
+func TestGroupRepository_FetchByID(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -101,7 +101,7 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 				AddRow(
 					group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived,
 					group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroupByID(userID, groupID)
+		res, err = r.FetchByID(userID, groupID)
 		assert.NoError(t, err)
 		assert.Equal(t, group, res)
 	})
@@ -113,7 +113,7 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-		res, err = r.FetchGroupByID(userID, groupID)
+		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
@@ -125,7 +125,7 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-		res, err = r.FetchGroupByID(userID, groupID)
+		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 		assert.Nil(t, res)
 	})
@@ -137,7 +137,7 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.FetchGroupByID(userID, groupID)
+		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
@@ -149,14 +149,14 @@ func TestGroupRepository_FetchGroupByID(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{})
-		res, err = r.FetchGroupByID(userID, groupID)
+		res, err = r.FetchByID(userID, groupID)
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
 
 }
 
-func TestGroupRepository_FetchGroups(t *testing.T) {
+func TestGroupRepository_Fetch(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -203,7 +203,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 				NewRows(columns).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 	})
@@ -227,7 +227,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy) /* Should set `rpp' to 10.  */
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy) /* Should set 'rpp' to 10.  */
 		assert.NoError(t, err)
 		assert.Len(t, res, 10)
 	})
@@ -246,7 +246,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 5)
 	})
@@ -267,7 +267,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 7)
 	})
@@ -281,7 +281,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.NewRows(columns))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Len(t, res, 0)
@@ -295,7 +295,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
@@ -308,7 +308,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
@@ -320,7 +320,7 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(&pq.Error{})
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
@@ -336,13 +336,13 @@ func TestGroupRepository_FetchGroups(t *testing.T) {
 					"group_id", "owner_id", "name", "description", "is_archived",
 					"archived_at", "created_at", "updated_at"}).
 				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
-		res, err = r.FetchGroups(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
 }
 
-func TestGroupRepository_UpdateGroup(t *testing.T) {
+func TestGroupRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -356,14 +356,14 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 
 	/* Success.  */
 
-	t.Run("succes", func(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnRows(sqlmock.
 				NewRows([]string{"update_group"}).
 				AddRow(true))
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
@@ -377,7 +377,7 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			WillReturnRows(sqlmock.
 				NewRows([]string{"update_group"}).
 				AddRow(false))
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.False(t, res)
 		assert.NoError(t, err)
 	})
@@ -389,7 +389,7 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
@@ -401,7 +401,7 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 		assert.False(t, res)
 	})
@@ -413,7 +413,7 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
@@ -425,13 +425,13 @@ func TestGroupRepository_UpdateGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{})
-		res, err = r.UpdateGroup(userID, groupID, up)
+		res, err = r.Update(userID, groupID, up)
 		assert.Error(t, err)
 		assert.False(t, res)
 	})
 }
 
-func TestGroupRepository_DeleteGroup(t *testing.T) {
+func TestGroupRepository_Remove(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -451,7 +451,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			WillReturnRows(sqlmock.
 				NewRows([]string{"delete_group"}).
 				AddRow(true))
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
@@ -465,7 +465,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			WillReturnRows(sqlmock.
 				NewRows([]string{"delete_group"}).
 				AddRow(false))
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.False(t, res)
 		assert.NoError(t, err)
 	})
@@ -477,7 +477,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
@@ -489,7 +489,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 		assert.False(t, res)
 	})
@@ -501,7 +501,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
@@ -513,7 +513,7 @@ func TestGroupRepository_DeleteGroup(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{})
-		res, err = r.DeleteGroup(userID, groupID)
+		res, err = r.Remove(userID, groupID)
 		assert.Error(t, err)
 		assert.False(t, res)
 	})

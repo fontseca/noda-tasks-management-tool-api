@@ -10,10 +10,10 @@ import (
 )
 
 type GroupService struct {
-	r repository.IGroupRepository
+	r repository.GroupRepository
 }
 
-func NewGroupService(repository repository.IGroupRepository) *GroupService {
+func NewGroupService(repository repository.GroupRepository) *GroupService {
 	return &GroupService{repository}
 }
 
@@ -21,18 +21,18 @@ func (s *GroupService) SaveGroup(ownerID uuid.UUID, newGroup *transfer.GroupCrea
 	if len(newGroup.Name) > 50 {
 		return "", noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}
-	return s.r.InsertGroup(ownerID.String(), newGroup)
+	return s.r.Save(ownerID.String(), newGroup)
 }
 
 func (s *GroupService) FindGroupByID(ownerID, groupID uuid.UUID) (group *model.Group, err error) {
-	return s.r.FetchGroupByID(ownerID.String(), groupID.String())
+	return s.r.FetchByID(ownerID.String(), groupID.String())
 }
 
 func (s *GroupService) FindGroups(
 	ownerID uuid.UUID,
 	pag *types.Pagination,
 	needle, sortExpr string) (result *types.Result[model.Group], err error) {
-	groups, err := s.r.FetchGroups(ownerID.String(), pag.Page, pag.RPP, needle, sortExpr)
+	groups, err := s.r.Fetch(ownerID.String(), pag.Page, pag.RPP, needle, sortExpr)
 	if nil != err {
 		return nil, err
 	}
@@ -48,9 +48,9 @@ func (s *GroupService) UpdateGroup(ownerID, groupID uuid.UUID, up *transfer.Grou
 	if len(up.Name) > 50 {
 		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}
-	return s.r.UpdateGroup(ownerID.String(), groupID.String(), up)
+	return s.r.Update(ownerID.String(), groupID.String(), up)
 }
 
 func (s *GroupService) DeleteGroup(ownerID, groupID uuid.UUID) (ok bool, err error) {
-	return s.r.DeleteGroup(ownerID.String(), groupID.String())
+	return s.r.Remove(ownerID.String(), groupID.String())
 }
