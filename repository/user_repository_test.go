@@ -13,7 +13,7 @@ import (
 
 const userID string = "9039f725-e31f-4f04-bdb1-7b74e7f72d59"
 
-func TestGroupRepository_TestInsertUser(t *testing.T) {
+func TestGroupRepository_Save(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -40,7 +40,7 @@ func TestGroupRepository_TestInsertUser(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"make_user"}).
 			AddRow(userID))
-	res, err = r.InsertUser(n)
+	res, err = r.Save(n)
 	assert.NoError(t, err)
 	assert.Equal(t, res, userID)
 
@@ -51,7 +51,7 @@ func TestGroupRepository_TestInsertUser(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
 		WillReturnError(&pq.Error{Code: "23514", Message: "value for domain email_t violates check constraint \"email_t_check\""})
-	res, err = r.InsertUser(n)
+	res, err = r.Save(n)
 	assert.Error(t, err)
 	assert.Equal(t, "", res)
 
@@ -62,7 +62,7 @@ func TestGroupRepository_TestInsertUser(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
 		WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"user_email_key\""})
-	res, err = r.InsertUser(n)
+	res, err = r.Save(n)
 	assert.ErrorIs(t, err, noda.ErrSameEmail)
 	assert.Equal(t, "", res)
 
@@ -72,13 +72,13 @@ func TestGroupRepository_TestInsertUser(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
 		WillReturnError(&pq.Error{})
-	res, err = r.InsertUser(n)
+	res, err = r.Save(n)
 	assert.Error(t, err)
 	assert.Equal(t, "", res)
 
 }
 
-func TestGroupRepository_TestUpdateUser(t *testing.T) {
+func TestGroupRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
@@ -98,7 +98,7 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"update_user"}).
 			AddRow(true))
-	res, err = r.UpdateUser(userID, up)
+	res, err = r.Update(userID, up)
 	assert.NoError(t, err)
 	assert.Equal(t, res, true)
 
@@ -110,7 +110,7 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"update_user"}).
 			AddRow(false))
-	res, err = r.UpdateUser(userID, up)
+	res, err = r.Update(userID, up)
 	assert.NoError(t, err)
 	assert.Equal(t, res, false)
 
@@ -120,7 +120,7 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.UpdateUser(userID, up)
+	res, err = r.Update(userID, up)
 	assert.ErrorIs(t, err, noda.ErrUserNotFound)
 	assert.Equal(t, res, false)
 
@@ -130,12 +130,12 @@ func TestGroupRepository_TestUpdateUser(t *testing.T) {
 		ExpectQuery(query).
 		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
 		WillReturnError(&pq.Error{})
-	res, err = r.UpdateUser(userID, up)
+	res, err = r.Update(userID, up)
 	assert.Error(t, err)
 	assert.Equal(t, res, false)
 }
 
-func TestGroupRepository_TestPromoteUserToAdmin(t *testing.T) {
+func TestGroupRepository_PromoteToAdmin(t *testing.T) {
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -150,7 +150,7 @@ func TestGroupRepository_TestPromoteUserToAdmin(t *testing.T) {
 		WillReturnRows(sqlmock.
 			NewRows([]string{"promote_user_to_admin"}).
 			AddRow(true))
-	res, err = r.PromoteUserToAdmin(userID)
+	res, err = r.PromoteToAdmin(userID)
 	assert.NoError(t, err)
 	assert.Equal(t, res, true)
 }
