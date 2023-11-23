@@ -68,10 +68,10 @@ func getTaskService() *service.TaskService {
 
 var (
 	userOnce    sync.Once
-	userService *service.UserService
+	userService service.UserService
 )
 
-func getUserService() *service.UserService {
+func getUserService() service.UserService {
 	if nil == taskService {
 		userOnce.Do(func() {
 			r := repository.NewUserRepository(getDatabase())

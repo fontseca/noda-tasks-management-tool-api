@@ -14,10 +14,10 @@ import (
 )
 
 type AuthenticationService struct {
-	userService *UserService
+	userService UserService
 }
 
-func NewAuthenticationService(userService *UserService) *AuthenticationService {
+func NewAuthenticationService(userService UserService) *AuthenticationService {
 	return &AuthenticationService{
 		userService: userService,
 	}
@@ -29,7 +29,7 @@ func (s *AuthenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, 
 
 func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
 	// TODO: Check credentials.Email is a valid email address.
-	user, err := s.userService.GetUserWithPasswordByEmail(credentials.Email)
+	user, err := s.userService.FetchRawUserByEmail(credentials.Email)
 	if err != nil {
 		return nil, err
 	}

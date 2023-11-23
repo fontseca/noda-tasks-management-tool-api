@@ -14,10 +14,10 @@ import (
 )
 
 type UserHandler struct {
-	s *service.UserService
+	s service.UserService
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
+func NewUserHandler(service service.UserService) *UserHandler {
 	return &UserHandler{service}
 }
 
@@ -26,7 +26,7 @@ func (h *UserHandler) RetrieveAllUsers(w http.ResponseWriter, r *http.Request) {
 	if pagination == nil { /* Errors handled in parsePagination ocurred.  */
 		return
 	}
-	res, err := h.s.GetAll(pagination)
+	res, err := h.s.Fetch(pagination)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -46,7 +46,7 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	needle := extractQueryParameter(r, "q", "")
-	res, err := h.s.SearchUsers(pagination, needle, sortExpr)
+	res, err := h.s.Search(pagination, needle, sortExpr)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -65,7 +65,7 @@ func (h *UserHandler) RetrieveAllBlockedUsers(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := h.s.GetAllBlocked(pagination)
+	res, err := h.s.FetchBlocked(pagination)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -81,7 +81,7 @@ func (h *UserHandler) RetrieveUserByID(w http.ResponseWriter, r *http.Request) {
 	if didNotParse(userID) {
 		return
 	}
-	user, err := h.s.GetByID(userID)
+	user, err := h.s.FetchByID(userID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -114,7 +114,7 @@ func (h *UserHandler) DegradeAdminUser(w http.ResponseWriter, r *http.Request) {
 	if didNotParse(userID) {
 		return
 	}
-	userWasPromoted, err := h.s.DegradeToNormalUser(userID)
+	userWasPromoted, err := h.s.DegradeToUser(userID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -174,7 +174,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		noda.EmitError(w, noda.ErrSelfOperation)
 		return
 	}
-	err := h.s.HardDelete(userToDelete)
+	err := h.s.RemoveHardly(userToDelete)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -183,7 +183,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) RetrieveCurrentUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
-	user, err := h.s.GetByID(userID)
+	user, err := h.s.FetchByID(userID)
 	if err != nil {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -213,7 +213,7 @@ func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	settings, err := h.s.GetUserSettings(pagination, userID)
+	settings, err := h.s.FetchSettings(userID, pagination)
 	if err != nil {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -240,7 +240,7 @@ func (h *UserHandler) RetrieveCurrentUserSettings(w http.ResponseWriter, r *http
 func (h *UserHandler) RetrieveOneSettingOfCurrentUser(w http.ResponseWriter, r *http.Request) {
 	settingKey := chi.URLParam(r, "setting_key")
 	userID, _ := extractUserPayload(r)
-	setting, err := h.s.GetOneSetting(userID, settingKey)
+	setting, err := h.s.FetchOneSetting(userID, settingKey)
 	if err != nil {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -329,15 +329,8 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 
 func (h *UserHandler) RemoveCurrentUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
-	id, err := h.s.SoftDelete(userID)
+	err := h.s.RemoveSoftly(userID)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
-	data, err := json.Marshal(id)
-	if nil != err {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Write(data)
 }

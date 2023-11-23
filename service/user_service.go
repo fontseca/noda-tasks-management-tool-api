@@ -16,17 +16,35 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
-	r *repository.UserRepository
+type UserService interface {
+	Save(creation *transfer.UserCreation) (insertedID uuid.UUID, err error)
+	FetchByID(id uuid.UUID) (user *transfer.User, err error)
+	FetchByEmail(email string) (user *transfer.User, err error)
+	FetchRawUserByEmail(email string) (user *model.User, err error)
+	Fetch(pagination *types.Pagination) (result *types.Result[transfer.User], err error)
+	FetchBlocked(pagination *types.Pagination) (result *types.Result[transfer.User], err error)
+	FetchSettings(userID uuid.UUID, pagination *types.Pagination) (result *types.Result[transfer.UserSetting], err error)
+	FetchOneSetting(userID uuid.UUID, settingKey string) (setting *transfer.UserSetting, err error)
+	Search(pagination *types.Pagination, needle, sortExpr string) (users *types.Result[transfer.User], err error)
+	Update(id uuid.UUID, update *transfer.UserUpdate) (ok bool, err error)
+	UpdateUserSetting(userID uuid.UUID, settingKey string, update *transfer.UserSettingUpdate) (ok bool, err error)
+	Block(id uuid.UUID) (ok bool, err error)
+	Unblock(id uuid.UUID) (ok bool, err error)
+	PromoteToAdmin(id uuid.UUID) (ok bool, err error)
+	DegradeToUser(id uuid.UUID) (ok bool, err error)
+	RemoveHardly(id uuid.UUID) error
+	RemoveSoftly(id uuid.UUID) error
 }
 
-type us = UserService
-
-func NewUserService(repository *repository.UserRepository) *UserService {
-	return &UserService{repository}
+type userService struct {
+	r repository.UserRepository
 }
 
-func (s *us) Save(next *transfer.UserCreation) (uuid.UUID, error) {
+func NewUserService(repository repository.UserRepository) UserService {
+	return &userService{repository}
+}
+
+func (s *userService) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 	if err := assertPasswordIsValid(&next.Password, &next.Email); err != nil {
 		return uuid.Nil, err
 	}
@@ -41,7 +59,7 @@ func (s *us) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 		}
 	}
 	next.Password = string(hashedPassword)
-	insertedID, err := s.r.InsertUser(next)
+	insertedID, err := s.r.Save(next)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -86,40 +104,40 @@ func assertPasswordIsValid(password, email *string) *noda.AggregateDetails {
 	return nil
 }
 
-func (s *us) Update(userID uuid.UUID, up *transfer.UserUpdate) (bool, error) {
-	return s.r.UpdateUser(userID.String(), up)
+func (s *userService) Update(userID uuid.UUID, up *transfer.UserUpdate) (bool, error) {
+	return s.r.Update(userID.String(), up)
 }
 
-func (s *us) PromoteToAdmin(userID uuid.UUID) (bool, error) {
-	return s.r.PromoteUserToAdmin(userID.String())
+func (s *userService) PromoteToAdmin(userID uuid.UUID) (bool, error) {
+	return s.r.PromoteToAdmin(userID.String())
 }
 
-func (s *us) DegradeToNormalUser(userID uuid.UUID) (bool, error) {
-	return s.r.DegradeAdminToNormalUser(userID.String())
+func (s *userService) DegradeToUser(userID uuid.UUID) (bool, error) {
+	return s.r.DegradeToUser(userID.String())
 }
 
-func (s *us) Block(userID uuid.UUID) (bool, error) {
-	return s.r.BlockUser(userID.String())
+func (s *userService) Block(userID uuid.UUID) (bool, error) {
+	return s.r.Block(userID.String())
 }
 
-func (s *us) Unblock(userID uuid.UUID) (bool, error) {
-	return s.r.UnblockUser(userID.String())
+func (s *userService) Unblock(userID uuid.UUID) (bool, error) {
+	return s.r.Unblock(userID.String())
 }
 
-func (s *us) GetByEmail(email string) (*transfer.User, error) {
-	return s.r.FetchTransferUserByEmail(email)
+func (s *userService) FetchByEmail(email string) (*transfer.User, error) {
+	return s.r.FetchShallowUserByEmail(email)
 }
 
-func (s *us) GetByID(id uuid.UUID) (*transfer.User, error) {
-	return s.r.FetchTransferUserByID(id.String())
+func (s *userService) FetchByID(id uuid.UUID) (*transfer.User, error) {
+	return s.r.FetchShallowUserByID(id.String())
 }
 
-func (s *us) GetUserWithPasswordByEmail(email string) (*model.User, error) {
-	return s.r.FetchUserByEmail(email)
+func (s *userService) FetchRawUserByEmail(email string) (*model.User, error) {
+	return s.r.FetchByEmail(email)
 }
 
-func (s *us) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error) {
-	users, err := s.r.FetchUsers(pag.Page, pag.RPP)
+func (s *userService) Fetch(pag *types.Pagination) (*types.Result[transfer.User], error) {
+	users, err := s.r.Fetch(pag.Page, pag.RPP)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +149,8 @@ func (s *us) GetAll(pag *types.Pagination) (*types.Result[transfer.User], error)
 	}, nil
 }
 
-func (s *us) SearchUsers(pag *types.Pagination, needle, sortExpr string) (*types.Result[transfer.User], error) {
-	users, err := s.r.SearchUsers(pag.Page, pag.RPP, needle, sortExpr)
+func (s *userService) Search(pag *types.Pagination, needle, sortExpr string) (*types.Result[transfer.User], error) {
+	users, err := s.r.Search(pag.Page, pag.RPP, needle, sortExpr)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +162,8 @@ func (s *us) SearchUsers(pag *types.Pagination, needle, sortExpr string) (*types
 	}, nil
 }
 
-func (s *us) GetAllBlocked(pag *types.Pagination) (*types.Result[transfer.User], error) {
-	users, err := s.r.FetchBlockedUsers(pag.Page, pag.RPP)
+func (s *userService) FetchBlocked(pag *types.Pagination) (*types.Result[transfer.User], error) {
+	users, err := s.r.FetchBlocked(pag.Page, pag.RPP)
 	if err != nil {
 		return nil, err
 	}
@@ -157,8 +175,11 @@ func (s *us) GetAllBlocked(pag *types.Pagination) (*types.Result[transfer.User],
 	}, nil
 }
 
-func (s *us) GetUserSettings(pag *types.Pagination, userID uuid.UUID) (*types.Result[transfer.UserSetting], error) {
-	settings, err := s.r.FetchUserSettings(userID.String(), pag.Page, pag.RPP)
+func (s *userService) FetchSettings(
+	userID uuid.UUID,
+	pag *types.Pagination,
+) (*types.Result[transfer.UserSetting], error) {
+	settings, err := s.r.FetchSettings(userID.String(), pag.Page, pag.RPP)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +197,8 @@ func (s *us) GetUserSettings(pag *types.Pagination, userID uuid.UUID) (*types.Re
 	}, nil
 }
 
-func (s *us) GetOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserSetting, error) {
-	setting, err := s.r.FetchOneUserSetting(userID.String(), settingKey)
+func (s *userService) FetchOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserSetting, error) {
+	setting, err := s.r.FetchOneSetting(userID.String(), settingKey)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +209,11 @@ func (s *us) GetOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserS
 	return setting, nil
 }
 
-func (s *us) UpdateUserSetting(userID uuid.UUID, settingKey string, update *transfer.UserSettingUpdate) (bool, error) {
+func (s *userService) UpdateUserSetting(
+	userID uuid.UUID,
+	settingKey string,
+	update *transfer.UserSettingUpdate,
+) (bool, error) {
 	buf, err := json.Marshal(update.Value)
 	if err != nil {
 		log.Println(err)
@@ -197,10 +222,10 @@ func (s *us) UpdateUserSetting(userID uuid.UUID, settingKey string, update *tran
 	return s.r.UpdateUserSetting(userID.String(), settingKey, string(buf))
 }
 
-func (s *us) HardDelete(id uuid.UUID) error {
-	return s.r.HardlyDeleteUser(id.String())
+func (s *userService) RemoveHardly(id uuid.UUID) error {
+	return s.r.RemoveHardly(id.String())
 }
 
-func (s *us) SoftDelete(id uuid.UUID) (string, error) {
-	return s.r.SoftlyDeleteUser(id.String())
+func (s *userService) RemoveSoftly(id uuid.UUID) error {
+	return s.r.RemoveSoftly(id.String())
 }
