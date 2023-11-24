@@ -943,3 +943,57 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 		assert.Equal(t, res, false)
 	})
 }
+
+func TestUserRepository_DegradeToUser(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewUserRepository(db)
+		query = regexp.QuoteMeta(`SELECT degrade_admin_to_user ($1);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"degrade_admin_to_user"}).
+				AddRow(true))
+		res, err = r.DegradeToUser(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, true)
+	})
+
+	t.Run("could not degrade but didn't get any error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"degrade_admin_to_user"}).AddRow(false))
+		res, err = r.DegradeToUser(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.DegradeToUser(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{})
+		res, err = r.DegradeToUser(userID)
+		assert.Error(t, err)
+		assert.Equal(t, res, false)
+	})
+}
