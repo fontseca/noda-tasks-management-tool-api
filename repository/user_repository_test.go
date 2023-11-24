@@ -32,50 +32,49 @@ func TestUserRepository_Save(t *testing.T) {
 		}
 	)
 
-	/* Success.  */
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"make_user"}).
+				AddRow(userID))
+		res, err = r.Save(n)
+		assert.NoError(t, err)
+		assert.Equal(t, res, userID)
+	})
 
-	mock.
-		ExpectQuery(query).
-		WithArgs("FirstName", "MiddleName", "LastName", "Surname", "Email", "Password").
-		WillReturnRows(sqlmock.
-			NewRows([]string{"make_user"}).
-			AddRow(userID))
-	res, err = r.Save(n)
-	assert.NoError(t, err)
-	assert.Equal(t, res, userID)
+	t.Run("got an invalid email", func(t *testing.T) {
+		n.Email = "invalid-email"
+		mock.
+			ExpectQuery(query).
+			WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
+			WillReturnError(&pq.Error{Code: "23514", Message: "value for domain email_t violates check constraint \"email_t_check\""})
+		res, err = r.Save(n)
+		assert.Error(t, err)
+		assert.Equal(t, "", res)
+	})
 
-	/* Invalid email.  */
+	t.Run("got a duplicated email", func(t *testing.T) {
+		n.Email = "mail@mail.com"
+		mock.
+			ExpectQuery(query).
+			WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
+			WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"user_email_key\""})
+		res, err = r.Save(n)
+		assert.ErrorIs(t, err, noda.ErrSameEmail)
+		assert.Equal(t, "", res)
+	})
 
-	n.Email = "invalid-email"
-	mock.
-		ExpectQuery(query).
-		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
-		WillReturnError(&pq.Error{Code: "23514", Message: "value for domain email_t violates check constraint \"email_t_check\""})
-	res, err = r.Save(n)
-	assert.Error(t, err)
-	assert.Equal(t, "", res)
-
-	/* Duplicated email.  */
-
-	n.Email = "mail@mail.com"
-	mock.
-		ExpectQuery(query).
-		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
-		WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"user_email_key\""})
-	res, err = r.Save(n)
-	assert.ErrorIs(t, err, noda.ErrSameEmail)
-	assert.Equal(t, "", res)
-
-	/* Unexpected database error.  */
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
-		WillReturnError(&pq.Error{})
-	res, err = r.Save(n)
-	assert.Error(t, err)
-	assert.Equal(t, "", res)
-
+	t.Run("got an unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
+			WillReturnError(&pq.Error{})
+		res, err = r.Save(n)
+		assert.Error(t, err)
+		assert.Equal(t, "", res)
+	})
 }
 
 func TestUserRepository_Update(t *testing.T) {
@@ -90,49 +89,49 @@ func TestUserRepository_Update(t *testing.T) {
 		up    = &transfer.UserUpdate{}
 	)
 
-	/* Success.  */
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"update_user"}).
+				AddRow(true))
+		res, err = r.Update(userID, up)
+		assert.NoError(t, err)
+		assert.Equal(t, res, true)
+	})
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"update_user"}).
-			AddRow(true))
-	res, err = r.Update(userID, up)
-	assert.NoError(t, err)
-	assert.Equal(t, res, true)
+	t.Run("could not update but didn't get any error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"update_user"}).
+				AddRow(false))
+		res, err = r.Update(userID, up)
+		assert.NoError(t, err)
+		assert.Equal(t, res, false)
+	})
 
-	/* Could not update but didn't get any error.  */
+	t.Run("user does not exist", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.Update(userID, up)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Equal(t, res, false)
+	})
 
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"update_user"}).
-			AddRow(false))
-	res, err = r.Update(userID, up)
-	assert.NoError(t, err)
-	assert.Equal(t, res, false)
-
-	/* User does not exist.  */
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
-	res, err = r.Update(userID, up)
-	assert.ErrorIs(t, err, noda.ErrUserNotFound)
-	assert.Equal(t, res, false)
-
-	/* Unexpected database error.  */
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
-		WillReturnError(&pq.Error{})
-	res, err = r.Update(userID, up)
-	assert.Error(t, err)
-	assert.Equal(t, res, false)
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
+			WillReturnError(&pq.Error{})
+		res, err = r.Update(userID, up)
+		assert.Error(t, err)
+		assert.Equal(t, res, false)
+	})
 }
 
 func TestUserRepository_PromoteToAdmin(t *testing.T) {
@@ -144,13 +143,16 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 		res   bool
 		err   error
 	)
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID).
-		WillReturnRows(sqlmock.
-			NewRows([]string{"promote_user_to_admin"}).
-			AddRow(true))
-	res, err = r.PromoteToAdmin(userID)
-	assert.NoError(t, err)
-	assert.Equal(t, res, true)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"promote_user_to_admin"}).
+				AddRow(true))
+		res, err = r.PromoteToAdmin(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, true)
+	})
 }
