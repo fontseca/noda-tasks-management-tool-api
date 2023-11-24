@@ -19,7 +19,7 @@ type UserRepository interface {
 	FetchShallowUserByEmail(email string) (user *transfer.User, err error)
 	Fetch(page, rpp int64, needle, sortExpr string) (users []*transfer.User, err error)
 	FetchBlocked(page, rpp int64, needle, sortExpr string) (users []*transfer.User, err error)
-	FetchSettings(userID string, page, rpp int64) (settings []*transfer.UserSetting, err error)
+	FetchSettings(userID string, page, rpp int64, needle, sortExpr string) (settings []*transfer.UserSetting, err error)
 	FetchOneSetting(userID string, settingKey string) (setting *transfer.UserSetting, err error)
 	Search(page, rpp int64, needle, sortExpr string) (users []*transfer.User, err error)
 	Update(id string, update *transfer.UserUpdate) (ok bool, err error)
@@ -224,9 +224,9 @@ func (r userRepository) Search(page, rpp int64, needle, sortExpr string) ([]*tra
 	return users, nil
 }
 
-func (r userRepository) FetchSettings(userID string, page, rpp int64) ([]*transfer.UserSetting, error) {
-	rows, err := r.db.Query("SELECT * FROM fetch_user_settings ($1, $2, $3, NULL, NULL);",
-		userID, page, rpp)
+func (r userRepository) FetchSettings(userID string, page, rpp int64, needle, sortExpr string) ([]*transfer.UserSetting, error) {
+	rows, err := r.db.Query("SELECT * FROM fetch_user_settings ($1, $2, $3, $4, $5);",
+		userID, page, rpp, needle, sortExpr)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {

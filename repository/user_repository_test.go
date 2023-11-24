@@ -516,6 +516,84 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 	})
 }
 
+func TestUserRepository_FetchSettings(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	var (
+		r         = NewUserRepository(db)
+		res       []*transfer.UserSetting
+		err       error
+		page, rpp int64
+		needle    = "foo"
+		sortExpr  = "-first_name"
+		setting   = new(transfer.UserSetting)
+		query     = regexp.QuoteMeta("SELECT * FROM fetch_user_settings ($1, $2, $3, $4, $5);")
+	)
+
+	t.Run("success with rpp=2", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"key", "description", "value", "created_at", "updated_at"}).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt)
+		rpp = 2
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortExpr).
+			WillReturnRows(rows)
+		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
+		assert.Len(t, res, 2)
+		assert.NoError(t, err)
+	})
+
+	t.Run("success with rpp=3", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"key", "description", "value", "created_at", "updated_at"}).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt)
+		rpp = 3
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortExpr).
+			WillReturnRows(rows)
+		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
+		assert.Len(t, res, 3)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a scanning error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortExpr).
+			WillReturnRows(
+				sqlmock.NewRows([]string{"unknown_column", "description", "value", "created_at", "updated_at"}).
+					AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt))
+		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortExpr).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got an unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, page, rpp, needle, sortExpr).
+			WillReturnError(new(pq.Error))
+		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func TestUserRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
