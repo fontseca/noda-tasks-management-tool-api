@@ -594,6 +594,77 @@ func TestUserRepository_FetchSettings(t *testing.T) {
 	})
 }
 
+func TestUserRepository_FetchOneSetting(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	var (
+		r       = NewUserRepository(db)
+		res     *transfer.UserSetting
+		err     error
+		setting = &transfer.UserSetting{
+			Key:   "key",
+			Value: "value",
+		}
+		query = regexp.QuoteMeta("SELECT * FROM fetch_one_user_setting ($1, $2);")
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"key", "description", "value", "created_at", "updated_at"}).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt)
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, setting.Key).
+			WillReturnRows(rows)
+		res, err = r.FetchOneSetting(userID, setting.Key)
+		assert.Equal(t, setting, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a scanning error", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"unknown_column", "description", "value", "created_at", "updated_at"}).
+			AddRow(setting.Key, setting.Description, setting.Value, setting.CreatedAt, setting.UpdatedAt)
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, setting.Key).
+			WillReturnRows(rows)
+		res, err = r.FetchOneSetting(userID, setting.Key)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, setting.Key).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.FetchOneSetting(userID, setting.Key)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got not found user setting error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, setting.Key).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent predefined user setting key"})
+		res, err = r.FetchOneSetting(userID, setting.Key)
+		assert.ErrorIs(t, err, noda.ErrSettingNotFound)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got an unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, setting.Key).
+			WillReturnError(new(pq.Error))
+		res, err = r.FetchOneSetting(userID, setting.Key)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func TestUserRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
