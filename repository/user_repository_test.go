@@ -889,7 +889,9 @@ func TestUserRepository_Unblock(t *testing.T) {
 		assert.Equal(t, res, false)
 	})
 }
+
 func TestUserRepository_PromoteToAdmin(t *testing.T) {
+	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -909,5 +911,35 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 		res, err = r.PromoteToAdmin(userID)
 		assert.NoError(t, err)
 		assert.Equal(t, res, true)
+	})
+
+	t.Run("could not promote but didn't get any error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"promote_user_to_admin"}).AddRow(false))
+		res, err = r.PromoteToAdmin(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.PromoteToAdmin(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{})
+		res, err = r.PromoteToAdmin(userID)
+		assert.Error(t, err)
+		assert.Equal(t, res, false)
 	})
 }
