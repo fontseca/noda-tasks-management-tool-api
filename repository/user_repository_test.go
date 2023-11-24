@@ -148,6 +148,74 @@ func TestUserRepository_FetchByID(t *testing.T) {
 	})
 }
 
+func TestUserRepository_FetchShallowUserByID(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewUserRepository(db)
+		res   *transfer.User
+		err   error
+		user  = &transfer.User{ID: uuid.MustParse(userID)}
+		query = regexp.QuoteMeta(`
+	  SELECT "user_id" AS "id",
+	         "role_id" AS "role",
+	         "first_name",
+	         "middle_name",
+	         "last_name",
+	         "surname",
+	         "picture_url",
+	         "email",
+	  			 "is_blocked",
+	         "created_at",
+	         "updated_at"
+	    FROM fetch_user_by_id ($1);`)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(rows)
+		res, err = r.FetchShallowUserByID(userID)
+		assert.Equal(t, user, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a scanning error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}))
+		res, err = r.FetchShallowUserByID(userID)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got an expected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.FetchShallowUserByID(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got an unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(new(pq.Error))
+		res, err = r.FetchShallowUserByID(userID)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func TestUserRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
