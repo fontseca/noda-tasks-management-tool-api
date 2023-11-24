@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/google/uuid"
 	"noda"
 	"noda/data/model"
@@ -995,5 +996,87 @@ func TestUserRepository_DegradeToUser(t *testing.T) {
 		res, err = r.DegradeToUser(userID)
 		assert.Error(t, err)
 		assert.Equal(t, res, false)
+	})
+}
+
+func TestUserRepository_RemoveHardly(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewUserRepository(db)
+		query = regexp.QuoteMeta(`SELECT delete_user_hardly ($1);`)
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"delete_user_hardly"}).
+				AddRow(true))
+		err = r.RemoveHardly(userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("could not remove user", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		err = r.RemoveHardly(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{})
+		err = r.RemoveHardly(userID)
+		assert.Error(t, err)
+	})
+}
+
+func TestUserRepository_RemoveSoftly(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewUserRepository(db)
+		query = regexp.QuoteMeta(`
+		DELETE FROM "user"
+					WHERE "user_id" = $1;`)
+		err error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"delete_user_hardly"}).
+				AddRow(true))
+		err = r.RemoveSoftly(userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("could not remove user", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(sql.ErrNoRows)
+		err = r.RemoveSoftly(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{})
+		err = r.RemoveSoftly(userID)
+		assert.Error(t, err)
 	})
 }
