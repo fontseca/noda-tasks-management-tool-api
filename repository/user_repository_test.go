@@ -436,6 +436,86 @@ func TestUserRepository_Fetch(t *testing.T) {
 	})
 }
 
+func TestUserRepository_FetchBlocked(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	var (
+		r         = NewUserRepository(db)
+		res       []*transfer.User
+		err       error
+		page, rpp int64
+		needle    = "foo"
+		sortExpr  = "-first_name"
+		user      = &transfer.User{ID: uuid.MustParse(userID)}
+		query     = regexp.QuoteMeta(`
+  	SELECT "user_id" AS "id",
+  	       "role_id" AS "role",
+  	       "first_name",
+  	       "middle_name",
+  	       "last_name",
+  	       "surname",
+  	       "picture_url",
+  	       "email",
+  	       "is_blocked",
+  	       "created_at",
+  	       "updated_at"
+      FROM fetch_blocked_users ($1, $2, $3, $4);`)
+	)
+
+	t.Run("success with rpp=2", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+		rpp = 2
+		mock.
+			ExpectQuery(query).
+			WithArgs(page, rpp, needle, sortExpr).
+			WillReturnRows(rows)
+		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
+		assert.Len(t, res, 2)
+		assert.NoError(t, err)
+	})
+
+	t.Run("success with rpp=3", func(t *testing.T) {
+		var rows = sqlmock.
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+		rpp = 3
+		mock.
+			ExpectQuery(query).
+			WithArgs(page, rpp, needle, sortExpr).
+			WillReturnRows(rows)
+		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
+		assert.Len(t, res, 3)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a scanning error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(page, rpp, needle, sortExpr).
+			WillReturnRows(
+				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
+					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt))
+		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("got an unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(page, rpp, needle, sortExpr).
+			WillReturnError(new(pq.Error))
+		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func TestUserRepository_Update(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()
