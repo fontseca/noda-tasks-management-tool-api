@@ -722,6 +722,70 @@ func TestUserRepository_Update(t *testing.T) {
 	})
 }
 
+func TestUserRepository_UpdateUserSetting(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r            = NewUserRepository(db)
+		res          bool
+		err          error
+		query        = regexp.QuoteMeta("SELECT update_user_setting ($1, $2, $3);")
+		settingKey   = "key"
+		settingValue = "new value"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, settingKey, settingValue).
+			WillReturnRows(sqlmock.NewRows([]string{"update_user_setting"}).AddRow(true))
+		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
+		assert.NoError(t, err)
+		assert.Equal(t, res, true)
+	})
+
+	t.Run("could not update but didn't get any error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, settingKey, settingValue).
+			WillReturnRows(sqlmock.NewRows([]string{"update_user_setting"}).AddRow(false))
+		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
+		assert.NoError(t, err)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, settingKey, settingValue).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("got not found user setting error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, settingKey, settingValue).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent predefined user setting key"})
+		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
+		assert.ErrorIs(t, err, noda.ErrSettingNotFound)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, settingKey, settingValue).
+			WillReturnError(&pq.Error{})
+		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
+		assert.Error(t, err)
+		assert.Equal(t, res, false)
+	})
+}
+
 func TestUserRepository_PromoteToAdmin(t *testing.T) {
 	db, mock := newMock()
 	defer db.Close()
