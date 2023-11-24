@@ -17,7 +17,7 @@ type UserRepository interface {
 	FetchShallowUserByID(id string) (user *transfer.User, err error)
 	FetchByEmail(email string) (user *model.User, err error)
 	FetchShallowUserByEmail(email string) (user *transfer.User, err error)
-	Fetch(page, rpp int64) (users []*transfer.User, err error)
+	Fetch(page, rpp int64, needle, sortExpr string) (users []*transfer.User, err error)
 	FetchBlocked(page, rpp int64) (users []*transfer.User, err error)
 	FetchSettings(userID string, page, rpp int64) (settings []*transfer.UserSetting, err error)
 	FetchOneSetting(userID string, settingKey string) (setting *transfer.UserSetting, err error)
@@ -156,7 +156,7 @@ func (r userRepository) Unblock(userID string) (bool, error) {
 	return wasUnblocked, nil
 }
 
-func (r userRepository) Fetch(page, rpp int64) ([]*transfer.User, error) {
+func (r userRepository) Fetch(page, rpp int64, needle, sortExpr string) ([]*transfer.User, error) {
 	query := `
 	SELECT "user_id" AS "id",
 	       "role_id" AS "role",
@@ -169,8 +169,8 @@ func (r userRepository) Fetch(page, rpp int64) ([]*transfer.User, error) {
 	       "is_blocked",
 	       "created_at",
 	       "updated_at"
-	  FROM fetch_users ($1, $2, NULL, NULL);`
-	rows, err := r.db.Query(query, page, rpp)
+	  FROM fetch_users ($1, $2, $3, $4);`
+	rows, err := r.db.Query(query, page, rpp, needle, sortExpr)
 	if err != nil {
 		var pqerr *pq.Error
 		switch {
