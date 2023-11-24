@@ -786,6 +786,58 @@ func TestUserRepository_UpdateUserSetting(t *testing.T) {
 	})
 }
 
+func TestUserRepository_Block(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewUserRepository(db)
+		res   bool
+		err   error
+		query = regexp.QuoteMeta("SELECT block_user ($1);")
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"block_user"}).AddRow(true))
+		res, err = r.Block(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, true)
+	})
+
+	t.Run("could not update but didn't get any error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"block_user"}).AddRow(false))
+		res, err = r.Block(userID)
+		assert.NoError(t, err)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("got not found user error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		res, err = r.Block(userID)
+		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.Equal(t, res, false)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID).
+			WillReturnError(&pq.Error{})
+		res, err = r.Block(userID)
+		assert.Error(t, err)
+		assert.Equal(t, res, false)
+	})
+}
+
 func TestUserRepository_PromoteToAdmin(t *testing.T) {
 	db, mock := newMock()
 	defer db.Close()
