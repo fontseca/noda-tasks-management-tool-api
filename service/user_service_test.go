@@ -9,6 +9,7 @@ import (
 	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
+	"noda/data/types"
 	"testing"
 )
 
@@ -481,6 +482,64 @@ func TestUserService_FetchRawUserByEmail(t *testing.T) {
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything).Return(nil, unexpected)
 		res, err = NewUserService(r).FetchRawUserByEmail(email)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}
+
+func TestUserService_Fetch(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Fetch"
+	var (
+		res        *types.Result[transfer.User]
+		err        error
+		needle     = "user"
+		sortExpr   = "+first_name"
+		users      = make([]*transfer.User, 2)
+		pagination = &types.Pagination{Page: 1, RPP: 10}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var result = &types.Result[transfer.User]{
+			Page:      pagination.Page,
+			RPP:       pagination.RPP,
+			Retrieved: int64(len(users)),
+			Payload:   users,
+		}
+		var r = newUserRepositoryMock()
+		r.On(routine, pagination.Page, pagination.RPP, needle, sortExpr).Return(users, nil)
+		res, err = NewUserService(r).Fetch(pagination, needle, sortExpr)
+		assert.Equal(t, result, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"pagination\" cannot be nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).Fetch(nil, needle, sortExpr)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("Fetch", "pagination").Error())
+		assert.Nil(t, res)
+	})
+
+	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
+		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, needle, mock.Anything).Return(users, nil)
+		_, _ = NewUserService(r).Fetch(pagination, n, sortExpr)
+	})
+
+	t.Run("must trim \"sortExpr\" parameter", func(t *testing.T) {
+		var s = "  \a\b\f\r\t\v" + sortExpr + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(users, nil)
+		_, _ = NewUserService(r).Fetch(pagination, needle, s)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, unexpected)
+		res, err = NewUserService(r).Fetch(pagination, needle, sortExpr)
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})

@@ -21,7 +21,7 @@ type UserService interface {
 	FetchByID(id uuid.UUID) (user *transfer.User, err error)
 	FetchByEmail(email string) (user *transfer.User, err error)
 	FetchRawUserByEmail(email string) (user *model.User, err error)
-	Fetch(pagination *types.Pagination) (result *types.Result[transfer.User], err error)
+	Fetch(pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.User], err error)
 	FetchBlocked(pagination *types.Pagination) (result *types.Result[transfer.User], err error)
 	FetchSettings(userID uuid.UUID, pagination *types.Pagination) (result *types.Result[transfer.UserSetting], err error)
 	FetchOneSetting(userID uuid.UUID, settingKey string) (setting *transfer.UserSetting, err error)
@@ -174,17 +174,25 @@ func (s *userService) FetchRawUserByEmail(email string) (user *model.User, err e
 	return s.r.FetchByEmail(email)
 }
 
-func (s *userService) Fetch(pag *types.Pagination) (*types.Result[transfer.User], error) {
-	users, err := s.r.Fetch(pag.Page, pag.RPP)
+func (s *userService) Fetch(pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.User], err error) {
+	if nil == pagination {
+		err = noda.NewNilParameterError("Fetch", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	needle = strings.Trim(needle, " \a\b\f\n\r\t\v")
+	sortExpr = strings.Trim(sortExpr, " \a\b\f\n\r\t\v")
+	users, err := s.r.Fetch(pagination.Page, pagination.RPP, needle, sortExpr)
 	if err != nil {
 		return nil, err
 	}
-	return &types.Result[transfer.User]{
-		Page:      pag.Page,
-		RPP:       pag.RPP,
+	result = &types.Result[transfer.User]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
 		Retrieved: int64(len(users)),
 		Payload:   users,
-	}, nil
+	}
+	return result, nil
 }
 
 func (s *userService) Search(pag *types.Pagination, needle, sortExpr string) (*types.Result[transfer.User], error) {

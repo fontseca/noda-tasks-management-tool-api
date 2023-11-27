@@ -26,7 +26,7 @@ func (h *UserHandler) HandleUsersRetrieval(w http.ResponseWriter, r *http.Reques
 	if pagination == nil {
 		return
 	}
-	res, err := h.s.Fetch(pagination)
+	res, err := h.s.Fetch(pagination, "", "")
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
