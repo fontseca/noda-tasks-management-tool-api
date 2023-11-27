@@ -149,7 +149,11 @@ func (s *userService) Unblock(userID uuid.UUID) (bool, error) {
 	return s.r.Unblock(userID.String())
 }
 
-func (s *userService) FetchByEmail(email string) (*transfer.User, error) {
+func (s *userService) FetchByEmail(email string) (user *transfer.User, err error) {
+	email = strings.Trim(email, " \a\b\f\n\r\t\v")
+	if "" == email {
+		return nil, noda.ErrUserNotFound
+	}
 	return s.r.FetchShallowUserByEmail(email)
 }
 
