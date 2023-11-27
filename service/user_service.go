@@ -166,7 +166,11 @@ func (s *userService) FetchByID(id uuid.UUID) (user *transfer.User, err error) {
 	return s.r.FetchShallowUserByID(id.String())
 }
 
-func (s *userService) FetchRawUserByEmail(email string) (*model.User, error) {
+func (s *userService) FetchRawUserByEmail(email string) (user *model.User, err error) {
+	email = strings.Trim(email, " \a\b\f\n\r\t\v")
+	if "" == email {
+		return nil, noda.ErrUserNotFound
+	}
 	return s.r.FetchByEmail(email)
 }
 

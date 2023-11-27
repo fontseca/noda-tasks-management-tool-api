@@ -438,3 +438,50 @@ func TestUserService_FetchByEmail(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestUserService_FetchRawUserByEmail(t *testing.T) {
+	defer beQuiet()()
+	const (
+		routine = "FetchByEmail"
+		email   = "foo@bar.com"
+	)
+	var (
+		res  *model.User
+		err  error
+		user = &model.User{ID: uuid.New(), Email: email}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, email).Return(user, nil)
+		res, err = NewUserService(r).FetchRawUserByEmail(email)
+		assert.Equal(t, user, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("must trim parameter \"email\"", func(t *testing.T) {
+		var e = "  \a\b\f\r\t\v" + email + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, email).Return(user, nil)
+		res, err = NewUserService(r).FetchRawUserByEmail(e)
+		assert.Equal(t, user, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("empty email? then noda.ErrUserNotFound", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).FetchRawUserByEmail("  \a\b\f\n\t\v  ")
+		assert.ErrorContains(t, err, noda.ErrUserNotFound.Error())
+		assert.Nil(t, res)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything).Return(nil, unexpected)
+		res, err = NewUserService(r).FetchRawUserByEmail(email)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}
