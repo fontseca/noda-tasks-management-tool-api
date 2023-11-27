@@ -153,7 +153,12 @@ func (s *userService) FetchByEmail(email string) (*transfer.User, error) {
 	return s.r.FetchShallowUserByEmail(email)
 }
 
-func (s *userService) FetchByID(id uuid.UUID) (*transfer.User, error) {
+func (s *userService) FetchByID(id uuid.UUID) (user *transfer.User, err error) {
+	if uuid.Nil == id {
+		err = noda.NewNilParameterError("FetchByID", "id")
+		log.Println(err)
+		return nil, err
+	}
 	return s.r.FetchShallowUserByID(id.String())
 }
 

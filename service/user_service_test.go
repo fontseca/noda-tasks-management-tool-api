@@ -355,3 +355,39 @@ func TestUserService_Save(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 }
+
+func TestUserService_FetchByID(t *testing.T) {
+	defer beQuiet()()
+	const routine = "FetchShallowUserByID"
+	var (
+		res    *transfer.User
+		err    error
+		userID = uuid.New()
+		user   = &transfer.User{ID: userID}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(user, nil)
+		res, err = NewUserService(r).FetchByID(userID)
+		assert.Equal(t, user, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"id\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).FetchByID(uuid.Nil)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "id").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything).Return(nil, unexpected)
+		res, err = NewUserService(r).FetchByID(userID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}
