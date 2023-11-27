@@ -44,11 +44,36 @@ func NewUserService(repository repository.UserRepository) UserService {
 	return &userService{repository}
 }
 
-func (s *userService) Save(next *transfer.UserCreation) (uuid.UUID, error) {
-	if err := assertPasswordIsValid(&next.Password, &next.Email); err != nil {
+func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUID, err error) {
+	if nil == creation {
+		err = noda.NewNilParameterError("Save", "creation")
+		log.Println(err)
 		return uuid.Nil, err
 	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(next.Password), bcrypt.DefaultCost)
+	creation.FirstName = strings.Trim(creation.FirstName, " \a\b\f\n\r\t\v")
+	creation.MiddleName = strings.Trim(creation.MiddleName, " \a\b\f\n\r\t\v")
+	creation.LastName = strings.Trim(creation.LastName, " \a\b\f\n\r\t\v")
+	creation.Surname = strings.Trim(creation.Surname, " \a\b\f\n\r\t\v")
+	creation.Email = strings.Trim(creation.Email, " \a\b\f\n\r\t\v")
+	creation.Password = strings.Trim(creation.Password, " \a\b\f\n\r\t\v")
+	switch {
+	case 50 < len(creation.FirstName):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
+	case 50 < len(creation.MiddleName):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
+	case 50 < len(creation.LastName):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
+	case 50 < len(creation.Surname):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
+	case 72 < len(creation.Password):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Password", "user", 72)
+	case 240 < len(creation.Email):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Email", "user", 240)
+	}
+	if err := assertPasswordIsValid(&creation.Password, &creation.Email); err != nil {
+		return uuid.Nil, err
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creation.Password), bcrypt.DefaultCost)
 	if err != nil {
 		switch {
 		default:
@@ -58,12 +83,12 @@ func (s *userService) Save(next *transfer.UserCreation) (uuid.UUID, error) {
 			return uuid.Nil, noda.ErrPasswordTooLong
 		}
 	}
-	next.Password = string(hashedPassword)
-	insertedID, err := s.r.Save(next)
+	creation.Password = string(hashedPassword)
+	insertedIDStr, err := s.r.Save(creation)
 	if err != nil {
 		return uuid.Nil, err
 	}
-	parsed, err := uuid.Parse(insertedID)
+	parsed, err := uuid.Parse(insertedIDStr)
 	if nil != err {
 		log.Println(err)
 		return uuid.Nil, err
