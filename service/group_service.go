@@ -26,6 +26,7 @@ func NewGroupService(repository repository.GroupRepository) GroupService {
 }
 
 func (s *groupService) Save(ownerID uuid.UUID, newGroup *transfer.GroupCreation) (insertedID string, err error) {
+	doTrim(&newGroup.Name, &newGroup.Description)
 	if len(newGroup.Name) > 50 {
 		return "", noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}
@@ -41,6 +42,8 @@ func (s *groupService) Fetch(
 	pag *types.Pagination,
 	needle, sortExpr string,
 ) (result *types.Result[model.Group], err error) {
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pag)
 	groups, err := s.r.Fetch(ownerID.String(), pag.Page, pag.RPP, needle, sortExpr)
 	if nil != err {
 		return nil, err
@@ -54,6 +57,7 @@ func (s *groupService) Fetch(
 }
 
 func (s *groupService) Update(ownerID, groupID uuid.UUID, up *transfer.GroupUpdate) (ok bool, err error) {
+	doTrim(&up.Name, &up.Description)
 	if len(up.Name) > 50 {
 		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
 	}

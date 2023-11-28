@@ -50,12 +50,14 @@ func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUI
 		log.Println(err)
 		return uuid.Nil, err
 	}
-	creation.FirstName = strings.Trim(creation.FirstName, " \a\b\f\n\r\t\v")
-	creation.MiddleName = strings.Trim(creation.MiddleName, " \a\b\f\n\r\t\v")
-	creation.LastName = strings.Trim(creation.LastName, " \a\b\f\n\r\t\v")
-	creation.Surname = strings.Trim(creation.Surname, " \a\b\f\n\r\t\v")
-	creation.Email = strings.Trim(creation.Email, " \a\b\f\n\r\t\v")
-	creation.Password = strings.Trim(creation.Password, " \a\b\f\n\r\t\v")
+	doTrim(
+		&creation.FirstName,
+		&creation.MiddleName,
+		&creation.LastName,
+		&creation.Surname,
+		&creation.Email,
+		&creation.Password,
+	)
 	switch {
 	case 50 < len(creation.FirstName):
 		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
@@ -150,7 +152,7 @@ func (s *userService) Unblock(userID uuid.UUID) (bool, error) {
 }
 
 func (s *userService) FetchByEmail(email string) (user *transfer.User, err error) {
-	email = strings.Trim(email, " \a\b\f\n\r\t\v")
+	doTrim(&email)
 	if "" == email {
 		return nil, noda.ErrUserNotFound
 	}
@@ -167,7 +169,7 @@ func (s *userService) FetchByID(id uuid.UUID) (user *transfer.User, err error) {
 }
 
 func (s *userService) FetchRawUserByEmail(email string) (user *model.User, err error) {
-	email = strings.Trim(email, " \a\b\f\n\r\t\v")
+	doTrim(&email)
 	if "" == email {
 		return nil, noda.ErrUserNotFound
 	}
@@ -180,8 +182,8 @@ func (s *userService) Fetch(pagination *types.Pagination, needle, sortExpr strin
 		log.Println(err)
 		return nil, err
 	}
-	needle = strings.Trim(needle, " \a\b\f\n\r\t\v")
-	sortExpr = strings.Trim(sortExpr, " \a\b\f\n\r\t\v")
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pagination)
 	users, err := s.r.Fetch(pagination.Page, pagination.RPP, needle, sortExpr)
 	if err != nil {
 		return nil, err
@@ -217,8 +219,8 @@ func (s *userService) FetchBlocked(
 		log.Println(err)
 		return nil, err
 	}
-	needle = strings.Trim(needle, " \a\b\f\n\r\t\v")
-	sortExpr = strings.Trim(sortExpr, " \a\b\f\n\r\t\v")
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pagination)
 	users, err := s.r.FetchBlocked(pagination.Page, pagination.RPP, needle, sortExpr)
 	if err != nil {
 		return nil, err

@@ -47,8 +47,7 @@ func (s *listService) Save(ownerID, groupID uuid.UUID, creation *transfer.ListCr
 		log.Println(err)
 		return uuid.Nil, err
 	}
-	creation.Name = strings.Trim(creation.Name, " \t\n")
-	creation.Description = strings.Trim(creation.Description, " \t\n")
+	doTrim(&creation.Name, &creation.Description)
 	switch {
 	case "" == creation.Name:
 		return uuid.Nil, errors.New("name cannot be an empty string") // must've been handled by validator
@@ -158,7 +157,8 @@ func (s *listService) FetchGrouped(
 		log.Println(err)
 		return nil, err
 	}
-	setToDefaultValues(pagination, &needle, &sortExpr)
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pagination)
 	res, err := s.r.FetchGrouped(ownerID.String(), groupID.String(), pagination.Page, pagination.RPP, needle, sortExpr)
 	if nil != err {
 		return nil, err
@@ -187,7 +187,8 @@ func (s *listService) FetchScattered(
 		log.Println(err)
 		return nil, err
 	}
-	setToDefaultValues(pagination, &needle, &sortExpr)
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pagination)
 	res, err := s.r.FetchScattered(ownerID.String(), pagination.Page, pagination.RPP, needle, sortExpr)
 	if nil != err {
 		return nil, err
@@ -199,19 +200,6 @@ func (s *listService) FetchScattered(
 		Payload:   res,
 	}
 	return result, nil
-}
-
-func setToDefaultValues(pagination *types.Pagination, needle, sortExpr *string) {
-	switch {
-	case "" != *needle:
-		*needle = strings.Trim(*needle, " \n\t")
-	case "" != *sortExpr:
-		*sortExpr = strings.Trim(*sortExpr, " \n\t")
-	case 0 >= pagination.Page:
-		pagination.Page = 1
-	case 0 >= pagination.RPP:
-		pagination.RPP = 10
-	}
 }
 
 func (s *listService) Remove(ownerID, groupID, listID uuid.UUID) error {
@@ -303,8 +291,7 @@ func (s *listService) Update(ownerID, groupID, listID uuid.UUID, up *transfer.Li
 	case uuid.Nil != groupID:
 		groupIDStr = groupID.String()
 	}
-	up.Name = strings.Trim(up.Name, " \t\n")
-	up.Description = strings.Trim(up.Description, " \t\n")
+	doTrim(&up.Name, &up.Description)
 	switch {
 	case 50 < len(up.Name):
 		return false, noda.ErrTooLong.Clone().FormatDetails("name", "list", 50)
