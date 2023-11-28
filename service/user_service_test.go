@@ -521,6 +521,15 @@ func TestUserService_Fetch(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
+	t.Run("must default pagination fields", func(t *testing.T) {
+		const expectedPage, expectedRPP int64 = 1, 10
+		pagination.Page = -1
+		pagination.RPP = 0
+		var r = newUserRepositoryMock()
+		r.On(routine, expectedPage, expectedRPP, mock.Anything, mock.Anything).Return(users, nil)
+		_, _ = NewUserService(r).Fetch(pagination, needle, sortExpr)
+	})
+
 	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
 		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
 		var r = newUserRepositoryMock()
@@ -577,6 +586,15 @@ func TestUserService_FetchBlocked(t *testing.T) {
 		res, err = NewUserService(r).FetchBlocked(nil, needle, sortExpr)
 		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchBlocked", "pagination").Error())
 		assert.Nil(t, res)
+	})
+
+	t.Run("must default pagination fields", func(t *testing.T) {
+		const expectedPage, expectedRPP int64 = 1, 10
+		pagination.Page = -1
+		pagination.RPP = 0
+		var r = newUserRepositoryMock()
+		r.On(routine, expectedPage, expectedRPP, mock.Anything, mock.Anything).Return(users, nil)
+		_, _ = NewUserService(r).FetchBlocked(pagination, needle, sortExpr)
 	})
 
 	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
