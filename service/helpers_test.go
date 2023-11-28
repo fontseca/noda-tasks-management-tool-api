@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/stretchr/testify/assert"
+	"noda/data/types"
 	"testing"
 )
 
@@ -24,5 +25,24 @@ func TestHelpers_doTrim(t *testing.T) {
 	t.Run("does nothing for nil parameters", func(t *testing.T) {
 		trimmed = doTrim(nil, nil, nil, nil)
 		assert.Equal(t, 0, trimmed)
+	})
+
+}
+
+func TestHelpers_doDefaultPagination(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		var pagination = &types.Pagination{Page: -1, RPP: 0}
+		doDefaultPagination(pagination)
+		assert.Equal(t, pagination.Page, int64(1))
+		assert.Equal(t, pagination.RPP, int64(10))
+		pagination.Page = 0
+		pagination.RPP = -6
+		doDefaultPagination(pagination)
+		assert.Equal(t, pagination.Page, int64(1))
+		assert.Equal(t, pagination.RPP, int64(10))
+	})
+
+	t.Run("does nothing for nil parameter", func(t *testing.T) {
+		doDefaultPagination(nil)
 	})
 }

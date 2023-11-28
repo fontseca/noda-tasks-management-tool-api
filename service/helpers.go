@@ -1,6 +1,9 @@
 package service
 
-import "strings"
+import (
+	"noda/data/types"
+	"strings"
+)
 
 func doTrim(args ...*string) (trimmed int) {
 	if 0 == len(args) {
@@ -13,4 +16,16 @@ func doTrim(args ...*string) (trimmed int) {
 		}
 	}
 	return trimmed
+}
+
+func doDefaultPagination(pagination *types.Pagination) {
+	if nil == pagination {
+		return
+	}
+	if 0 >= pagination.Page {
+		pagination.Page = 1
+	}
+	if 0 >= pagination.RPP {
+		pagination.RPP = 10
+	}
 }
