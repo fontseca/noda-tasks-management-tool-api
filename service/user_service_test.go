@@ -620,3 +620,100 @@ func TestUserService_FetchBlocked(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestUserService_FetchSettings(t *testing.T) {
+	defer beQuiet()()
+	const routine = "FetchSettings"
+	var (
+		res        *types.Result[transfer.UserSetting]
+		err        error
+		needle     = "setting"
+		sortExpr   = "+first_name"
+		pagination = &types.Pagination{Page: 1, RPP: 10}
+		userID     = uuid.New()
+		settings   = make([]*transfer.UserSetting, 2)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var s = []*transfer.UserSetting{
+			{
+				Key:   "setting 1",
+				Value: []byte("true"),
+			},
+			{
+				Key:   "setting 2",
+				Value: []byte("{\"key_1\":true,\"key_2\":\"value_2\",\"key_3\":null}"),
+			},
+			{
+				Key:   "setting 3",
+				Value: []byte("3.14"),
+			},
+		}
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String(), pagination.Page, pagination.RPP, needle, sortExpr).Return(s, nil)
+		res, err = NewUserService(r).FetchSettings(userID, pagination, needle, sortExpr)
+		assert.NoError(t, err)
+		assert.NotNil(t, res.Payload)
+		assert.Equal(t, int64(1), res.Page)
+		assert.Equal(t, int64(10), res.RPP)
+		assert.Equal(t, int64(3), res.Retrieved)
+		var value, expected any
+		value, expected = res.Payload[0].Value, true
+		assert.IsType(t, expected, value)
+		assert.Equal(t, expected, value)
+		value, expected = res.Payload[1].Value, map[string]any{"key_1": true, "key_2": "value_2", "key_3": nil}
+		assert.IsType(t, expected, value)
+		assert.Equal(t, expected, value)
+		value, expected = res.Payload[2].Value, 3.14
+		assert.IsType(t, expected, value)
+		assert.Equal(t, expected, value)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).FetchSettings(uuid.Nil, pagination, needle, sortExpr)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchSettings", "userID").Error())
+	})
+
+	t.Run("parameter \"pagination\" cannot be nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).FetchSettings(userID, nil, needle, sortExpr)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchSettings", "pagination").Error())
+		assert.Nil(t, res)
+	})
+
+	t.Run("must default pagination fields", func(t *testing.T) {
+		const expectedPage, expectedRPP int64 = 1, 10
+		pagination.Page = -1
+		pagination.RPP = 0
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, expectedPage, expectedRPP, mock.Anything, mock.Anything).Return(settings, nil)
+		_, _ = NewUserService(r).FetchSettings(userID, pagination, needle, sortExpr)
+	})
+
+	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
+		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, needle, mock.Anything).Return(settings, nil)
+		_, _ = NewUserService(r).FetchSettings(userID, pagination, n, sortExpr)
+	})
+
+	t.Run("must trim \"sortExpr\" parameter", func(t *testing.T) {
+		var s = "  \a\b\f\r\t\v" + sortExpr + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(settings, nil)
+		_, _ = NewUserService(r).FetchSettings(userID, pagination, needle, s)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, unexpected)
+		res, err = NewUserService(r).FetchSettings(userID, pagination, needle, sortExpr)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}

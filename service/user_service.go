@@ -23,7 +23,7 @@ type UserService interface {
 	FetchRawUserByEmail(email string) (user *model.User, err error)
 	Fetch(pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.User], err error)
 	FetchBlocked(pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.User], err error)
-	FetchSettings(userID uuid.UUID, pagination *types.Pagination) (result *types.Result[transfer.UserSetting], err error)
+	FetchSettings(userID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.UserSetting], err error)
 	FetchOneSetting(userID uuid.UUID, settingKey string) (setting *transfer.UserSetting, err error)
 	Search(pagination *types.Pagination, needle, sortExpr string) (users *types.Result[transfer.User], err error)
 	Update(id uuid.UUID, update *transfer.UserUpdate) (ok bool, err error)
@@ -236,24 +236,41 @@ func (s *userService) FetchBlocked(
 
 func (s *userService) FetchSettings(
 	userID uuid.UUID,
-	pag *types.Pagination,
-) (*types.Result[transfer.UserSetting], error) {
-	settings, err := s.r.FetchSettings(userID.String(), pag.Page, pag.RPP)
+	pagination *types.Pagination,
+	needle, sortExpr string,
+) (result *types.Result[transfer.UserSetting], err error) {
+	if uuid.Nil == userID {
+		err = noda.NewNilParameterError("FetchSettings", "userID")
+		log.Println(err)
+		return nil, err
+	}
+	if nil == pagination {
+		err = noda.NewNilParameterError("FetchSettings", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	doTrim(&needle, &sortExpr)
+	doDefaultPagination(pagination)
+	settings, err := s.r.FetchSettings(userID.String(), pagination.Page, pagination.RPP, needle, sortExpr)
 	if err != nil {
 		return nil, err
 	}
 	for _, setting := range settings {
-		if err := json.Unmarshal(setting.Value.([]byte), &setting.Value); err != nil {
-			log.Println(err)
-			return nil, err
+		if nil != setting {
+			err = json.Unmarshal(setting.Value.([]byte), &setting.Value)
+			if nil != err {
+				log.Println(err)
+				return nil, err
+			}
 		}
 	}
-	return &types.Result[transfer.UserSetting]{
-		Page:      pag.Page,
-		RPP:       pag.RPP,
+	result = &types.Result[transfer.UserSetting]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
 		Retrieved: int64(len(settings)),
 		Payload:   settings,
-	}, nil
+	}
+	return result, nil
 }
 
 func (s *userService) FetchOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserSetting, error) {
