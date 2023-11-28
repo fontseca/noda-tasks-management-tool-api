@@ -717,3 +717,53 @@ func TestUserService_FetchSettings(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestUserService_FetchOneSetting(t *testing.T) {
+	defer beQuiet()()
+	const routine = "FetchOneSetting"
+	var (
+		userID     = uuid.New()
+		settingKey = "key"
+		res        *transfer.UserSetting
+		err        error
+		setting    = &transfer.UserSetting{
+			Key:   "key",
+			Value: []byte("\"yeah\""),
+		}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String(), settingKey).Return(setting, nil)
+		res, err = NewUserService(r).FetchOneSetting(userID, settingKey)
+		assert.NoError(t, err)
+		assert.Equal(t, "yeah", setting.Value)
+		assert.Equal(t, setting, res)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).FetchOneSetting(uuid.Nil, settingKey)
+		assert.Nil(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchOneSetting", "userID").Error())
+	})
+
+	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
+		setting.Value = []byte("\"yeah\"")
+		var k = "  \a\b\f\r\t\v" + settingKey + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, settingKey).Return(setting, nil)
+		_, _ = NewUserService(r).FetchOneSetting(userID, k)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		setting.Value = []byte("\"yeah\"")
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(nil, unexpected)
+		res, err = NewUserService(r).FetchOneSetting(userID, settingKey)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}

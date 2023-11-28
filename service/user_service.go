@@ -273,12 +273,19 @@ func (s *userService) FetchSettings(
 	return result, nil
 }
 
-func (s *userService) FetchOneSetting(userID uuid.UUID, settingKey string) (*transfer.UserSetting, error) {
-	setting, err := s.r.FetchOneSetting(userID.String(), settingKey)
+func (s *userService) FetchOneSetting(userID uuid.UUID, settingKey string) (setting *transfer.UserSetting, err error) {
+	if uuid.Nil == userID {
+		err = noda.NewNilParameterError("FetchOneSetting", "userID")
+		log.Println(err)
+		return nil, err
+	}
+	doTrim(&settingKey)
+	setting, err = s.r.FetchOneSetting(userID.String(), settingKey)
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(setting.Value.([]byte), &setting.Value); err != nil {
+	err = json.Unmarshal(setting.Value.([]byte), &setting.Value)
+	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
