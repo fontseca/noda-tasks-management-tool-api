@@ -948,3 +948,199 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestUserService_Block(t *testing.T) {
+	const routine = "Block"
+	var (
+		userID = uuid.New()
+		res    bool
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(true, nil)
+		res, err = NewUserService(r).Block(userID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).Block(uuid.Nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("Block", "userID").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(false, unexpected)
+		res, err = NewUserService(r).Block(userID)
+		assert.False(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestUserService_Unblock(t *testing.T) {
+	const routine = "Unblock"
+	var (
+		userID = uuid.New()
+		res    bool
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(true, nil)
+		res, err = NewUserService(r).Unblock(userID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).Unblock(uuid.Nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("Unblock", "userID").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(false, unexpected)
+		res, err = NewUserService(r).Unblock(userID)
+		assert.False(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestUserService_PromoteToAdmin(t *testing.T) {
+	const routine = "PromoteToAdmin"
+	var (
+		userID = uuid.New()
+		res    bool
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(true, nil)
+		res, err = NewUserService(r).PromoteToAdmin(userID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).PromoteToAdmin(uuid.Nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("PromoteToAdmin", "userID").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(false, unexpected)
+		res, err = NewUserService(r).PromoteToAdmin(userID)
+		assert.False(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestUserService_DegradeToUser(t *testing.T) {
+	const routine = "DegradeToUser"
+	var (
+		userID = uuid.New()
+		res    bool
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(true, nil)
+		res, err = NewUserService(r).DegradeToUser(userID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).DegradeToUser(uuid.Nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("DegradeToUser", "userID").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(false, unexpected)
+		res, err = NewUserService(r).DegradeToUser(userID)
+		assert.False(t, res)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestUserService_RemoveHardly(t *testing.T) {
+	const routine = "RemoveHardly"
+	var (
+		userID = uuid.New()
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(nil)
+		err = NewUserService(r).RemoveHardly(userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		err = NewUserService(r).RemoveHardly(uuid.Nil)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("RemoveHardly", "id").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(unexpected)
+		err = NewUserService(r).RemoveHardly(userID)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}
+
+func TestUserService_RemoveSoftly(t *testing.T) {
+	const routine = "RemoveSoftly"
+	var (
+		userID = uuid.New()
+		err    error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(nil)
+		err = NewUserService(r).RemoveSoftly(userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		err = NewUserService(r).RemoveSoftly(uuid.Nil)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("RemoveSoftly", "id").Error())
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String()).Return(unexpected)
+		err = NewUserService(r).RemoveSoftly(userID)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}

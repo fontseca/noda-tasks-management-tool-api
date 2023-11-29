@@ -162,19 +162,31 @@ func (s *userService) Update(userID uuid.UUID, update *transfer.UserUpdate) (ok 
 	return s.r.Update(userID.String(), update)
 }
 
-func (s *userService) PromoteToAdmin(userID uuid.UUID) (bool, error) {
+func (s *userService) PromoteToAdmin(userID uuid.UUID) (ok bool, err error) {
+	if uuid.Nil == userID {
+		return false, noda.NewNilParameterError("PromoteToAdmin", "userID")
+	}
 	return s.r.PromoteToAdmin(userID.String())
 }
 
-func (s *userService) DegradeToUser(userID uuid.UUID) (bool, error) {
+func (s *userService) DegradeToUser(userID uuid.UUID) (ok bool, err error) {
+	if uuid.Nil == userID {
+		return false, noda.NewNilParameterError("DegradeToUser", "userID")
+	}
 	return s.r.DegradeToUser(userID.String())
 }
 
-func (s *userService) Block(userID uuid.UUID) (bool, error) {
+func (s *userService) Block(userID uuid.UUID) (ok bool, err error) {
+	if uuid.Nil == userID {
+		return false, noda.NewNilParameterError("Block", "userID")
+	}
 	return s.r.Block(userID.String())
 }
 
-func (s *userService) Unblock(userID uuid.UUID) (bool, error) {
+func (s *userService) Unblock(userID uuid.UUID) (ok bool, err error) {
+	if uuid.Nil == userID {
+		return false, noda.NewNilParameterError("Unblock", "userID")
+	}
 	return s.r.Unblock(userID.String())
 }
 
@@ -352,9 +364,15 @@ func (s *userService) UpdateUserSetting(
 }
 
 func (s *userService) RemoveHardly(id uuid.UUID) error {
+	if uuid.Nil == id {
+		return noda.NewNilParameterError("RemoveHardly", "id")
+	}
 	return s.r.RemoveHardly(id.String())
 }
 
 func (s *userService) RemoveSoftly(id uuid.UUID) error {
+	if uuid.Nil == id {
+		return noda.NewNilParameterError("RemoveSoftly", "id")
+	}
 	return s.r.RemoveSoftly(id.String())
 }
