@@ -131,8 +131,34 @@ func assertPasswordIsValid(password, email *string) *noda.AggregateDetails {
 	return nil
 }
 
-func (s *userService) Update(userID uuid.UUID, up *transfer.UserUpdate) (bool, error) {
-	return s.r.Update(userID.String(), up)
+func (s *userService) Update(userID uuid.UUID, update *transfer.UserUpdate) (ok bool, err error) {
+	switch {
+	case uuid.Nil == userID:
+		err = noda.NewNilParameterError("Update", "userID")
+		log.Println(err)
+		return false, err
+	case nil == update:
+		err = noda.NewNilParameterError("Update", "update")
+		log.Println(err)
+		return false, err
+	}
+	doTrim(
+		&update.FirstName,
+		&update.MiddleName,
+		&update.LastName,
+		&update.Surname,
+	)
+	switch {
+	case 50 < len(update.FirstName):
+		return false, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
+	case 50 < len(update.MiddleName):
+		return false, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
+	case 50 < len(update.LastName):
+		return false, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
+	case 50 < len(update.Surname):
+		return false, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
+	}
+	return s.r.Update(userID.String(), update)
 }
 
 func (s *userService) PromoteToAdmin(userID uuid.UUID) (bool, error) {

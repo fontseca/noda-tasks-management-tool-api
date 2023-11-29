@@ -767,3 +767,109 @@ func TestUserService_FetchOneSetting(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestUserService_Update(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Update"
+	var (
+		res         bool
+		err         error
+		placeholder = &transfer.UserUpdate{}
+		userID      = uuid.New()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String(), placeholder).Return(true, nil)
+		res, err = NewUserService(r).Update(userID, placeholder)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).Update(uuid.Nil, placeholder)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "userID").Error())
+	})
+
+	t.Run("parameter \"update\" cannot be nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).Update(userID, nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "update").Error())
+	})
+
+	t.Run("must trim all string fields", func(t *testing.T) {
+		var update = &transfer.UserUpdate{
+			FirstName:  "  \a\b\f\n\r\t\vFirst Name\a\b\f\n\r\t\v  ",
+			MiddleName: "  \a\b\f\n\r\t\vMiddle Name\a\b\f\n\r\t\v  ",
+			LastName:   "  \a\b\f\n\r\t\vLast Name\a\b\f\n\r\t\v  ",
+			Surname:    "  \a\b\f\n\r\t\vSurname\a\b\f\n\r\t\v  ",
+		}
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(true, nil)
+		res, err = NewUserService(r).Update(userID, update)
+		assert.True(t, res)
+		assert.Equal(t, "First Name", update.FirstName)
+		assert.Equal(t, "Middle Name", update.MiddleName)
+		assert.Equal(t, "Last Name", update.LastName)
+		assert.Equal(t, "Surname", update.Surname)
+		assert.NoError(t, err)
+	})
+
+	t.Run("if not empty, satisfies...", func(t *testing.T) {
+		var max = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		var update = &transfer.UserUpdate{}
+
+		t.Run("50 < update.FirstName", func(t *testing.T) {
+			update.FirstName = max
+			var r = newUserRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewUserService(r).Update(userID, update)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50).Error())
+			assert.False(t, res)
+			update.FirstName = ""
+		})
+
+		t.Run("50 < update.MiddleName", func(t *testing.T) {
+			update.MiddleName = max
+			var r = newUserRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewUserService(r).Update(userID, update)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50).Error())
+			assert.False(t, res)
+			update.MiddleName = ""
+		})
+
+		t.Run("50 < update.LastName", func(t *testing.T) {
+			update.LastName = max
+			var r = newUserRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewUserService(r).Update(userID, update)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50).Error())
+			assert.False(t, res)
+			update.LastName = ""
+		})
+
+		t.Run("50 < update.Surname", func(t *testing.T) {
+			update.Surname = max
+			var r = newUserRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewUserService(r).Update(userID, update)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50).Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewUserService(r).Update(userID, placeholder)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
