@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+const blankset = "  \a\b\f\r\t\v  "
+
 func beQuiet() func() {
 	null, _ := os.Open(os.DevNull)
 	sout := os.Stdout

@@ -179,11 +179,11 @@ func TestUserService_Save(t *testing.T) {
 
 	t.Run("must trim all string fields", func(t *testing.T) {
 		var creation = &transfer.UserCreation{
-			FirstName:  "  \a\b\f\n\r\t\vFirst Name\a\b\f\n\r\t\v  ",
-			MiddleName: "  \a\b\f\n\r\t\vMiddle Name\a\b\f\n\r\t\v  ",
-			LastName:   "  \a\b\f\n\r\t\vLast Name\a\b\f\n\r\t\v  ",
-			Surname:    "  \a\b\f\n\r\t\vSurname\a\b\f\n\r\t\v  ",
-			Email:      "  \a\b\f\n\r\t\vfoo@bar.com\a\b\f\n\r\t\v  ",
+			FirstName:  blankset + "First Name" + blankset,
+			MiddleName: blankset + "Middle Name" + blankset,
+			LastName:   blankset + "Last Name" + blankset,
+			Surname:    blankset + "Surname" + blankset,
+			Email:      blankset + "foo@bar.com" + blankset,
 			Password:   correctPassword,
 		}
 		var r = newUserRepositoryMock()
@@ -199,7 +199,7 @@ func TestUserService_Save(t *testing.T) {
 	})
 
 	t.Run("must trim and bcrypt password", func(t *testing.T) {
-		var creation = &transfer.UserCreation{Password: "  \a\b\f\r\t\v" + correctPassword + "\a\b\f\r\t\v  "}
+		var creation = &transfer.UserCreation{Password: blankset + correctPassword + blankset}
 		var trimmedPassword = correctPassword
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything).Return(inserted.String(), nil)
@@ -415,7 +415,7 @@ func TestUserService_FetchByEmail(t *testing.T) {
 	})
 
 	t.Run("must trim parameter \"email\"", func(t *testing.T) {
-		var e = "  \a\b\f\r\t\v" + email + "\a\b\f\r\t\v  "
+		var e = blankset + email + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, email).Return(user, nil)
 		res, err = NewUserService(r).FetchByEmail(e)
@@ -426,7 +426,7 @@ func TestUserService_FetchByEmail(t *testing.T) {
 	t.Run("empty email? then noda.ErrUserNotFound", func(t *testing.T) {
 		var r = newUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
-		res, err = NewUserService(r).FetchByEmail("  \a\b\f\n\t\v  ")
+		res, err = NewUserService(r).FetchByEmail(blankset)
 		assert.ErrorContains(t, err, noda.ErrUserNotFound.Error())
 		assert.Nil(t, res)
 	})
@@ -462,7 +462,7 @@ func TestUserService_FetchRawUserByEmail(t *testing.T) {
 	})
 
 	t.Run("must trim parameter \"email\"", func(t *testing.T) {
-		var e = "  \a\b\f\r\t\v" + email + "\a\b\f\r\t\v  "
+		var e = blankset + email + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, email).Return(user, nil)
 		res, err = NewUserService(r).FetchRawUserByEmail(e)
@@ -473,7 +473,7 @@ func TestUserService_FetchRawUserByEmail(t *testing.T) {
 	t.Run("empty email? then noda.ErrUserNotFound", func(t *testing.T) {
 		var r = newUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
-		res, err = NewUserService(r).FetchRawUserByEmail("  \a\b\f\n\t\v  ")
+		res, err = NewUserService(r).FetchRawUserByEmail(blankset)
 		assert.ErrorContains(t, err, noda.ErrUserNotFound.Error())
 		assert.Nil(t, res)
 	})
@@ -532,14 +532,14 @@ func TestUserService_Fetch(t *testing.T) {
 	})
 
 	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
-		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
+		var n = blankset + needle + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, needle, mock.Anything).Return(users, nil)
 		_, _ = NewUserService(r).Fetch(pagination, n, sortExpr)
 	})
 
 	t.Run("must trim \"sortExpr\" parameter", func(t *testing.T) {
-		var s = "  \a\b\f\r\t\v" + sortExpr + "\a\b\f\r\t\v  "
+		var s = blankset + sortExpr + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(users, nil)
 		_, _ = NewUserService(r).Fetch(pagination, needle, s)
@@ -599,14 +599,14 @@ func TestUserService_FetchBlocked(t *testing.T) {
 	})
 
 	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
-		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
+		var n = blankset + needle + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, needle, mock.Anything).Return(users, nil)
 		_, _ = NewUserService(r).FetchBlocked(pagination, n, sortExpr)
 	})
 
 	t.Run("must trim \"sortExpr\" parameter", func(t *testing.T) {
-		var s = "  \a\b\f\r\t\v" + sortExpr + "\a\b\f\r\t\v  "
+		var s = blankset + sortExpr + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(users, nil)
 		_, _ = NewUserService(r).FetchBlocked(pagination, needle, s)
@@ -696,14 +696,14 @@ func TestUserService_FetchSettings(t *testing.T) {
 	})
 
 	t.Run("must trim \"needle\" parameter", func(t *testing.T) {
-		var n = "  \a\b\f\r\t\v" + needle + "\a\b\f\r\t\v  "
+		var n = blankset + needle + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, mock.Anything, needle, mock.Anything).Return(settings, nil)
 		_, _ = NewUserService(r).FetchSettings(userID, pagination, n, sortExpr)
 	})
 
 	t.Run("must trim \"sortExpr\" parameter", func(t *testing.T) {
-		var s = "  \a\b\f\r\t\v" + sortExpr + "\a\b\f\r\t\v  "
+		var s = blankset + sortExpr + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(settings, nil)
 		_, _ = NewUserService(r).FetchSettings(userID, pagination, needle, s)
@@ -752,7 +752,7 @@ func TestUserService_FetchOneSetting(t *testing.T) {
 
 	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
 		setting.Value = []byte("\"yeah\"")
-		var k = "  \a\b\f\r\t\v" + settingKey + "\a\b\f\r\t\v  "
+		var k = blankset + settingKey + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, settingKey).Return(setting, nil)
 		_, _ = NewUserService(r).FetchOneSetting(userID, k)
@@ -805,10 +805,10 @@ func TestUserService_Update(t *testing.T) {
 
 	t.Run("must trim all string fields", func(t *testing.T) {
 		var update = &transfer.UserUpdate{
-			FirstName:  "  \a\b\f\n\r\t\vFirst Name\a\b\f\n\r\t\v  ",
-			MiddleName: "  \a\b\f\n\r\t\vMiddle Name\a\b\f\n\r\t\v  ",
-			LastName:   "  \a\b\f\n\r\t\vLast Name\a\b\f\n\r\t\v  ",
-			Surname:    "  \a\b\f\n\r\t\vSurname\a\b\f\n\r\t\v  ",
+			FirstName:  blankset + "First Name" + blankset,
+			MiddleName: blankset + "Middle Name" + blankset,
+			LastName:   blankset + "Last Name" + blankset,
+			Surname:    blankset + "Surname" + blankset,
 		}
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything).Return(true, nil)
@@ -915,23 +915,24 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 	t.Run("empty \"settingKey\"? then do nothing", func(t *testing.T) {
 		var r = newUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
-		res, err = NewUserService(r).UpdateUserSetting(userID, "  \a\b\f\r\t\v  ", placeholder)
+		res, err = NewUserService(r).UpdateUserSetting(userID, blankset, placeholder)
 		assert.False(t, res)
 		assert.NoError(t, err)
 	})
 
 	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
-		var s = "  \a\b\f\r\t\v" + settingKey + "\a\b\f\r\t\v  "
+		var s = blankset + settingKey + blankset
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, settingKey, mock.Anything).Return(true, nil)
 		_, _ = NewUserService(r).UpdateUserSetting(userID, s, placeholder)
 	})
 
 	t.Run("if value is string, trim it", func(t *testing.T) {
+		var value = "setting value"
 		var update = &transfer.UserSettingUpdate{
-			Value: "  \a\b\f\n\r\t\vsetting value\a\b\f\n\r\t\v  ",
+			Value: blankset + value + blankset,
 		}
-		var buf, _ = json.Marshal("setting value")
+		var buf, _ = json.Marshal(value)
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, string(buf)).Return(true, nil)
 		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, update)
