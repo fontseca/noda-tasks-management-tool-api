@@ -11,6 +11,7 @@ import (
 	"noda/repository"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -322,7 +323,26 @@ func (s *userService) UpdateUserSetting(
 	userID uuid.UUID,
 	settingKey string,
 	update *transfer.UserSettingUpdate,
-) (bool, error) {
+) (ok bool, err error) {
+	switch {
+	case uuid.Nil == userID:
+		err = noda.NewNilParameterError("UpdateUserSetting", "userID")
+		log.Println(err)
+		return false, err
+	case nil == update:
+		err = noda.NewNilParameterError("UpdateUserSetting", "update")
+		log.Println(err)
+		return false, err
+	}
+	doTrim(&settingKey)
+	if "" == settingKey {
+		return false, nil
+	}
+	var v, yeah = update.Value.(string)
+	if yeah && "" != v && (unicode.IsSpace(rune(v[0])) || unicode.IsSpace(rune(v[len(v)-1]))) {
+		doTrim(&v)
+		update.Value = v
+	}
 	buf, err := json.Marshal(update.Value)
 	if err != nil {
 		log.Println(err)

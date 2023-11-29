@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -869,6 +870,80 @@ func TestUserService_Update(t *testing.T) {
 		var r = newUserRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything).Return(false, unexpected)
 		res, err = NewUserService(r).Update(userID, placeholder)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestUserService_UpdateUserSetting(t *testing.T) {
+	defer beQuiet()()
+	const routine = "UpdateUserSetting"
+	var (
+		res           bool
+		err           error
+		placeholder   = &transfer.UserSettingUpdate{Value: "{\"setting\":\"value\"}"}
+		settingKey    = "key"
+		userID        = uuid.New()
+		buf, _        = json.Marshal(placeholder.Value)
+		expectedValue = string(buf)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.On(routine, userID.String(), settingKey, expectedValue).Return(true, nil)
+		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, placeholder)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameter \"userID\" cannot be uuid.Nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).UpdateUserSetting(uuid.Nil, settingKey, placeholder)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("UpdateUserSetting", "userID").Error())
+	})
+
+	t.Run("parameter \"update\" cannot be nil", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, nil)
+		assert.False(t, res)
+		assert.ErrorContains(t, err, noda.NewNilParameterError("UpdateUserSetting", "update").Error())
+	})
+
+	t.Run("empty \"settingKey\"? then do nothing", func(t *testing.T) {
+		var r = newUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).UpdateUserSetting(userID, "  \a\b\f\r\t\v  ", placeholder)
+		assert.False(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
+		var s = "  \a\b\f\r\t\v" + settingKey + "\a\b\f\r\t\v  "
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, settingKey, mock.Anything).Return(true, nil)
+		_, _ = NewUserService(r).UpdateUserSetting(userID, s, placeholder)
+	})
+
+	t.Run("if value is string, trim it", func(t *testing.T) {
+		var update = &transfer.UserSettingUpdate{
+			Value: "  \a\b\f\n\r\t\vsetting value\a\b\f\n\r\t\v  ",
+		}
+		var buf, _ = json.Marshal("setting value")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, string(buf)).Return(true, nil)
+		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, update)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = newUserRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, placeholder)
 		assert.ErrorIs(t, err, unexpected)
 		assert.False(t, res)
 	})
