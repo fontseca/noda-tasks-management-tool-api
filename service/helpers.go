@@ -2,8 +2,11 @@ package service
 
 import (
 	"noda/data/types"
+	"regexp"
 	"strings"
 )
+
+var emailRegexp = regexp.MustCompile("^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$")
 
 func doTrim(args ...*string) (trimmed int) {
 	if 0 == len(args) {
