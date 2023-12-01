@@ -28,8 +28,13 @@ func NewAuthenticationService(userService UserService) AuthenticationService {
 	}
 }
 
-func (s *authenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, error) {
-	return s.userService.Save(next)
+func (s *authenticationService) SignUp(creation *transfer.UserCreation) (insertedID uuid.UUID, err error) {
+	if nil == creation {
+		err = noda.NewNilParameterError("SignUp", "creation")
+		log.Println(err)
+		return uuid.Nil, err
+	}
+	return s.userService.Save(creation)
 }
 
 func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
