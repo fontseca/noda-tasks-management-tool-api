@@ -6,6 +6,7 @@ import (
 	"log"
 	"noda"
 	"noda/data/transfer"
+	"noda/data/types"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -37,13 +38,25 @@ func (s *authenticationService) SignUp(creation *transfer.UserCreation) (inserte
 	return s.userService.Save(creation)
 }
 
-func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
-	// TODO: Check credentials.Email is a valid email address.
+func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (payload *types.TokenPayload, err error) {
+	if nil == credentials {
+		return nil, noda.NewNilParameterError("SignIn", "credentials")
+	}
+	doTrim(&credentials.Email, &credentials.Password)
+	switch {
+	case 72 < len(credentials.Password):
+		return nil, noda.ErrTooLong.Clone().FormatDetails("Password", "credentials", 72)
+	case 240 < len(credentials.Email):
+		return nil, noda.ErrTooLong.Clone().FormatDetails("Email", "credentials", 240)
+	case !emailRegexp.MatchString(credentials.Email):
+		return nil, noda.ErrBadRequest.
+			Clone().
+			SetDetails(fmt.Sprintf("Email address does not match regular expression: %q.", emailRegexp.String()))
+	}
 	user, err := s.userService.FetchRawUserByEmail(credentials.Email)
 	if err != nil {
 		return nil, err
 	}
-
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password)); err != nil {
 		switch {
 		default:
@@ -53,35 +66,50 @@ func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (*
 			return nil, noda.ErrIncorrectPassword
 		}
 	}
-
 	if user.IsBlocked {
 		return nil, noda.ErrUserBlocked
 	}
-
-	claims := jwt.MapClaims{
-		/* Registered claims.  */
-		"iss": "noda",
-		"sub": "authentication",
-		"iat": jwt.NewNumericDate(time.Now()),
-		"exp": jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-
-		/* Public claims.  */
+	var claims = jwt.MapClaims{
+		"iss":       "noda",
+		"sub":       "authentication",
+		"iat":       jwt.NewNumericDate(time.Now()),
+		"exp":       jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 		"user_id":   user.ID,
 		"user_role": user.Role,
 	}
-
-	secret := []byte("secret")
+	secret := []byte("secret") // TODO: Use a secure secret.
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := t.SignedString(secret)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
-
-	return &map[string]any{
-		"jwt": ss,
-		"iat": claims["iat"].(*jwt.NumericDate).String(),
-		"exp": claims["exp"].(*jwt.NumericDate).String(),
-		"jti": claims["jti"],
-	}, nil
+	var jti, _ = claims["jti"].(string)
+	var sub, _ = claims["sub"].(string)
+	var iss, _ = claims["iss"].(string)
+	payload = &types.TokenPayload{
+		ID:      jti,
+		Token:   ss,
+		Subject: sub,
+		Issuer:  iss,
+	}
+	var ok bool
+	var iat, exp *jwt.NumericDate
+	iat, ok = claims["iat"].(*jwt.NumericDate)
+	if ok {
+		payload.IssuedAt = iat.Time
+	}
+	exp, ok = claims["exp"].(*jwt.NumericDate)
+	if ok {
+		var expires = types.TokenExpires{
+			At:     exp.Time,
+			Within: -1,
+			Unit:   "s",
+		}
+		if nil != iat {
+			expires.Within = exp.Sub(iat.Time).Seconds()
+		}
+		payload.Expires = expires
+	}
+	return payload, nil
 }
