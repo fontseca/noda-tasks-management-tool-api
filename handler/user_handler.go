@@ -65,7 +65,8 @@ func (h *UserHandler) HandleBlockedUsersRetrieval(w http.ResponseWriter, r *http
 		return
 	}
 
-	res, err := h.s.FetchBlocked(pagination)
+	// TODO: Pass actual parameters.
+	res, err := h.s.FetchBlocked(pagination, "", "")
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
@@ -213,7 +214,8 @@ func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter,
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	settings, err := h.s.FetchSettings(userID, pagination)
+	// TODO: Pass actual parameters.
+	settings, err := h.s.FetchSettings(userID, pagination, "", "")
 	if err != nil {
 		var e *noda.Error
 		if errors.As(err, &e) {
