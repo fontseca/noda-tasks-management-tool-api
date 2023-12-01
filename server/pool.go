@@ -8,10 +8,10 @@ import (
 
 var (
 	authOnce              sync.Once
-	authenticationService *service.AuthenticationService
+	authenticationService service.AuthenticationService
 )
 
-func getAuthenticationService() *service.AuthenticationService {
+func getAuthenticationService() service.AuthenticationService {
 	if nil == authenticationService {
 		authOnce.Do(func() {
 			userService := getUserService()

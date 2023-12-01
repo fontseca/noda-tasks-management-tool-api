@@ -13,21 +13,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthenticationService struct {
+type AuthenticationService interface {
+	SignUp(creation *transfer.UserCreation) (insertedID uuid.UUID, err error)
+	SignIn(credentials *transfer.UserCredentials) (payload *types.TokenPayload, err error)
+}
+
+type authenticationService struct {
 	userService UserService
 }
 
-func NewAuthenticationService(userService UserService) *AuthenticationService {
-	return &AuthenticationService{
+func NewAuthenticationService(userService UserService) AuthenticationService {
+	return &authenticationService{
 		userService: userService,
 	}
 }
 
-func (s *AuthenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, error) {
+func (s *authenticationService) SignUp(next *transfer.UserCreation) (uuid.UUID, error) {
 	return s.userService.Save(next)
 }
 
-func (s *AuthenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
+func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (*map[string]any, error) {
 	// TODO: Check credentials.Email is a valid email address.
 	user, err := s.userService.FetchRawUserByEmail(credentials.Email)
 	if err != nil {

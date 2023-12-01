@@ -10,10 +10,10 @@ import (
 )
 
 type AuthenticationHandler struct {
-	s *service.AuthenticationService
+	s service.AuthenticationService
 }
 
-func NewAuthenticationHandler(s *service.AuthenticationService) *AuthenticationHandler {
+func NewAuthenticationHandler(s service.AuthenticationService) *AuthenticationHandler {
 	return &AuthenticationHandler{s}
 }
 
