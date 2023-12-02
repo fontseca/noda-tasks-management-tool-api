@@ -73,13 +73,12 @@ func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (p
 		"iss":       "noda",
 		"sub":       "authentication",
 		"iat":       jwt.NewNumericDate(time.Now()),
-		"exp":       jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+		"exp":       jwt.NewNumericDate(time.Now().Add(noda.JWTExpiresIn)),
 		"user_id":   user.ID,
 		"user_role": user.Role,
 	}
-	secret := []byte("secret") // TODO: Use a secure secret.
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := t.SignedString(secret)
+	ss, err := t.SignedString(noda.Secret())
 	if err != nil {
 		log.Println(err)
 		return nil, err

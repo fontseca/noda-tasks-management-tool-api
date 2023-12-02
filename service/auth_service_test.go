@@ -82,7 +82,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 				if _, ok := tk.Method.(*jwt.SigningMethodHMAC); !ok {
 					t.Fatal(fmt.Errorf("unexpected signing method: %v", tk.Header["alg"]))
 				}
-				return []byte("secret"), nil
+				return noda.Secret(), nil
 			})
 			var claims = token.Claims.(jwt.MapClaims)
 			var iat = claims["iat"]

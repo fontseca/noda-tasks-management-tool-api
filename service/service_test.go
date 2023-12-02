@@ -2,10 +2,11 @@ package service
 
 import (
 	"log"
+	"noda"
 	"os"
 )
 
-const blankset = "  \a\b\f\r\t\v  "
+const blankset = noda.Blankset
 
 func beQuiet() func() {
 	null, _ := os.Open(os.DevNull)

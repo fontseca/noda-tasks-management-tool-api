@@ -39,7 +39,7 @@ func authorization(next http.Handler) http.Handler {
 
 		token := strings.Split(value, " ")[1]
 		t, err := jwt.Parse(token, func(t *jwt.Token) (any, error) {
-			return []byte("secret"), nil // TODO: Please use a better way to get a secret.
+			return noda.Secret(), nil
 		})
 
 		if err != nil {
