@@ -69,17 +69,19 @@ func (h *UserHandler) HandleBlockedUsersRetrieval(w http.ResponseWriter, r *http
 	if pagination == nil {
 		return
 	}
-
-	// TODO: Pass actual parameters.
-	res, err := h.s.FetchBlocked(pagination, "", "")
+	var sortExpr = extractSorting(w, r)
+	var needle = extractQueryParameter(r, "search", "")
+	res, err := h.s.FetchBlocked(pagination, needle, sortExpr)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
-
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	data, err := json.Marshal(res)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.Request) {
