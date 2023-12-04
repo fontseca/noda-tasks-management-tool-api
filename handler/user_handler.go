@@ -221,8 +221,9 @@ func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter,
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	// TODO: Pass actual parameters.
-	settings, err := h.s.FetchSettings(userID, pagination, "", "")
+	var sortExpr = extractSorting(w, r)
+	var needle = extractQueryParameter(r, "search", "")
+	settings, err := h.s.FetchSettings(userID, pagination, needle, sortExpr)
 	if err != nil {
 		var e *noda.Error
 		if errors.As(err, &e) {
@@ -243,6 +244,7 @@ func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter,
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
