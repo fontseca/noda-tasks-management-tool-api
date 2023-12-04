@@ -26,14 +26,19 @@ func (h *UserHandler) HandleUsersRetrieval(w http.ResponseWriter, r *http.Reques
 	if pagination == nil {
 		return
 	}
-	res, err := h.s.Fetch(pagination, "", "")
+	var sortExpr = extractSorting(w, r)
+	var needle = extractQueryParameter(r, "search", "")
+	res, err := h.s.Fetch(pagination, needle, sortExpr)
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	data, err := json.Marshal(res)
+	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func (h *UserHandler) HandleUsersSearch(w http.ResponseWriter, r *http.Request) {
