@@ -135,3 +135,52 @@ func TestUserHandler_HandleBlockedUsersRetrieval(t *testing.T) {
 		assert.Empty(t, string(responseBody), "No response body is expected.")
 	})
 }
+
+func TestUserHandler_HandleRetrievalOfUserByID(t *testing.T) {
+	const (
+		method  = "GET"
+		target  = "/users/{user_id}"
+		routine = "FetchByID"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var (
+			user                 = &transfer.User{ID: userID}
+			expectedStatusCode   = http.StatusOK
+			expectedResponseBody = string(marshal(t, user))
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"user_id": userID.String()})
+		var s = mocks.NewUserServiceMock()
+		s.On(routine, userID).Return(user, nil)
+		var recorder = httptest.NewRecorder()
+		NewUserHandler(s).HandleRetrievalOfUserByID(recorder, request)
+		var response = recorder.Result()
+		defer response.Body.Close()
+		var responseBody = extractResponseBody(t, response.Body)
+		assert.Equal(t, expectedResponseBody, string(responseBody))
+		assert.Equal(t, expectedStatusCode, response.StatusCode)
+		assert.Empty(t, response.Header, "No header is expected, but got: %d.", len(response.Header))
+		assert.Empty(t, response.Cookies(), "No cookie is expected, but got: %d.", len(response.Cookies()))
+	})
+
+	t.Run("got an unexpected service error", func(t *testing.T) {
+		var (
+			unexpected         = errors.New("unexpected error")
+			expectedStatusCode = http.StatusInternalServerError
+		)
+		var request = httptest.NewRequest(method, target, nil)
+		withLoggedUser(&request)
+		withPathParameters(&request, parameters{"user_id": userID.String()})
+		var s = mocks.NewUserServiceMock()
+		s.On(routine, mock.Anything).Return(nil, unexpected)
+		var recorder = httptest.NewRecorder()
+		NewUserHandler(s).HandleRetrievalOfUserByID(recorder, request)
+		var response = recorder.Result()
+		defer response.Body.Close()
+		var responseBody = extractResponseBody(t, response.Body)
+		assert.Equal(t, expectedStatusCode, response.StatusCode)
+		assert.Empty(t, string(responseBody), "No response body is expected.")
+	})
+}

@@ -97,8 +97,8 @@ func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.R
 	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
+	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
