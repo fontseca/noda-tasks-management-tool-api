@@ -28,9 +28,9 @@ func startRouter() *chi.Mux {
 func routeAuthentication(r *chi.Mux) {
 	s := getAuthenticationService()
 	h := handler.NewAuthenticationHandler(s)
-	r.Post("/signup", h.SignUp)
-	r.Post("/signin", h.SignIn)
-	r.Post("/me/signout", nil)
+	r.Post("/signup", h.HandleSignUp)
+	r.Post("/login", h.HandleSignIn)
+	r.Post("/me/logout", nil)
 }
 
 func routeUsers(router chi.Router) {

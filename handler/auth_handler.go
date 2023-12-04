@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"noda"
 	"noda/data/transfer"
@@ -17,7 +18,7 @@ func NewAuthenticationHandler(s service.AuthenticationService) *AuthenticationHa
 	return &AuthenticationHandler{s}
 }
 
-func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
+func (h *AuthenticationHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) {
 	next := &transfer.UserCreation{}
 	var err = parseRequestBody(w, r, next)
 	if nil != err {
@@ -44,20 +45,23 @@ func (h *AuthenticationHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	var payload = map[string]string{"user_id": insertedID.String()}
+	data, err := json.Marshal(payload)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"user_id": insertedID.String(),
-	})
+	w.Write(data)
 }
 
-func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
+func (h *AuthenticationHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) {
 	credentials := &transfer.UserCredentials{}
 	var err = parseRequestBody(w, r, credentials)
 	if nil != err {
 		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
-
 	res, err := h.s.SignIn(credentials)
 	if err != nil {
 		var e *noda.Error
@@ -77,6 +81,10 @@ func (h *AuthenticationHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	json.NewEncoder(w).Encode(res)
+	data, err := json.Marshal(res)
+	if nil != err {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write(data)
 }
