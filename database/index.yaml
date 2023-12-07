@@ -10,8 +10,8 @@ types:
 tables:
   - 'users/role_table'
   - 'users/user_table'
-  - 'tasks/group_table'
-  - 'tasks/list_table'
+  - 'group_table'
+  - 'lists/list_table'
   - 'tasks/task_table'
 views:
 indexes:
