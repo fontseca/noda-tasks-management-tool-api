@@ -5,6 +5,8 @@ init:
 extensions:
 domains:
 types:
+  - 'enums/task_priority_enum'
+  - 'enums/task_status_enum'
 tables:
   - 'users/role_table'
   - 'users/user_table'
