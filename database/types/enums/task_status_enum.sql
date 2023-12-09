@@ -1,8 +1,9 @@
 DROP TYPE IF EXISTS "task_status_t";
 
 CREATE TYPE "task_status_t"
-    AS ENUM ('incomplete',
-             'complete',
+    AS ENUM ('finished',
+             'in progress',
+             'unfinished',
              'decayed');
 
 ALTER TYPE "task_status_t"

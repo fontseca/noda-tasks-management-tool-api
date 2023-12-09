@@ -1,8 +1,10 @@
 DROP TYPE IF EXISTS "task_priority_t";
 
 CREATE TYPE "task_priority_t"
-    AS ENUM ('high',
+    AS ENUM ('urgent',
+             'high',
              'medium',
+             'normal',
              'low');
 
 ALTER TYPE "task_priority_t"
