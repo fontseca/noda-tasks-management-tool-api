@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "predefined_user_setting" (
-  "key"           TEXT PRIMARY KEY,
+  "key"           VARCHAR(50) PRIMARY KEY,
   "default_value" JSON NULL,
-  "description"   TEXT NULL
+  "description"   VARCHAR(512) NULL
 );
 
 ALTER TABLE "predefined_user_setting"

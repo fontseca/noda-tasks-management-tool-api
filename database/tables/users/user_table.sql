@@ -6,10 +6,9 @@ CREATE TABLE IF NOT EXISTS "user"
   "middle_name" VARCHAR(50) DEFAULT NULL,
   "last_name"   VARCHAR(50) DEFAULT NULL,
   "surname"     VARCHAR(50) DEFAULT NULL,
-  "picture_url" VARCHAR DEFAULT NULL,
+  "picture_url" VARCHAR(2048) DEFAULT NULL,
   "email"       email_t UNIQUE,
   "password"    VARCHAR NOT NULL,
-  "is_blocked"  BOOLEAN DEFAULT FALSE,
   "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now (),
   "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT now ()
 );

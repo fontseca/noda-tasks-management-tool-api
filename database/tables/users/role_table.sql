@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "role" (
   "role_id" SERIAL NOT NULL PRIMARY KEY,
-  "name"    TEXT NOT NULL
+  "name"    VARCHAR(50) NOT NULL
 );
 
 ALTER TABLE "role"
