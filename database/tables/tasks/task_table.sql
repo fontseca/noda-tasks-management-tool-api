@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "task"
 (
   "task_id"          UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4 (),
-  "owner_id"         UUID NOT NULL REFERENCES "user" ("user_id") ON DELETE CASCADE,
+  "owner_id"         UUID NOT NULL REFERENCES "user" ("user_id"),
   "list_id"          UUID NOT NULL REFERENCES "list" ("list_id") ON DELETE CASCADE,
   "position_in_list" pos_t NOT NULL,
   "title"            VARCHAR(128) NOT NULL,

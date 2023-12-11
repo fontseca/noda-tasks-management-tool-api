@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "tag"
 (
   "tag_id"      UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
-  "owner_id"    UUID NOT NULL REFERENCES "user" ("user_id") ON DELETE CASCADE,
+  "owner_id"    UUID NOT NULL REFERENCES "user" ("user_id"),
   "name"        VARCHAR(50) NOT NULL UNIQUE,
   "description" VARCHAR(512) DEFAULT NULL,
   "color"       tag_color_t NOT NULL DEFAULT 'fff',
