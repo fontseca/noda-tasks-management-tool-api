@@ -66,9 +66,6 @@ func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (p
 			return nil, noda.ErrIncorrectPassword
 		}
 	}
-	if user.IsBlocked {
-		return nil, noda.ErrUserBlocked
-	}
 	var claims = jwt.MapClaims{
 		"iss":       "noda",
 		"sub":       "authentication",

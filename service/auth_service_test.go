@@ -170,17 +170,6 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 		})
 	})
 
-	t.Run("blocked user won't sign in", func(t *testing.T) {
-		var credentials = &transfer.UserCredentials{Email: email, Password: password}
-		user.IsBlocked = true
-		var s = mocks.NewUserServiceMock()
-		s.On(routine, user.Email).Return(user, nil)
-		res, err = NewAuthenticationService(s).SignIn(credentials)
-		assert.ErrorIs(t, err, noda.ErrUserBlocked)
-		assert.Nil(t, res)
-		user.IsBlocked = false
-	})
-
 	t.Run("got user service error", func(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		var credentials = &transfer.UserCredentials{Email: email, Password: password}
