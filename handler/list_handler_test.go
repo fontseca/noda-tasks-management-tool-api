@@ -217,8 +217,6 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 				Description: "list description",
 				UpdatedAt:   time.Now(),
 				CreatedAt:   time.Now(),
-				ArchivedAt:  nil,
-				IsArchived:  false,
 			}
 			expectedStatusCode   = http.StatusOK
 			expectedResponseBody = marshal(t, list)
@@ -337,8 +335,6 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 				Description: "list description",
 				UpdatedAt:   time.Now(),
 				CreatedAt:   time.Now(),
-				ArchivedAt:  nil,
-				IsArchived:  false,
 			}
 			expectedStatusCode   = http.StatusOK
 			expectedResponseBody = marshal(t, list)
