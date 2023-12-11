@@ -1,4 +1,5 @@
-CREATE OR REPLACE FUNCTION fetch_groups (
+CREATE OR REPLACE FUNCTION fetch_groups
+(
   IN p_owner_id "group"."owner_id"%TYPE,
   IN p_page      BIGINT,
   IN p_rpp       BIGINT,
@@ -16,17 +17,12 @@ BEGIN
   RETURN QUERY
         SELECT *
           FROM "group" g
-         WHERE g."is_archived" IS FALSE
-               AND lower (concat (g."name", ' ', g."description")) ~ p_needle
+         WHERE lower (concat (g."name", ' ', g."description")) ~ p_needle
       ORDER BY (CASE WHEN p_sort_expr = '' THEN g."created_at" END) DESC,
                (CASE WHEN p_sort_expr = '+name' THEN g."name" END) ASC,
                (CASE WHEN p_sort_expr = '-name' THEN g."name" END) DESC,
                (CASE WHEN p_sort_expr = '+description' THEN g."description" END) ASC,
                (CASE WHEN p_sort_expr = '-description' THEN g."description" END) DESC,
-               (CASE WHEN p_sort_expr = '+is_archived' THEN g."is_archived" END) ASC,
-               (CASE WHEN p_sort_expr = '-is_archived' THEN g."is_archived" END) DESC,
-               (CASE WHEN p_sort_expr = '+archived_at' THEN g."archived_at" END) ASC,
-               (CASE WHEN p_sort_expr = '-archived_at' THEN g."archived_at" END) DESC,
                (CASE WHEN p_sort_expr = '+created_at' THEN g."created_at" END) ASC,
                (CASE WHEN p_sort_expr = '-created_at' THEN g."created_at" END) DESC,
                (CASE WHEN p_sort_expr = '+updated_at' THEN g."updated_at" END) ASC,
