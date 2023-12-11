@@ -81,9 +81,7 @@ func (r *groupRepository) FetchByID(ownerID, groupID string) (group *model.Group
 		return
 	}
 	group = &model.Group{}
-	result.Scan(
-		&group.ID, &group.OwnerID, &group.Name, &group.Description,
-		&group.IsArchived, &group.ArchivedAt, &group.CreatedAt, &group.UpdatedAt)
+	result.Scan(&group.ID, &group.OwnerID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
 	return
 }
 
@@ -95,8 +93,6 @@ func (r *groupRepository) Fetch(ownerID string, page, rpp int64, needle, sortBy 
          "owner_id",
          "name",
          "description",
-         "is_archived",
-         "archived_at",
          "created_at",
          "updated_at"
 	  FROM fetch_groups ($1, $2, $3, $4, $5);`

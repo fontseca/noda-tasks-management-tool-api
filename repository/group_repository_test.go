@@ -27,8 +27,6 @@ func TestGroupRepository_Save(t *testing.T) {
 		next  = &transfer.GroupCreation{Name: "name", Description: "desc"}
 	)
 
-	/* Success.  */
-
 	t.Run("success", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -41,8 +39,6 @@ func TestGroupRepository_Save(t *testing.T) {
 		assert.Equal(t, groupID, res)
 	})
 
-	/* User not found.  */
-
 	t.Run("user not found", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -52,8 +48,6 @@ func TestGroupRepository_Save(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Equal(t, "", res)
 	})
-
-	/* Unexpected database error.  */
 
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.
@@ -80,17 +74,11 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   nil,
 			UpdatedAt:   nil,
 		}
-		columns = []string{
-			"id", "owner_id", "name", "description", "is_archived",
-			"archived_at", "created_at", "updated_at"}
+		columns = []string{"id", "owner_id", "name", "description", "created_at", "updated_at"}
 	)
-
-	/* Success.  */
 
 	t.Run("success", func(t *testing.T) {
 		mock.
@@ -98,15 +86,11 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(
-					group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived,
-					group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.FetchByID(userID, groupID)
 		assert.NoError(t, err)
 		assert.Equal(t, group, res)
 	})
-
-	/* User not found.  */
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.
@@ -118,8 +102,6 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	/* Group not found.  */
-
 	t.Run("group not found", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -130,8 +112,6 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	/* Deadline (5s) exceeded.  */
-
 	t.Run("deadline (5s) exceeded", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -141,8 +121,6 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
-
-	/* Unexpected database error.  */
 
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.
@@ -167,8 +145,6 @@ func TestGroupRepository_Fetch(t *testing.T) {
 					 "owner_id",
 					 "name",
 					 "description",
-					 "is_archived",
-					 "archived_at",
 					 "created_at",
 					 "updated_at"
 			FROM fetch_groups ($1, $2, $3, $4, $5);`)
@@ -182,17 +158,11 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   nil,
 			UpdatedAt:   nil,
 		}
-		columns = []string{
-			"id", "owner_id", "name", "description", "is_archived",
-			"archived_at", "created_at", "updated_at"}
+		columns = []string{"id", "owner_id", "name", "description", "created_at", "updated_at"}
 	)
-
-	/* Success with 2 records.  */
 
 	t.Run("success with 2 records", func(t *testing.T) {
 		page, rpp = 1, 2
@@ -201,14 +171,12 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 	})
-
-	/* Success with the default number of records (10).  */
 
 	t.Run("success with the default number of records (10)", func(t *testing.T) {
 		page, rpp = 1, -1000
@@ -217,22 +185,20 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy) /* Should set 'rpp' to 10.  */
 		assert.NoError(t, err)
 		assert.Len(t, res, 10)
 	})
-
-	/* Success with custom pagination and RPP.  */
 
 	t.Run("success with custom pagination and RPP", func(t *testing.T) {
 		page, rpp = 2, 5
@@ -241,17 +207,15 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 5)
 	})
-
-	/* Success with searching.  */
 
 	t.Run("success with searching", func(t *testing.T) {
 		page, rpp, needle = 1, 7, "name"
@@ -260,20 +224,17 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 7)
 	})
-
-	/* There should not be a response for a weird needle and neither should be
-	   an error.  */
 
 	t.Run("no response/error for weird needle", func(t *testing.T) {
 		page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
@@ -287,8 +248,6 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		assert.Len(t, res, 0)
 	})
 
-	/* User not found.  */
-
 	t.Run("user not found", func(t *testing.T) {
 		page, rpp = 1, 10
 		mock.
@@ -299,8 +258,6 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
-
-	/* Deadline (5s) exceeded.  */
 
 	t.Run("deadline (5s) exceeded", func(t *testing.T) {
 		page, rpp = 1, 10
@@ -313,8 +270,6 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	/* Unexpected database error.  */
-
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -325,17 +280,13 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	/* Unexpected scanning error.  */
-
 	t.Run("unexpected scanning error", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
-				NewRows([]string{
-					"group_id", "owner_id", "name", "description", "is_archived",
-					"archived_at", "created_at", "updated_at"}).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.IsArchived, group.ArchivedAt, group.CreatedAt, group.UpdatedAt))
+				NewRows([]string{"group_id", "owner_id", "name", "description", "created_at", "updated_at"}).
+				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -354,8 +305,6 @@ func TestGroupRepository_Update(t *testing.T) {
 		up    = &transfer.GroupUpdate{}
 	)
 
-	/* Success.  */
-
 	t.Run("success", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -367,8 +316,6 @@ func TestGroupRepository_Update(t *testing.T) {
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
-
-	/* Did not update and no error.  */
 
 	t.Run("did not update and no error", func(t *testing.T) {
 		mock.
@@ -382,8 +329,6 @@ func TestGroupRepository_Update(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	/* User not found.  */
-
 	t.Run("user not found", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -395,8 +340,6 @@ func TestGroupRepository_Update(t *testing.T) {
 	})
 
 	t.Run("group not found", func(t *testing.T) {
-		/* Group not found.  */
-
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
@@ -405,8 +348,6 @@ func TestGroupRepository_Update(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 		assert.False(t, res)
 	})
-
-	/* Deadline (5s) exceeded.  */
 
 	t.Run("deadline (5s) exceeded", func(t *testing.T) {
 		mock.
@@ -417,8 +358,6 @@ func TestGroupRepository_Update(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
-
-	/* Unexpected database error.  */
 
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.
@@ -442,8 +381,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		err   error
 	)
 
-	/* Success.  */
-
 	t.Run("success", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -455,8 +392,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		assert.True(t, res)
 		assert.NoError(t, err)
 	})
-
-	/* Did not delete and no error.  */
 
 	t.Run("did not delete and no error", func(t *testing.T) {
 		mock.
@@ -470,8 +405,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	/* User not found.  */
-
 	t.Run("user not found", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -481,8 +414,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
-
-	/* Group not found.  */
 
 	t.Run("group not found", func(t *testing.T) {
 		mock.
@@ -494,8 +425,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		assert.False(t, res)
 	})
 
-	/* Deadline (5s) exceeded.  */
-
 	t.Run("deadline (5s) exceeded", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
@@ -505,8 +434,6 @@ func TestGroupRepository_Remove(t *testing.T) {
 		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
-
-	/* Unexpected database error.  */
 
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.

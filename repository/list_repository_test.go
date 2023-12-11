@@ -29,8 +29,6 @@ func TestListRepository_Save(t *testing.T) {
 		next  = &transfer.ListCreation{Name: "list name", Description: "list desc"}
 	)
 
-	/* Success for grouped list.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
@@ -40,8 +38,6 @@ func TestListRepository_Save(t *testing.T) {
 	res, err = r.Save(userID, groupID, next)
 	assert.NoError(t, err)
 	assert.Equal(t, listID, res)
-
-	/* Success for scattered list.  */
 
 	mock.
 		ExpectQuery(query).
@@ -53,8 +49,6 @@ func TestListRepository_Save(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, listID, res)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
@@ -63,8 +57,6 @@ func TestListRepository_Save(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
 
-	/* Group not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
@@ -72,8 +64,6 @@ func TestListRepository_Save(t *testing.T) {
 	res, err = r.Save(userID, groupID, next)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -98,39 +88,31 @@ func TestListRepository_FetchByID(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"list_id", "owner_id", "group_id", "name", "description", "is_archived", "archived_at", "created_at", "updated_at"}
+		columns = []string{"list_id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
 	)
-
-	/* Success for grouped list.  */
 
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
-
-	/* Success for scattered list.  */
 
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, nil, listID).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchByID(userID, "", listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
-
-	/* User was not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -140,8 +122,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
-	/* Group was not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -149,8 +129,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
-
-	/* Grouped list not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -160,8 +138,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
-	/* Scatter list not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, nil, listID).
@@ -170,8 +146,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 	assert.Error(t, err, noda.ErrListNotFound)
 	assert.Nil(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -179,8 +153,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -202,8 +174,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 		err   error
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -214,8 +184,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "the actual ID", res)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -224,8 +192,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Empty(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -233,8 +199,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 	res, err = r.GetTodayListID(userID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -256,8 +220,6 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 		err   error
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -268,8 +230,6 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "the actual ID", res)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -278,8 +238,6 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
@@ -287,8 +245,6 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	res, err = r.GetTomorrowListID(userID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -311,8 +267,6 @@ func TestListRepository_Fetch(t *testing.T) {
 		       "group_id",
 		       "name",
 		       "description",
-		       "is_archived",
-		       "archived_at",
 		       "created_at",
 		       "updated_at"
      FROM fetch_lists ($1, $2, $3, $4, $5);`)
@@ -326,15 +280,11 @@ func TestListRepository_Fetch(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "is_archived", "archived_at", "created_at", "updated_at"}
+		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
 	)
-
-	/* Success with 2 records.  */
 
 	page, rpp = 1, 2
 	mock.
@@ -342,13 +292,11 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
-
-	/* Success with the default number of records (10).  */
 
 	page, rpp = 1, -1000
 	mock.
@@ -356,21 +304,19 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
-
-	/* Success with custom pagination and RPP.  */
 
 	page, rpp = 2, 5
 	mock.
@@ -378,16 +324,14 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
-
-	/* Success with searching.  */
 
 	page, rpp, needle = 1, 7, "name"
 	mock.
@@ -395,19 +339,16 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
-
-	/* There should not be a response for a weird needle and neither should be
-	   an error.  */
 
 	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
 	mock.
@@ -419,8 +360,6 @@ func TestListRepository_Fetch(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
 
-	/* User not found.  */
-
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
@@ -429,8 +368,6 @@ func TestListRepository_Fetch(t *testing.T) {
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
-
-	/* Deadline (5s) exceeded.  */
 
 	page, rpp = 1, 10
 	mock.
@@ -441,8 +378,6 @@ func TestListRepository_Fetch(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
-	/* Unexpected database error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
@@ -451,16 +386,12 @@ func TestListRepository_Fetch(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
-	/* Unexpected scanning error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
-			NewRows([]string{
-				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
-				"archived_at", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -478,8 +409,6 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		       "group_id",
 		       "name",
 		       "description",
-		       "is_archived",
-		       "archived_at",
 		       "created_at",
 		       "updated_at"
       FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`)
@@ -493,15 +422,11 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "is_archived", "archived_at", "created_at", "updated_at"}
+		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
 	)
-
-	/* Success with 2 records.  */
 
 	page, rpp = 1, 2
 	mock.
@@ -509,13 +434,11 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
-
-	/* Success with the default number of records (10).  */
 
 	page, rpp = 1, -1000
 	mock.
@@ -523,21 +446,19 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
-
-	/* Success with custom pagination and RPP.  */
 
 	page, rpp = 2, 5
 	mock.
@@ -545,16 +466,14 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
-
-	/* Success with searching.  */
 
 	page, rpp, needle = 1, 7, "name"
 	mock.
@@ -562,19 +481,16 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
-
-	/* There should not be a response for a weird needle and neither should be
-	   an error.  */
 
 	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
 	mock.
@@ -586,8 +502,6 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
 
-	/* User not found.  */
-
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
@@ -596,8 +510,6 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
-
-	/* Group not found.  */
 
 	page, rpp = 1, 10
 	mock.
@@ -608,8 +520,6 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.Nil(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
@@ -619,8 +529,6 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
-	/* Unexpected database error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
@@ -629,16 +537,12 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
-	/* Unexpected scanning error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
-			NewRows([]string{
-				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
-				"archived_at", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -656,8 +560,6 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		       "group_id",
 		       "name",
 		       "description",
-		       "is_archived",
-		       "archived_at",
 		       "created_at",
 		       "updated_at"
       FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`)
@@ -671,12 +573,10 @@ func TestListRepository_FetchScattered(t *testing.T) {
 			OwnerID:     uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
-			IsArchived:  false,
-			ArchivedAt:  nil,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "is_archived", "archived_at", "created_at", "updated_at"}
+		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
 	)
 
 	/* Success with 2 records.  */
@@ -687,8 +587,8 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
@@ -701,16 +601,16 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
@@ -723,16 +623,14 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
-
-	/* Success with searching.  */
 
 	page, rpp, needle = 1, 7, "name"
 	mock.
@@ -740,21 +638,18 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
 
-	/* There should not be a response for a weird needle and neither should be
-	   an error.  */
-
-	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
+	page, rpp, needle = 1, 5, "some random text"
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
@@ -763,8 +658,6 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 0)
-
-	/* User not found.  */
 
 	page, rpp = 1, 10
 	mock.
@@ -775,8 +668,6 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Nil(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	page, rpp = 1, 10
 	mock.
 		ExpectQuery(query).
@@ -786,8 +677,6 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
-	/* Unexpected database error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
@@ -796,16 +685,12 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
-	/* Unexpected scanning error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
-			NewRows([]string{
-				"id", "unknown_column", "owner_id", "name", "description", "is_archived",
-				"archived_at", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.IsArchived, list.ArchivedAt, list.CreatedAt, list.UpdatedAt))
+			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
+			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -822,8 +707,6 @@ func TestListRepository_Remove(t *testing.T) {
 		err   error
 	)
 
-	/* Success for grouped list.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -833,8 +716,6 @@ func TestListRepository_Remove(t *testing.T) {
 	res, err = r.Remove(userID, groupID, listID)
 	assert.True(t, res)
 	assert.NoError(t, err)
-
-	/* Success for scattered list.  */
 
 	mock.
 		ExpectQuery(query).
@@ -846,8 +727,6 @@ func TestListRepository_Remove(t *testing.T) {
 	assert.True(t, res)
 	assert.NoError(t, err)
 
-	/* Did not delete and no error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -858,8 +737,6 @@ func TestListRepository_Remove(t *testing.T) {
 	assert.False(t, res)
 	assert.NoError(t, err)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -867,8 +744,6 @@ func TestListRepository_Remove(t *testing.T) {
 	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
-
-	/* Group not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -878,8 +753,6 @@ func TestListRepository_Remove(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
-	/* List not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -888,8 +761,6 @@ func TestListRepository_Remove(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
@@ -897,8 +768,6 @@ func TestListRepository_Remove(t *testing.T) {
 	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -921,8 +790,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 		err       error
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -933,8 +800,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 	assert.Equal(t, replicaID, res)
 	assert.NoError(t, err)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -942,8 +807,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.Empty(t, res)
-
-	/* List not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -953,8 +816,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.Empty(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -962,8 +823,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.Empty(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -985,8 +844,6 @@ func TestListRepository_Scatter(t *testing.T) {
 		err   error
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -997,8 +854,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	assert.True(t, res)
 	assert.NoError(t, err)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -1007,8 +862,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
-	/* List not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -1016,8 +869,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	res, err = r.Scatter(userID, listID)
 	assert.False(t, res)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
-
-	/* Did not convert and there's no error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1029,8 +880,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	assert.False(t, res)
 	assert.NoError(t, err)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
@@ -1038,8 +887,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	res, err = r.Scatter(userID, listID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1061,8 +908,6 @@ func TestListRepository_Move(t *testing.T) {
 		err   error
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
@@ -1073,8 +918,6 @@ func TestListRepository_Move(t *testing.T) {
 	assert.True(t, res)
 	assert.NoError(t, err)
 
-	/* Did not move and no error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
@@ -1084,8 +927,6 @@ func TestListRepository_Move(t *testing.T) {
 	res, err = r.Move(userID, listID, groupID)
 	assert.False(t, res)
 	assert.NoError(t, err)
-
-	/* User not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1095,8 +936,6 @@ func TestListRepository_Move(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
 
-	/* List not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
@@ -1105,8 +944,6 @@ func TestListRepository_Move(t *testing.T) {
 	assert.False(t, res)
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 
-	/* Target group does not exist.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
@@ -1114,8 +951,6 @@ func TestListRepository_Move(t *testing.T) {
 	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
-
-	/* Did not move and there's no error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1127,8 +962,6 @@ func TestListRepository_Move(t *testing.T) {
 	assert.False(t, res)
 	assert.NoError(t, err)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
@@ -1136,8 +969,6 @@ func TestListRepository_Move(t *testing.T) {
 	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1160,8 +991,6 @@ func TestListRepository_Update(t *testing.T) {
 		up    = new(transfer.ListUpdate)
 	)
 
-	/* Success.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
@@ -1171,8 +1000,6 @@ func TestListRepository_Update(t *testing.T) {
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.True(t, res)
 	assert.NoError(t, err)
-
-	/* Success for scattered list.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1184,8 +1011,6 @@ func TestListRepository_Update(t *testing.T) {
 	assert.True(t, res)
 	assert.NoError(t, err)
 
-	/* Did not update and no error.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
@@ -1196,8 +1021,6 @@ func TestListRepository_Update(t *testing.T) {
 	assert.False(t, res)
 	assert.NoError(t, err)
 
-	/* User not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
@@ -1205,8 +1028,6 @@ func TestListRepository_Update(t *testing.T) {
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
 	assert.False(t, res)
-
-	/* Group not found.  */
 
 	mock.
 		ExpectQuery(query).
@@ -1216,8 +1037,6 @@ func TestListRepository_Update(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrGroupNotFound)
 	assert.False(t, res)
 
-	/* List not found.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
@@ -1226,8 +1045,6 @@ func TestListRepository_Update(t *testing.T) {
 	assert.ErrorIs(t, err, noda.ErrListNotFound)
 	assert.False(t, res)
 
-	/* Deadline (5s) exceeded.  */
-
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
@@ -1235,8 +1052,6 @@ func TestListRepository_Update(t *testing.T) {
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
 	assert.False(t, res)
-
-	/* Unexpected database error.  */
 
 	mock.
 		ExpectQuery(query).

@@ -81,8 +81,7 @@ func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model
 	}
 	list = &model.List{}
 	err = result.Scan(
-		&list.ID, &list.OwnerID, &list.GroupID, &list.Name, &list.Description,
-		&list.IsArchived, &list.ArchivedAt, &list.CreatedAt, &list.UpdatedAt)
+		&list.ID, &list.OwnerID, &list.GroupID, &list.Name, &list.Description, &list.CreatedAt, &list.UpdatedAt)
 	if err != nil {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -169,8 +168,6 @@ func (r *listRepository) Fetch(
 		       "group_id",
 		       "name",
 		       "description",
-		       "is_archived",
-		       "archived_at",
 		       "created_at",
 		       "updated_at"
       FROM fetch_lists ($1, $2, $3, $4, $5);`
@@ -215,8 +212,6 @@ func (r *listRepository) FetchGrouped(
 		       "group_id",
 		       "name",
 		       "description",
-		       "is_archived",
-		       "archived_at",
 		       "created_at",
 		       "updated_at"
       FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`
@@ -263,8 +258,6 @@ func (r *listRepository) FetchScattered(
 		     "group_id",
 		     "name",
 		     "description",
-		     "is_archived",
-		     "archived_at",
 		     "created_at",
 		     "updated_at"
     FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`

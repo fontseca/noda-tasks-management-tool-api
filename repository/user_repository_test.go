@@ -99,7 +99,6 @@ func TestUserRepository_FetchByID(t *testing.T) {
 	         "picture_url",
 	         "email",
 	  			 "password",
-	  			 "is_blocked",
 	         "created_at",
 	         "updated_at"
 	    FROM fetch_user_by_id ($1);`)
@@ -107,8 +106,8 @@ func TestUserRepository_FetchByID(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
@@ -122,7 +121,7 @@ func TestUserRepository_FetchByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}))
+			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}))
 		res, err = r.FetchByID(userID)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -167,7 +166,6 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 	         "surname",
 	         "picture_url",
 	         "email",
-	  			 "is_blocked",
 	         "created_at",
 	         "updated_at"
 	    FROM fetch_user_by_id ($1);`)
@@ -175,8 +173,8 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
@@ -190,7 +188,7 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}))
+			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}))
 		res, err = r.FetchShallowUserByID(userID)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -237,7 +235,6 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 	         "picture_url",
 	         "email",
 	  			 "password",
-	  			 "is_blocked",
 	         "created_at",
 	         "updated_at"
 	    FROM fetch_user_by_email ($1);`)
@@ -245,8 +242,8 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
@@ -260,7 +257,7 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
-			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}))
+			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}))
 		res, err = r.FetchByEmail(email)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -307,7 +304,6 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 	         "picture_url",
 	         "email",
 	  			 "password",
-	  			 "is_blocked",
 	         "created_at",
 	         "updated_at"
 	    FROM fetch_user_by_email ($1);`)
@@ -315,8 +311,8 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, "password", user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, "password", user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
@@ -330,7 +326,7 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
-			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "is_blocked", "created_at", "updated_at"}))
+			WillReturnRows(sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}))
 		res, err = r.FetchShallowUserByEmail(email)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -377,7 +373,6 @@ func TestUserRepository_Fetch(t *testing.T) {
   	       "surname",
   	       "picture_url",
   	       "email",
-  	       "is_blocked",
   	       "created_at",
   	       "updated_at"
       FROM fetch_users ($1, $2, $3, $4);`)
@@ -385,9 +380,9 @@ func TestUserRepository_Fetch(t *testing.T) {
 
 	t.Run("success with rpp=2", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 2
 		mock.
 			ExpectQuery(query).
@@ -400,10 +395,10 @@ func TestUserRepository_Fetch(t *testing.T) {
 
 	t.Run("success with rpp=3", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 3
 		mock.
 			ExpectQuery(query).
@@ -419,8 +414,8 @@ func TestUserRepository_Fetch(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(page, rpp, needle, sortExpr).
 			WillReturnRows(
-				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt))
+				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
 		res, err = r.Fetch(page, rpp, needle, sortExpr)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -457,7 +452,6 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
   	       "surname",
   	       "picture_url",
   	       "email",
-  	       "is_blocked",
   	       "created_at",
   	       "updated_at"
       FROM fetch_blocked_users ($1, $2, $3, $4);`)
@@ -465,9 +459,9 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 
 	t.Run("success with rpp=2", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 2
 		mock.
 			ExpectQuery(query).
@@ -480,10 +474,10 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 
 	t.Run("success with rpp=3", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 3
 		mock.
 			ExpectQuery(query).
@@ -499,8 +493,8 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(page, rpp, needle, sortExpr).
 			WillReturnRows(
-				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "is_blocked", "created_at", "updated_at"}).
-					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.IsBlocked, user.CreatedAt, user.UpdatedAt))
+				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
 		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
 		assert.Error(t, err)
 		assert.Nil(t, res)

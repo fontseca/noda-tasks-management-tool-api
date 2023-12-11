@@ -166,7 +166,6 @@ func (r userRepository) Fetch(page, rpp int64, needle, sortExpr string) ([]*tran
 	       "surname",
 	       "picture_url",
 	       "email",
-	       "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_users ($1, $2, $3, $4);`
@@ -200,7 +199,6 @@ func (r userRepository) Search(page, rpp int64, needle, sortExpr string) ([]*tra
 	       "surname",
 	       "picture_url",
 	       "email",
-	       "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_users ($1, $2, $3, $4);`
@@ -317,7 +315,6 @@ func (r userRepository) FetchBlocked(page, rpp int64, needle, sortExpr string) (
 	       "surname",
 	       "picture_url",
 	       "email",
-	       "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_blocked_users ($1, $2, $3, $4);`
@@ -352,7 +349,6 @@ func (r userRepository) FetchByID(userID string) (*model.User, error) {
 	       "picture_url",
 	       "email",
 				 "password",
-				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_id ($1);`
@@ -394,7 +390,6 @@ func (r userRepository) FetchByEmail(email string) (*model.User, error) {
 	       "picture_url",
 	       "email",
 				 "password",
-				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_email ($1);`
@@ -453,7 +448,6 @@ func (r userRepository) FetchShallowUserByID(userID string) (*transfer.User, err
 	       "surname",
 	       "picture_url",
 	       "email",
-				 "is_blocked",
 	       "created_at",
 	       "updated_at"
 	  FROM fetch_user_by_id ($1);`
