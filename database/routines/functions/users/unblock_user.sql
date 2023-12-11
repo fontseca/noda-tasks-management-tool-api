@@ -3,20 +3,37 @@ RETURNS BOOLEAN
 LANGUAGE 'plpgsql'
 AS $$
 DECLARE
-  is_blocked BOOLEAN;
   affected_rows INTEGER;
 BEGIN
-  CALL assert_user_exists (p_user_id);
-  SELECT "user"."is_blocked"
-    INTO is_blocked
-    FROM "user"
-   WHERE "user_id" = p_user_id;
-  IF is_blocked IS FALSE THEN
-    RETURN FALSE;
-  END IF;
-  UPDATE "user"
-     SET "is_blocked" = FALSE
-   WHERE "user_id" = p_user_id;
+  WITH "user_to_unblock" AS
+  (
+    DELETE FROM "blocked_user"
+          WHERE "user_id" = p_user_id
+      RETURNING *
+  )
+  INSERT INTO "user" ("user_id",
+                      "role_id",
+                      "first_name",
+                      "middle_name",
+                      "last_name",
+                      "surname",
+                      "picture_url",
+                      "email",
+                      "password",
+                      "created_at",
+                      "updated_at")
+       SELECT "user_id",
+              "role_id",
+              "first_name",
+              "middle_name",
+              "last_name",
+              "surname",
+              "picture_url",
+              "email",
+              "password",
+              "created_at",
+              "updated_at"
+         FROM "user_to_unblock";
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
   RETURN affected_rows;
 END;
