@@ -1,4 +1,5 @@
-CREATE OR REPLACE FUNCTION fetch_users (
+CREATE OR REPLACE FUNCTION fetch_users
+(
   IN p_page      BIGINT,
   IN p_rpp       BIGINT,
   IN p_needle    TEXT,
@@ -14,8 +15,7 @@ BEGIN
   RETURN QUERY
         SELECT *
           FROM "user" u
-         WHERE u."is_blocked" IS FALSE
-               AND lower ( concat(
+         WHERE lower ( concat(
                  u."first_name", ' ',
                  u."middle_name", ' ',
                  u."last_name", ' ',
