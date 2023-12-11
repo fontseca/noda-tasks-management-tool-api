@@ -1,10 +1,11 @@
-CREATE OR REPLACE FUNCTION fetch_blocked_users (
+CREATE OR REPLACE FUNCTION fetch_blocked_users
+(
   IN p_page      BIGINT,
   IN p_rpp       BIGINT,
   IN p_needle    TEXT,
   IN p_sort_expr TEXT
 )
-RETURNS SETOF "user"
+RETURNS SETOF "blocked_user"
 LANGUAGE 'plpgsql'
 AS $$
 BEGIN
@@ -13,9 +14,8 @@ BEGIN
   CALL validate_sort_expr (p_sort_expr);
   RETURN QUERY
         SELECT *
-          FROM "user" u
-         WHERE u."is_blocked" IS TRUE
-               AND lower ( concat(
+          FROM "blocked_user" u
+         WHERE lower ( concat(
                  u."first_name", ' ',
                  u."middle_name", ' ',
                  u."last_name", ' ',
