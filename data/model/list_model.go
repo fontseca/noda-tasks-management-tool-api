@@ -10,15 +10,13 @@ import (
 
 /* Organizes tasks under a single unit.  */
 type List struct {
-	ID          uuid.UUID  `json:"list_id"`
-	OwnerID     uuid.UUID  `json:"owner_id"`
-	GroupID     uuid.UUID  `json:"group_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	IsArchived  bool       `json:"is_archived"`
-	ArchivedAt  *time.Time `json:"archived_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID          uuid.UUID `json:"list_id"`
+	OwnerID     uuid.UUID `json:"owner_id"`
+	GroupID     uuid.UUID `json:"group_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (l *List) String() string {

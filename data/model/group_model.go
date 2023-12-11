@@ -14,8 +14,6 @@ type Group struct {
 	OwnerID     uuid.UUID  `json:"owner_id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	IsArchived  bool       `json:"is_archived"`
-	ArchivedAt  *time.Time `json:"archived_at"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
 }

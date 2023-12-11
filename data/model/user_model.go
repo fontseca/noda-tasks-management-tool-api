@@ -19,7 +19,6 @@ type User struct {
 	Surname    string     `json:"surname"`
 	PictureUrl *string    `json:"picture_url"`
 	Email      string     `json:"email"`
-	IsBlocked  bool       `json:"is_blocked"`
 	Password   string     `json:"password"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
