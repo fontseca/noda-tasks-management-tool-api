@@ -102,7 +102,7 @@ func TestListService_Save(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
-	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
+	t.Run("name too long: max length is 32 characters", func(t *testing.T) {
 		var previousName = next.Name
 		next.Name = strings.Repeat("x", 1+32)
 		var m = mocks.NewListRepositoryMock()
@@ -110,8 +110,7 @@ func TestListService_Save(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Save(ownerID, groupID, next)
 		next.Name = previousName
-		assert.ErrorContains(t, err,
-			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
+		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -1022,7 +1021,7 @@ func TestListService_Update(t *testing.T) {
 		assert.False(t, res)
 	})
 
-	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
+	t.Run("name too long: max length is 32 characters", func(t *testing.T) {
 		var previousName = up.Name
 		up.Name = strings.Repeat("x", 1+32)
 		var m = mocks.NewListRepositoryMock()
@@ -1030,8 +1029,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(ownerID, groupID, listID, up)
 		up.Name = previousName
-		assert.ErrorContains(t, err,
-			noda.ErrTooLong.Clone().FormatDetails("name", "list", 50).Error())
+		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
 		assert.False(t, res)
 	})
 
