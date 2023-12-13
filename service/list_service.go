@@ -50,8 +50,8 @@ func (s *listService) Save(ownerID, groupID uuid.UUID, creation *transfer.ListCr
 	switch {
 	case "" == creation.Name:
 		return uuid.Nil, errors.New("name cannot be an empty string") // must've been handled by validator
-	case 50 < len(creation.Name):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("name", "list", 50)
+	case 1<<5 < len(creation.Name):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("name", "list", 1<<5)
 	case 1<<9 < len(creation.Description):
 		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("description", "list", 1<<9)
 	}
@@ -292,8 +292,8 @@ func (s *listService) Update(ownerID, groupID, listID uuid.UUID, up *transfer.Li
 	}
 	doTrim(&up.Name, &up.Description)
 	switch {
-	case 50 < len(up.Name):
-		return false, noda.ErrTooLong.Clone().FormatDetails("name", "list", 50)
+	case 1<<5 < len(up.Name):
+		return false, noda.ErrTooLong.Clone().FormatDetails("name", "list", 1<<5)
 	case 1<<9 < len(up.Description):
 		return false, noda.ErrTooLong.Clone().FormatDetails("description", "list", 1<<9)
 	}

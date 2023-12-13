@@ -114,6 +114,18 @@ func TestListService_Save(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 
+	t.Run("description too long: max length is 512 characters", func(t *testing.T) {
+		var description = next.Description
+		next.Description = strings.Repeat("x", 1+512)
+		var m = mocks.NewListRepositoryMock()
+		m.AssertNotCalled(t, "Save")
+		s = NewListService(m)
+		res, err = s.Save(ownerID, groupID, next)
+		next.Description = description
+		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
+		assert.Equal(t, uuid.Nil, res)
+	})
+
 	t.Run("next.Name and next.Description must be trimmed", func(t *testing.T) {
 		var previousName, previousDesc = next.Name, next.Description
 		var insertedID = uuid.New()
@@ -1030,6 +1042,18 @@ func TestListService_Update(t *testing.T) {
 		res, err = s.Update(ownerID, groupID, listID, up)
 		up.Name = previousName
 		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
+		assert.False(t, res)
+	})
+
+	t.Run("description too long: max length is 512 characters", func(t *testing.T) {
+		var previousDescription = up.Description
+		up.Description = strings.Repeat("x", 1+512)
+		var m = mocks.NewListRepositoryMock()
+		m.AssertNotCalled(t, "Update")
+		s = NewListService(m)
+		res, err = s.Update(ownerID, groupID, listID, up)
+		up.Description = previousDescription
+		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
 		assert.False(t, res)
 	})
 
