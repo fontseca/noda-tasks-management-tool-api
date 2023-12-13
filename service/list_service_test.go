@@ -104,7 +104,7 @@ func TestListService_Save(t *testing.T) {
 
 	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
 		var previousName = next.Name
-		next.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		next.Name = strings.Repeat("x", 1+32)
 		var m = mocks.NewListRepositoryMock()
 		m.AssertNotCalled(t, "Save")
 		s = NewListService(m)
@@ -1024,7 +1024,7 @@ func TestListService_Update(t *testing.T) {
 
 	t.Run("name too long: max length is 50 characters", func(t *testing.T) {
 		var previousName = up.Name
-		up.Name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		up.Name = strings.Repeat("x", 1+32)
 		var m = mocks.NewListRepositoryMock()
 		m.AssertNotCalled(t, "Update")
 		s = NewListService(m)
