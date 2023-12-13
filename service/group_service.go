@@ -10,7 +10,7 @@ import (
 )
 
 type GroupService interface {
-	Save(ownerID uuid.UUID, creation *transfer.GroupCreation) (insertedID string, err error)
+	Save(ownerID uuid.UUID, creation *transfer.GroupCreation) (insertedID uuid.UUID, err error)
 	FetchByID(ownerID, groupID uuid.UUID) (group *model.Group, err error)
 	Fetch(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Group], err error)
 	Update(ownerID, groupID uuid.UUID, update *transfer.GroupUpdate) (ok bool, err error)
@@ -25,12 +25,19 @@ func NewGroupService(repository repository.GroupRepository) GroupService {
 	return &groupService{repository}
 }
 
-func (s *groupService) Save(ownerID uuid.UUID, newGroup *transfer.GroupCreation) (insertedID string, err error) {
+func (s *groupService) Save(ownerID uuid.UUID, newGroup *transfer.GroupCreation) (insertedID uuid.UUID, err error) {
 	doTrim(&newGroup.Name, &newGroup.Description)
-	if len(newGroup.Name) > 50 {
-		return "", noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
+	switch {
+	case 1<<5 < len(newGroup.Name):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
+	case 1<<9 < len(newGroup.Description):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
 	}
-	return s.r.Save(ownerID.String(), newGroup)
+	id, err := s.r.Save(ownerID.String(), newGroup)
+	if nil != err {
+		return uuid.Nil, err
+	}
+	return uuid.Parse(id)
 }
 
 func (s *groupService) FetchByID(ownerID, groupID uuid.UUID) (group *model.Group, err error) {
@@ -58,8 +65,11 @@ func (s *groupService) Fetch(
 
 func (s *groupService) Update(ownerID, groupID uuid.UUID, up *transfer.GroupUpdate) (ok bool, err error) {
 	doTrim(&up.Name, &up.Description)
-	if len(up.Name) > 50 {
-		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 50)
+	switch {
+	case 1<<5 < len(up.Name):
+		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
+	case 1<<9 < len(up.Description):
+		return false, noda.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
 	}
 	return s.r.Update(ownerID.String(), groupID.String(), up)
 }

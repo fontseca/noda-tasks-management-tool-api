@@ -34,7 +34,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 	if gotAndHandledServiceError(w, err) {
 		return
 	}
-	var result = map[string]string{"insertedID": insertedID}
+	var result = map[string]string{"insertedID": insertedID.String()}
 	data, err := json.Marshal(result)
 	if nil != err {
 		log.Println(err)
