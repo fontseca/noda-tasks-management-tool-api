@@ -337,6 +337,8 @@ func (s *userService) UpdateUserSetting(
 	update *transfer.UserSettingUpdate,
 ) (ok bool, err error) {
 	switch {
+	case 50 < len(settingKey):
+		return false, noda.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50)
 	case uuid.Nil == userID:
 		err = noda.NewNilParameterError("UpdateUserSetting", "userID")
 		log.Println(err)

@@ -788,6 +788,14 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("50 < settingKey", func(t *testing.T) {
+		var r = mocks.NewUserRepositoryMock()
+		r.AssertNotCalled(t, routine)
+		res, err = NewUserService(r).UpdateUserSetting(userID, strings.Repeat("x", 1+50), nil)
+		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50).Error())
+		assert.False(t, res)
+	})
+
 	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
 		var s = blankset + settingKey + blankset
 		var r = mocks.NewUserRepositoryMock()
