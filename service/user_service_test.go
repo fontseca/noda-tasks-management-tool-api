@@ -12,6 +12,7 @@ import (
 	"noda/data/transfer"
 	"noda/data/types"
 	"noda/mocks"
+	"strings"
 	"testing"
 )
 
@@ -76,7 +77,7 @@ func TestUserService_Save(t *testing.T) {
 	})
 
 	t.Run("satisfies...", func(t *testing.T) {
-		var max = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		var max = strings.Repeat("x", 1+50)
 		var creation = &transfer.UserCreation{Password: correctPassword}
 
 		t.Run("50 < creation.FirstName", func(t *testing.T) {
@@ -119,7 +120,7 @@ func TestUserService_Save(t *testing.T) {
 			creation.Surname = ""
 		})
 
-		max = max + max + max + max + max // >250
+		max = strings.Repeat("x", 1+240)
 		t.Run("240 < creation.Email", func(t *testing.T) {
 			creation.Email = max
 			var r = mocks.NewUserRepositoryMock()
@@ -689,7 +690,7 @@ func TestUserService_Update(t *testing.T) {
 	})
 
 	t.Run("if not empty, satisfies...", func(t *testing.T) {
-		var max = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX"
+		var max = strings.Repeat("x", 1+50)
 		var update = &transfer.UserUpdate{}
 
 		t.Run("50 < update.FirstName", func(t *testing.T) {
