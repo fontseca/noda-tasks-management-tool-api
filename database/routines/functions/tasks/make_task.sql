@@ -24,8 +24,9 @@ BEGIN
   END IF;
   SELECT count (*)
     INTO n_similar_titles
-  FROM "task" t
-  WHERE regexp_count (t."title", '^' || quote_meta (actual_list_title) || '(?: \(\d+\))?$') = 1;
+    FROM "task" t
+   WHERE "list_id" = p_list_id AND
+         regexp_count (t."title", '^' || quote_meta (actual_list_title) || '(?: \(\d+\))?$') = 1;
   IF n_similar_titles > 0 THEN
     actual_list_title := concat (actual_list_title, ' ' , '(', n_similar_titles, ')');
   END IF;
