@@ -1,4 +1,5 @@
-CREATE OR REPLACE FUNCTION duplicate_list (
+CREATE OR REPLACE FUNCTION duplicate_list
+(
   IN p_owner_id "list"."owner_id"%TYPE,
   IN p_list_id  "list"."list_id"%TYPE
 )
@@ -20,8 +21,20 @@ BEGIN
    new_list_id := make_list (p_owner_id,
                              current_list."group_id",
                              current_list."name",
-                             current_list.description);
-  /* TODO: Duplicate all tasks of this list.  */
+                             current_list."description");
+  PERFORM *
+     FROM "task" t,
+  LATERAL make_task (p_owner_id,
+                     new_list_id,
+                     ROW(t."title",
+                         t."headline",
+                         t."description",
+                         t."priority",
+                         t."status",
+                         t."due_date",
+                         t."remind_at"))
+    WHERE "owner_id" = p_owner_id AND
+          "list_id" = p_list_id;
   RETURN new_list_id;
 END;
 $$;
