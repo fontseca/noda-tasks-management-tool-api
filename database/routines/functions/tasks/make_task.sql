@@ -10,6 +10,8 @@ AS $$
 DECLARE
   inserted_id "task"."task_id"%TYPE;
   actual_list_id "task"."task_id"%TYPE := p_list_id;
+  n_similar_titles INT := 0;
+  actual_list_title "task"."title"%TYPE := p_task_creation."title";
 BEGIN
   CALL assert_user_exists (p_owner_id);
   IF actual_list_id IS NOT NULL THEN
@@ -19,6 +21,13 @@ BEGIN
     IF actual_list_id IS NULL THEN
       actual_list_id := make_today_list (p_owner_id);
     END IF;
+  END IF;
+  SELECT count (*)
+    INTO n_similar_titles
+  FROM "task" t
+  WHERE regexp_count (t."title", '^' || quote_meta (actual_list_title) || '(?: \(\d+\))?$') = 1;
+  IF n_similar_titles > 0 THEN
+    actual_list_title := concat (actual_list_title, ' ' , '(', n_similar_titles, ')');
   END IF;
   INSERT INTO "task" ("owner_id",
                       "list_id",
@@ -33,7 +42,7 @@ BEGIN
        VALUES (p_owner_id,
                actual_list_id,
                compute_next_task_pos (),
-               p_task_creation."title",
+               actual_list_title,
                NULLIF (p_task_creation."headline", ''),
                NULLIF (p_task_creation."description", ''),
                COALESCE (p_task_creation."priority", 'normal'::task_priority_t),
