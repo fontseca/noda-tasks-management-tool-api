@@ -41,7 +41,7 @@ BEGIN
                       "remind_at")
        VALUES (p_owner_id,
                actual_list_id,
-               compute_next_task_pos (),
+               compute_next_task_pos (p_list_id),
                actual_list_title,
                NULLIF (p_task_creation."headline", ''),
                NULLIF (p_task_creation."description", ''),
