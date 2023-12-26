@@ -15,8 +15,7 @@ BEGIN
   CALL assert_task_exists_somewhere (p_owner_id, p_task_id);
   CALL assert_list_exists_somewhere (p_owner_id, p_dst_list_id);
   UPDATE "task"
-     SET "list_id" = p_dst_list_id,
-         "updated_at" = now ()
+     SET "list_id" = p_dst_list_id
    WHERE "task"."owner_id" = p_owner_id
      AND "task"."task_id" = p_task_id;
   GET DIAGNOSTICS n_affected_rows := ROW_COUNT;
