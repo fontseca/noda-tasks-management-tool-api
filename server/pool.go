@@ -52,27 +52,12 @@ func getListService() service.ListService {
 }
 
 var (
-	taskOnce    sync.Once
-	taskService *service.TaskService
-)
-
-func getTaskService() *service.TaskService {
-	if nil == taskService {
-		taskOnce.Do(func() {
-			r := repository.NewTaskRepository(getDatabase())
-			taskService = service.NewTaskService(r)
-		})
-	}
-	return taskService
-}
-
-var (
 	userOnce    sync.Once
 	userService service.UserService
 )
 
 func getUserService() service.UserService {
-	if nil == taskService {
+	if nil == userService {
 		userOnce.Do(func() {
 			r := repository.NewUserRepository(getDatabase())
 			userService = service.NewUserService(r)

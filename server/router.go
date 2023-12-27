@@ -21,7 +21,6 @@ func startRouter() *chi.Mux {
 	routeUsers(r)
 	routeGroups(r)
 	routeLists(r)
-	routeTasks(r)
 	return r
 }
 
@@ -94,19 +93,5 @@ func routeLists(router chi.Router) {
 			r.Get("/me/groups/{group_id}/lists/{list_id}", h.HandleGroupedListRetrievalByID)
 			r.Patch("/me/groups/{group_id}/lists/{list_id}", h.HandlePartialUpdateOfGroupedList)
 			r.Delete("/me/groups/{group_id}/lists/{list_id}", h.HandleGroupedListDeletion)
-		})
-}
-
-func routeTasks(router chi.Router) {
-	s := getTaskService()
-	h := handler.NewTaskHandler(s)
-	router.
-		With(authorization).
-		Group(func(r chi.Router) {
-			r.Get("/me/tasks", h.RetrieveTasksFromUser)
-			r.Post("/me/tasks", nil)
-			r.Get("/me/tasks/{task_id}", nil)
-			r.Patch("/me/tasks/{task_id}", nil)
-			r.Delete("/me/tasks/{task_id}", nil)
 		})
 }
