@@ -101,8 +101,46 @@ func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, er
 }
 
 func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.Task, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT fetch_task_by_id ($1, $2, $3);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
+	task = new(model.Task)
+	err = row.Scan(
+		&task.ID,
+		&task.OwnerID,
+		&task.ListID,
+		&task.PositionInList,
+		&task.Title,
+		&task.Headline,
+		&task.Description,
+		&task.Priority,
+		&task.Status,
+		&task.IsPinned,
+		&task.DueDate,
+		&task.RemindAt,
+		&task.CompletedAt,
+		&task.CreatedAt,
+		&task.UpdatedAt)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return nil, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return nil, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return nil, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return nil, err
+	}
+	return task, nil
 }
 
 func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
