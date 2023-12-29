@@ -194,18 +194,153 @@ func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, 
 }
 
 func (r *taskRepository) FetchFromToday(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT fetch_tasks_from_today_list ($1, $2, $3, $4, $5);`
+	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return nil, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return nil, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return nil, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return nil, err
+	}
+	tasks = make([]*model.Task, 0)
+	for rows.Next() {
+		var task = new(model.Task)
+		err = rows.Scan(
+			&task.ID,
+			&task.OwnerID,
+			&task.ListID,
+			&task.PositionInList,
+			&task.Title,
+			&task.Headline,
+			&task.Description,
+			&task.Priority,
+			&task.Status,
+			&task.IsPinned,
+			&task.DueDate,
+			&task.RemindAt,
+			&task.CompletedAt,
+			&task.CreatedAt,
+			&task.UpdatedAt)
+		if nil != err {
+			break
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
 }
 
 func (r *taskRepository) FetchFromTomorrow(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT fetch_tasks_from_tomorrow_list ($1, $2, $3, $4, $5);`
+	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return nil, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return nil, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return nil, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return nil, err
+	}
+	tasks = make([]*model.Task, 0)
+	for rows.Next() {
+		var task = new(model.Task)
+		err = rows.Scan(
+			&task.ID,
+			&task.OwnerID,
+			&task.ListID,
+			&task.PositionInList,
+			&task.Title,
+			&task.Headline,
+			&task.Description,
+			&task.Priority,
+			&task.Status,
+			&task.IsPinned,
+			&task.DueDate,
+			&task.RemindAt,
+			&task.CompletedAt,
+			&task.CreatedAt,
+			&task.UpdatedAt)
+		if nil != err {
+			break
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
 }
 
 func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT fetch_tasks_from_deferred_list ($1, $2, $3, $4, $5);`
+	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return nil, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return nil, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return nil, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return nil, err
+	}
+	tasks = make([]*model.Task, 0)
+	for rows.Next() {
+		var task = new(model.Task)
+		err = rows.Scan(
+			&task.ID,
+			&task.OwnerID,
+			&task.ListID,
+			&task.PositionInList,
+			&task.Title,
+			&task.Headline,
+			&task.Description,
+			&task.Priority,
+			&task.Status,
+			&task.IsPinned,
+			&task.DueDate,
+			&task.RemindAt,
+			&task.CompletedAt,
+			&task.CreatedAt,
+			&task.UpdatedAt)
+		if nil != err {
+			break
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
 }
 
 func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer.TaskUpdate) (ok bool, err error) {
