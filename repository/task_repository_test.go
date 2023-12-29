@@ -158,3 +158,56 @@ func TestTaskRepository_FetchByID(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestTaskRepository_Fetch(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT fetch_tasks ($1, $2, $3, $4, $5, $6);`)
+		res   []*model.Task
+		err   error
+		task  = &model.Task{
+			ID:             uuid.MustParse(taskID),
+			OwnerID:        uuid.MustParse(userID),
+			ListID:         uuid.MustParse(listID),
+			PositionInList: 1,
+			Title:          "task title",
+			Headline:       "task headline",
+			Description:    "task description",
+			Priority:       types.TaskPriorityHigh,
+			Status:         types.TaskStatusComplete,
+			IsPinned:       false,
+			DueDate:        nil,
+			RemindAt:       nil,
+			CompletedAt:    nil,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+		tasks = []*model.Task{task, task, task}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, 1, 10, "", "").
+			WillReturnRows(sqlmock.
+				NewRows(taskTableColumns).
+				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+		res, err = r.Fetch(userID, listID, 1, 10, "", "")
+		assert.Equal(t, tasks, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Fetch(userID, listID, 1, 10, "", "")
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
