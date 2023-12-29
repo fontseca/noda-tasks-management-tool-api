@@ -21,6 +21,11 @@ func isNonexistentListError(err *pq.Error) bool {
 		strings.Contains(err.Message, "nonexistent list with ID")
 }
 
+func isNonexistentTaskError(err *pq.Error) bool {
+	return err.Code == "P0001" &&
+		strings.Contains(err.Message, "nonexistent list with ID")
+}
+
 func isContextDeadlineError(err error) bool {
 	return strings.Compare(err.Error(), "context deadline exceeded") == 0
 }
