@@ -173,6 +173,13 @@ var (
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
+	ErrTaskNotFound = &Error{
+		code:    ErrorCode("R0008"),
+		message: "Not found.",
+		details: "Could not find any task with this ID.",
+		hint:    "",
+		status:  http.StatusNotFound,
+	}
 	ErrSettingNotFound = &Error{
 		code:    ErrorCode("R0004"),
 		message: "Not found.",
