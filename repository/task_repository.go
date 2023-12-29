@@ -8,7 +8,7 @@ import (
 )
 
 type TaskRepository interface {
-	Save(creation *transfer.TaskCreation) (insertedID string, err error)
+	Save(ownerID, taskID string, creation *transfer.TaskCreation) (insertedID string, err error)
 	Duplicate(ownerID, taskID string) (replicaID string, err error)
 	FetchByID(ownerID, listID, taskID string) (task *model.Task, err error)
 	Fetch(ownerID, listID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error)
