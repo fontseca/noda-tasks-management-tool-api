@@ -76,8 +76,28 @@ func (r *taskRepository) Save(ownerID, listID string, creation *transfer.TaskCre
 }
 
 func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT duplicate_task ($1, $2);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID)
+	err = row.Scan(&replicaID)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return "", noda.ErrUserNoLongerExists
+			case isNonexistentTaskError(pqerr):
+				return "", noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return "", err
+	}
+	return replicaID, nil
 }
 
 func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.Task, err error) {

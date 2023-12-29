@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"noda/data/transfer"
@@ -50,6 +51,40 @@ func TestTaskRepository_Save(t *testing.T) {
 			ExpectQuery(query).
 			WillReturnError(&pq.Error{})
 		res, err = r.Save(userID, listID, creation)
+		assert.Error(t, err)
+		assert.Equal(t, "", res)
+	})
+}
+
+func TestTaskRepository_Duplicate(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r         = NewTaskRepository(db)
+		query     = regexp.QuoteMeta(`SELECT duplicate_task ($1, $2);`)
+		res       string
+		err       error
+		replicaID = uuid.New().String()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"duplicate_task"}).
+				AddRow(replicaID))
+		res, err = r.Duplicate(userID, taskID)
+		assert.Equal(t, replicaID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Duplicate(userID, taskID)
 		assert.Error(t, err)
 		assert.Equal(t, "", res)
 	})
