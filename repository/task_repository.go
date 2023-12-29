@@ -1,7 +1,13 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	"errors"
+	"fmt"
+	"github.com/lib/pq"
+	"log"
+	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
@@ -43,8 +49,30 @@ func NewTaskRepository(db *sql.DB) TaskRepository {
 }
 
 func (r *taskRepository) Save(ownerID, listID string, creation *transfer.TaskCreation) (insertedID string, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT make_task ($1, $2, $3);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID,
+		fmt.Sprintf("ROW('%s', '%s', '%s', '%s', '%s', %s, %s)",
+			creation.Title, creation.Headline, creation.Description, creation.Priority, creation.Status, "NULL", "NULL"))
+	err = row.Scan(&insertedID)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return "", noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return "", noda.ErrListNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return "", err
+	}
+	return insertedID, nil
 }
 
 func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, err error) {
