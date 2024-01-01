@@ -538,8 +538,30 @@ func (r *taskRepository) Pin(ownerID, listID, taskID string) (ok bool, err error
 }
 
 func (r *taskRepository) Unpin(ownerID, listID, taskID string) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT unpin_task ($1, $2, $3);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
+	err = row.Scan(&ok)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return false, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return false, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return false, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return false, err
+	}
+	return ok, nil
 }
 
 func (r *taskRepository) Move(ownerID, taskID, targetListID string) (ok bool, err error) {
