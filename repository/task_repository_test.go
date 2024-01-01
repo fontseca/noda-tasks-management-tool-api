@@ -637,3 +637,37 @@ func TestTaskRepository_Unpin(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_Move(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r            = NewTaskRepository(db)
+		query        = regexp.QuoteMeta(`SELECT move_task_from_list ($1, $2, $3);`)
+		res          bool
+		err          error
+		targetListID = uuid.New().String()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, taskID, targetListID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"move_task_from_list"}).
+				AddRow(true))
+		res, err = r.Move(userID, taskID, targetListID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Move(userID, taskID, targetListID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
