@@ -671,3 +671,168 @@ func TestTaskRepository_Move(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_Today(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT move_task_to_today_list ($1, $2);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"move_task_to_today_list"}).
+				AddRow(true))
+		res, err = r.Today(userID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Today(userID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
+
+func TestTaskRepository_Tomorrow(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT move_task_to_tomorrow_list ($1, $2);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"move_task_to_tomorrow_list"}).
+				AddRow(true))
+		res, err = r.Tomorrow(userID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Tomorrow(userID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
+
+func TestTaskRepository_Defer(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT move_task_to_deferred_list ($1, $2);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"move_task_to_deferred_list"}).
+				AddRow(true))
+		res, err = r.Defer(userID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Defer(userID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
+
+func TestTaskRepository_Trash(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT trash_task ($1, $2, $3);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"trash_task"}).
+				AddRow(true))
+		res, err = r.Trash(userID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Trash(userID, listID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
+
+func TestTaskRepository_RestoreFromTrash(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT restore_task_from_trash ($1, $2, $3);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"restore_task_from_trash"}).
+				AddRow(true))
+		res, err = r.RestoreFromTrash(userID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.RestoreFromTrash(userID, listID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
