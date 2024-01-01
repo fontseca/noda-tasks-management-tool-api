@@ -571,3 +571,36 @@ func TestTaskRepository_Resume(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_Pin(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT pin_task ($1, $2, $3);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"pin_task"}).
+				AddRow(true))
+		res, err = r.Pin(userID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Pin(userID, listID, taskID)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
