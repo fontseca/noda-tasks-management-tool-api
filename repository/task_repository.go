@@ -403,8 +403,30 @@ func (r *taskRepository) SetReminder(ownerID, listID, taskID string, remindAt ti
 }
 
 func (r *taskRepository) SetPriority(ownerID, listID, taskID string, priority types.TaskPriority) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT set_task_priority ($1, $2, $3, $4);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, priority)
+	err = row.Scan(&ok)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return false, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return false, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return false, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return false, err
+	}
+	return ok, nil
 }
 
 func (r *taskRepository) SetDueDate(ownerID, listID, taskID string, dueDate time.Time) (ok bool, err error) {

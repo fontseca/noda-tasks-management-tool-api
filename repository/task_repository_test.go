@@ -437,3 +437,37 @@ func TestTaskRepository_SetReminder(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_SetPriority(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r        = NewTaskRepository(db)
+		query    = regexp.QuoteMeta(`SELECT set_task_priority ($1, $2, $3, $4);`)
+		res      bool
+		err      error
+		priority = types.TaskPriorityHigh
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID, priority).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"set_task_reminder_date"}).
+				AddRow(true))
+		res, err = r.SetPriority(userID, listID, taskID, priority)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.SetPriority(userID, listID, taskID, priority)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
