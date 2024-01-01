@@ -349,8 +349,30 @@ func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer
 }
 
 func (r *taskRepository) Reorder(ownerID, listID, taskID string, position uint64) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT reorder_task_in_list ($1, $2, $3, $4);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, position)
+	err = row.Scan(&ok)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return false, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return false, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return false, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return false, err
+	}
+	return ok, nil
 }
 
 func (r *taskRepository) SetReminder(ownerID, listID, taskID string, remindAt time.Time) (ok bool, err error) {

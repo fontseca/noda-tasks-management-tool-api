@@ -370,3 +370,36 @@ func TestTaskRepository_FetchFromDeferred(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestTaskRepository_Reorder(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT reorder_task_in_list ($1, $2, $3, $4);`)
+		res   bool
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID, 5).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"reorder_task_in_list"}).
+				AddRow(true))
+		res, err = r.Reorder(userID, listID, taskID, 5)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Reorder(userID, listID, taskID, 5)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
