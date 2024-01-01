@@ -403,3 +403,37 @@ func TestTaskRepository_Reorder(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_SetReminder(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT set_task_reminder_date ($1, $2, $3, $4);`)
+		res   bool
+		err   error
+		tm    = time.Now().Add(5 * time.Hour)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID, tm).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"set_task_reminder_date"}).
+				AddRow(true))
+		res, err = r.SetReminder(userID, listID, taskID, tm)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.SetReminder(userID, listID, taskID, tm)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
