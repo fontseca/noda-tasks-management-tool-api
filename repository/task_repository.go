@@ -744,6 +744,27 @@ func (r *taskRepository) RestoreFromTrash(ownerID, listID, taskID string) (ok bo
 }
 
 func (r *taskRepository) Delete(ownerID, listID, taskID string) error {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT delete_task ($1, $2, $3);`
+	_, err := r.db.ExecContext(ctx, query, ownerID, listID, taskID)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return err
+	}
+	return nil
 }

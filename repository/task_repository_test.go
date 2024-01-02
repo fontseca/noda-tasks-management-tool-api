@@ -876,3 +876,31 @@ func TestTaskRepository_RestoreFromTrash(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestTaskRepository_Delete(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r     = NewTaskRepository(db)
+		query = regexp.QuoteMeta(`SELECT delete_task ($1, $2, $3);`)
+		err   error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectExec(query).
+			WithArgs(userID, listID, taskID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+		err = r.Delete(userID, listID, taskID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		err = r.Delete(userID, listID, taskID)
+		assert.Error(t, err)
+	})
+}
