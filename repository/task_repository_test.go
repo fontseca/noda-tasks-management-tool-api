@@ -371,6 +371,46 @@ func TestTaskRepository_FetchFromDeferred(t *testing.T) {
 	})
 }
 
+func TestTaskRepository_Update(t *testing.T) {
+	defer beQuiet()()
+	db, mock := newMock()
+	defer db.Close()
+	var (
+		r        = NewTaskRepository(db)
+		query    = regexp.QuoteMeta(`SELECT update_task ($1, $2, $3, $4);`)
+		creation = &transfer.TaskUpdate{
+			Title:       "task title",
+			Description: "task description",
+			Headline:    "task headline",
+		}
+		res bool
+		err error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WithArgs(userID, listID, taskID,
+				fmt.Sprintf("ROW('%s', '%s', '%s')",
+					creation.Title, creation.Headline, creation.Description)).
+			WillReturnRows(sqlmock.
+				NewRows([]string{"update_task"}).
+				AddRow(true))
+		res, err = r.Update(userID, listID, taskID, creation)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("unexpected database error", func(t *testing.T) {
+		mock.
+			ExpectQuery(query).
+			WillReturnError(&pq.Error{})
+		res, err = r.Update(userID, listID, taskID, creation)
+		assert.False(t, res)
+		assert.Error(t, err)
+	})
+}
+
 func TestTaskRepository_Reorder(t *testing.T) {
 	defer beQuiet()()
 	db, mock := newMock()

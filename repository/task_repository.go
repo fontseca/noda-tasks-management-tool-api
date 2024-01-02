@@ -344,8 +344,31 @@ func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, need
 }
 
 func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer.TaskUpdate) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var query = `SELECT update_task ($1, $2, $3, $4);`
+	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID,
+		fmt.Sprintf("ROW('%s', '%s', '%s')", update.Title, update.Headline, update.Description))
+	err = row.Scan(&ok)
+	if nil != err {
+		var pqerr *pq.Error
+		if errors.As(err, &pqerr) {
+			switch {
+			default:
+				log.Println(noda.PQErrorToString(pqerr))
+			case isNonexistentUserError(pqerr):
+				return false, noda.ErrUserNoLongerExists
+			case isNonexistentListError(pqerr):
+				return false, noda.ErrListNotFound
+			case isNonexistentTaskError(pqerr):
+				return false, noda.ErrTaskNotFound
+			}
+		} else {
+			log.Println(err)
+		}
+		return false, err
+	}
+	return ok, nil
 }
 
 func (r *taskRepository) Reorder(ownerID, listID, taskID string, position uint64) (ok bool, err error) {
