@@ -143,3 +143,48 @@ func TestTaskService_Save(t *testing.T) {
 		assert.Equal(t, uuid.Nil, res)
 	})
 }
+
+func TestTaskService_Duplicate(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Duplicate"
+	var (
+		res                        uuid.UUID
+		err                        error
+		ownerID, taskID, replicaID = uuid.New(), uuid.New(), uuid.New()
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), taskID.String()).Return(replicaID.String(), nil)
+		res, err = NewTaskService(r).Duplicate(ownerID, taskID)
+		assert.Equal(t, replicaID, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Duplicate(uuid.Nil, taskID)
+			assert.Equal(t, uuid.Nil, res)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Duplicate", "ownerID").Error())
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Duplicate(ownerID, uuid.Nil)
+			assert.Equal(t, uuid.Nil, res)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Duplicate", "taskID").Error())
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return("", unexpected)
+		res, err = NewTaskService(r).Duplicate(ownerID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Equal(t, uuid.Nil, res)
+	})
+}
