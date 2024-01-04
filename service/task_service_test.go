@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"noda"
+	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
 	"noda/mocks"
@@ -186,5 +187,62 @@ func TestTaskService_Duplicate(t *testing.T) {
 		res, err = NewTaskService(r).Duplicate(ownerID, taskID)
 		assert.ErrorIs(t, err, unexpected)
 		assert.Equal(t, uuid.Nil, res)
+	})
+}
+
+func TestTaskService_FetchByID(t *testing.T) {
+	defer beQuiet()()
+	const routine = "FetchByID"
+	var (
+		res  *model.Task
+		err  error
+		task = &model.Task{
+			ID:      uuid.New(),
+			OwnerID: uuid.New(),
+			ListID:  uuid.New(),
+		}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, task.OwnerID.String(), task.ListID.String(), task.ID.String()).Return(task, nil)
+		res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, task.ID)
+		assert.Equal(t, task, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).FetchByID(uuid.Nil, task.ListID, task.ID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "ownerID").Error())
+			assert.Nil(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).FetchByID(task.OwnerID, uuid.Nil, task.ID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "listID").Error())
+			assert.Nil(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "taskID").Error())
+			assert.Nil(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(nil, unexpected)
+		res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, task.ID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
 	})
 }

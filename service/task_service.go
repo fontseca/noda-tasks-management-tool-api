@@ -102,8 +102,21 @@ func (t *taskService) Duplicate(ownerID, taskID uuid.UUID) (replicaID uuid.UUID,
 }
 
 func (t *taskService) FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.Task, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("FetchByID", "ownerID")
+		log.Println(err)
+		return nil, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("FetchByID", "listID")
+		log.Println(err)
+		return nil, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("FetchByID", "taskID")
+		log.Println(err)
+		return nil, err
+	}
+	return t.r.FetchByID(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Fetch(ownerID, listID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
