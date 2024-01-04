@@ -2,6 +2,8 @@ package service
 
 import (
 	"github.com/google/uuid"
+	"log"
+	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
@@ -10,7 +12,7 @@ import (
 )
 
 type TaskService interface {
-	Save(ownerID, taskID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error)
+	Save(ownerID, listID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error)
 	Duplicate(ownerID, taskID uuid.UUID) (replicaID uuid.UUID, err error)
 	FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.Task, err error)
 	Fetch(ownerID, listID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error)
@@ -43,9 +45,42 @@ func NewTaskService(repository repository.TaskRepository) TaskService {
 	return &taskService{r: repository}
 }
 
-func (t taskService) Save(ownerID, taskID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error) {
-	//TODO implement me
-	panic("implement me")
+func (t taskService) Save(ownerID, listID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error) {
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Save", "ownerID")
+		log.Println(err)
+		return uuid.Nil, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Save", "listID")
+		log.Println(err)
+		return uuid.Nil, err
+	case nil == creation:
+		err = noda.NewNilParameterError("Save", "creation")
+		log.Println(err)
+		return uuid.Nil, err
+	case 128 < len(creation.Title):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Title", "creation", 128)
+	case 64 < len(creation.Headline):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Headline", "creation", 64)
+	case 512 < len(creation.Description):
+		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Description", "creation", 512)
+	}
+	doTrim(&creation.Title, &creation.Headline, &creation.Description)
+	if "" == creation.Title {
+		creation.Title = "Untitled"
+	}
+	if "" == creation.Priority {
+		creation.Priority = types.TaskPriorityMedium
+	}
+	if "" == creation.Status {
+		creation.Status = types.TaskStatusIncomplete
+	}
+	inserted, err := t.r.Save(ownerID.String(), listID.String(), creation)
+	if nil != err {
+		return uuid.Nil, err
+	}
+	return uuid.Parse(inserted)
 }
 
 func (t taskService) Duplicate(ownerID, taskID uuid.UUID) (replicaID uuid.UUID, err error) {
