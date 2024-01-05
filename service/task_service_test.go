@@ -717,3 +717,56 @@ func TestTaskService_Update(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestTaskService_Reorder(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Reorder"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String(), uint64(10)).Return(true, nil)
+		res, err = NewTaskService(r).Reorder(ownerID, listID, taskID, 10)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Reorder(uuid.Nil, listID, taskID, 1)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Reorder(ownerID, uuid.Nil, taskID, 1)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Reorder(ownerID, listID, uuid.Nil, 1)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Reorder(ownerID, listID, taskID, 1)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
