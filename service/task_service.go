@@ -120,8 +120,33 @@ func (t *taskService) FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.
 }
 
 func (t *taskService) Fetch(ownerID, listID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Fetch", "ownerID")
+		log.Println(err)
+		return nil, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Fetch", "listID")
+		log.Println(err)
+		return nil, err
+	case nil == pagination:
+		err = noda.NewNilParameterError("Fetch", "pagination")
+		log.Println(err)
+		return nil, err
+	}
+	doDefaultPagination(pagination)
+	doTrim(&needle, &sortExpr)
+	tasks, err := t.r.Fetch(ownerID.String(), listID.String(), pagination.Page, pagination.RPP, needle, sortExpr)
+	if nil != err {
+		return nil, err
+	}
+	result = &types.Result[model.Task]{
+		Page:      pagination.Page,
+		RPP:       pagination.RPP,
+		Retrieved: int64(len(tasks)),
+		Payload:   tasks,
+	}
+	return result, nil
 }
 
 func (t *taskService) FetchFromToday(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
