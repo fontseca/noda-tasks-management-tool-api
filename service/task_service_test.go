@@ -606,3 +606,114 @@ func TestTaskService_FetchFromDeferred(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestTaskService_Update(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Update"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var u = &transfer.TaskUpdate{
+			Title:       "Title",
+			Description: "Description",
+			Headline:    "Headline",
+		}
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String(), u).Return(true, nil)
+		res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not nil or uuid.Nil", func(t *testing.T) {
+		var u = new(transfer.TaskUpdate)
+
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(uuid.Nil, listID, taskID, u)
+			assert.False(t, res)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "ownerID").Error())
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(ownerID, uuid.Nil, taskID, u)
+			assert.False(t, res)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "listID").Error())
+		})
+
+		t.Run("\"update\" != nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(ownerID, listID, taskID, nil)
+			assert.False(t, res)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "update").Error())
+		})
+	})
+
+	t.Run("trims all string fields in \"update\"", func(t *testing.T) {
+		var u = &transfer.TaskUpdate{
+			Title:       blankset + "Title" + blankset,
+			Headline:    blankset + "Headline" + blankset,
+			Description: blankset + "Description" + blankset,
+		}
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+		res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+		assert.Equal(t, "Title", u.Title)
+		assert.Equal(t, "Headline", u.Headline)
+		assert.Equal(t, "Description", u.Description)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("satisfies...", func(t *testing.T) {
+		var u = new(transfer.TaskUpdate)
+
+		t.Run("128 < len(update.Title)", func(t *testing.T) {
+			u.Title = strings.Repeat("x", 129)
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Title", "update", 128).Error())
+			assert.False(t, res)
+			u.Title = ""
+		})
+
+		t.Run("64 < len(update.Headline)", func(t *testing.T) {
+			u.Headline = strings.Repeat("x", 65)
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Headline", "update", 64).Error())
+			assert.False(t, res)
+			u.Headline = ""
+		})
+
+		t.Run("512 < len(update.Description)", func(t *testing.T) {
+			u.Description = strings.Repeat("x", 513)
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Description", "update", 512).Error())
+			assert.False(t, res)
+			u.Description = ""
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var u = new(transfer.TaskUpdate)
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}

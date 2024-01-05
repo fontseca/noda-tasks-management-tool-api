@@ -228,8 +228,28 @@ func (t *taskService) FetchFromDeferred(ownerID uuid.UUID, pagination *types.Pag
 }
 
 func (t *taskService) Update(ownerID, listID, taskID uuid.UUID, update *transfer.TaskUpdate) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Update", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Update", "listID")
+		log.Println(err)
+		return false, err
+	case nil == update:
+		err = noda.NewNilParameterError("Update", "update")
+		log.Println(err)
+		return false, err
+	case 128 < len(update.Title):
+		return false, noda.ErrTooLong.Clone().FormatDetails("Title", "update", 128)
+	case 64 < len(update.Headline):
+		return false, noda.ErrTooLong.Clone().FormatDetails("Headline", "update", 64)
+	case 512 < len(update.Description):
+		return false, noda.ErrTooLong.Clone().FormatDetails("Description", "update", 512)
+	}
+	doTrim(&update.Title, &update.Headline, &update.Description)
+	return t.r.Update(ownerID.String(), listID.String(), taskID.String(), update)
 }
 
 func (t *taskService) Reorder(ownerID, listID, taskID uuid.UUID, position uint64) (ok bool, err error) {
