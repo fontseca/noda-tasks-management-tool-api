@@ -430,3 +430,91 @@ func TestTaskService_FetchFromToday(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
+
+func TestTaskService_FetchFromTomorrow(t *testing.T) {
+	defer beQuiet()()
+	const routine = "FetchFromTomorrow"
+	var (
+		ownerID    = uuid.New()
+		res        *types.Result[model.Task]
+		err        error
+		page       int64 = 1
+		rpp        int64 = 10
+		needle           = "x"
+		sortExpr         = "-title"
+		pagination       = &types.Pagination{Page: 1, RPP: 10}
+		tasks            = []*model.Task{
+			{ID: uuid.New(), OwnerID: ownerID},
+			{ID: uuid.New(), OwnerID: ownerID},
+			{ID: uuid.New(), OwnerID: ownerID},
+		}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var result = &types.Result[model.Task]{
+			Page:      page,
+			RPP:       10,
+			Retrieved: int64(len(tasks)),
+			Payload:   tasks,
+		}
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), page, rpp, needle, sortExpr).Return(tasks, nil)
+		res, err = NewTaskService(r).FetchFromTomorrow(ownerID, pagination, needle, sortExpr)
+		assert.Equal(t, result, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not nil or uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).FetchFromTomorrow(uuid.Nil, pagination, needle, sortExpr)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromTomorrow", "ownerID").Error())
+			assert.Nil(t, res)
+		})
+
+		t.Run("\"pagination\" != nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).FetchFromTomorrow(ownerID, nil, needle, sortExpr)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromTomorrow", "pagination").Error())
+			assert.Nil(t, res)
+		})
+	})
+
+	t.Run("parameters are trimmed", func(n *testing.T) {
+		t.Run("\"needle\" is trimmed", func(t *testing.T) {
+			var n = blankset + needle + blankset
+			var r = mocks.NewTaskRepositoryMock()
+			r.On(routine, mock.Anything, mock.Anything, mock.Anything, needle, mock.Anything).Return(tasks, nil)
+			_, _ = NewTaskService(r).FetchFromTomorrow(ownerID, pagination, n, sortExpr)
+		})
+
+		t.Run("\"sortExpr\" is trimmed", func(t *testing.T) {
+			var s = blankset + sortExpr + blankset
+			var r = mocks.NewTaskRepositoryMock()
+			r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything, sortExpr).Return(tasks, nil)
+			_, _ = NewTaskService(r).FetchFromTomorrow(ownerID, pagination, needle, s)
+		})
+	})
+
+	t.Run("defaults pagination", func(t *testing.T) {
+		const expectedPage, expectedRPP int64 = 1, 10
+		pagination.Page = -1
+		pagination.RPP = 0
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, expectedPage, expectedRPP, mock.Anything, mock.Anything).Return(tasks, nil)
+		_, _ = NewTaskService(r).FetchFromTomorrow(ownerID, pagination, needle, sortExpr)
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.
+			On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, unexpected)
+		res, err = NewTaskService(r).FetchFromTomorrow(ownerID, pagination, needle, sortExpr)
+		assert.ErrorIs(t, err, unexpected)
+		assert.Nil(t, res)
+	})
+}
