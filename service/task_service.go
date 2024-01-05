@@ -15,10 +15,10 @@ type TaskService interface {
 	Save(ownerID, listID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error)
 	Duplicate(ownerID, taskID uuid.UUID) (replicaID uuid.UUID, err error)
 	FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.Task, err error)
-	Fetch(ownerID, listID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error)
-	FetchFromToday(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error)
-	FetchFromTomorrow(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error)
-	FetchFromDeferred(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error)
+	Fetch(ownerID, listID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error)
+	FetchFromToday(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error)
+	FetchFromTomorrow(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error)
+	FetchFromDeferred(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error)
 	Update(ownerID, listID, taskID uuid.UUID, update *transfer.TaskUpdate) (ok bool, err error)
 	Reorder(ownerID, listID, taskID uuid.UUID, position uint64) (ok bool, err error)
 	SetReminder(ownerID, listID, taskID uuid.UUID, remindAt time.Time) (ok bool, err error)
@@ -119,22 +119,22 @@ func (t *taskService) FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.
 	return t.r.FetchByID(ownerID.String(), listID.String(), taskID.String())
 }
 
-func (t *taskService) Fetch(ownerID, listID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error) {
+func (t *taskService) Fetch(ownerID, listID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *taskService) FetchFromToday(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error) {
+func (t *taskService) FetchFromToday(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *taskService) FetchFromTomorrow(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error) {
+func (t *taskService) FetchFromTomorrow(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *taskService) FetchFromDeferred(ownerID uuid.UUID, page, rpp int64, needle, sortExpr string) (tasks *types.Result[model.Task], err error) {
+func (t *taskService) FetchFromDeferred(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
 	//TODO implement me
 	panic("implement me")
 }
