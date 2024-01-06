@@ -770,3 +770,57 @@ func TestTaskService_Reorder(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestTaskService_SetReminder(t *testing.T) {
+	defer beQuiet()()
+	const routine = "SetReminder"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+		tm                      = time.Now().Add(5 * time.Hour)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String(), tm).Return(true, nil)
+		res, err = NewTaskService(r).SetReminder(ownerID, listID, taskID, tm)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetReminder(uuid.Nil, listID, taskID, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetReminder(ownerID, uuid.Nil, taskID, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetReminder(ownerID, listID, uuid.Nil, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).SetReminder(ownerID, listID, taskID, tm)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}

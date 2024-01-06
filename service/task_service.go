@@ -271,8 +271,21 @@ func (t *taskService) Reorder(ownerID, listID, taskID uuid.UUID, position uint64
 }
 
 func (t *taskService) SetReminder(ownerID, listID, taskID uuid.UUID, remindAt time.Time) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("SetReminder", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("SetReminder", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("SetReminder", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.SetReminder(ownerID.String(), listID.String(), taskID.String(), remindAt)
 }
 
 func (t *taskService) SetPriority(ownerID, listID, taskID uuid.UUID, priority types.TaskPriority) (ok bool, err error) {
