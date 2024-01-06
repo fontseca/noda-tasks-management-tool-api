@@ -824,3 +824,668 @@ func TestTaskService_SetReminder(t *testing.T) {
 		assert.False(t, res)
 	})
 }
+
+func TestTaskService_SetPriority(t *testing.T) {
+	{
+		defer beQuiet()()
+		const routine = "SetPriority"
+		var (
+			ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+			res                     bool
+			err                     error
+			p                       = types.TaskPriorityHigh
+		)
+
+		t.Run("success", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.On(routine, ownerID.String(), listID.String(), taskID.String(), p).Return(true, nil)
+			res, err = NewTaskService(r).SetPriority(ownerID, listID, taskID, p)
+			assert.True(t, res)
+			assert.NoError(t, err)
+		})
+
+		t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+			t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+				var r = mocks.NewTaskRepositoryMock()
+				r.AssertNotCalled(t, routine)
+				res, err = NewTaskService(r).SetPriority(uuid.Nil, listID, taskID, p)
+				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "ownerID").Error())
+				assert.False(t, res)
+			})
+
+			t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+				var r = mocks.NewTaskRepositoryMock()
+				r.AssertNotCalled(t, routine)
+				res, err = NewTaskService(r).SetPriority(ownerID, uuid.Nil, taskID, p)
+				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "listID").Error())
+				assert.False(t, res)
+			})
+
+			t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+				var r = mocks.NewTaskRepositoryMock()
+				r.AssertNotCalled(t, routine)
+				res, err = NewTaskService(r).SetPriority(ownerID, listID, uuid.Nil, p)
+				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "taskID").Error())
+				assert.False(t, res)
+			})
+		})
+
+		t.Run("got a repository error", func(t *testing.T) {
+			var unexpected = errors.New("unexpected error")
+			var r = mocks.NewTaskRepositoryMock()
+			r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+			res, err = NewTaskService(r).SetPriority(ownerID, listID, taskID, p)
+			assert.ErrorIs(t, err, unexpected)
+			assert.False(t, res)
+		})
+	}
+
+}
+
+func TestTaskService_SetDueDate(t *testing.T) {
+
+	defer beQuiet()()
+	const routine = "SetDueDate"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+		tm                      = time.Now().Add(5 * time.Hour)
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String(), tm).Return(true, nil)
+		res, err = NewTaskService(r).SetDueDate(ownerID, listID, taskID, tm)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetDueDate(uuid.Nil, listID, taskID, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetDueDate(ownerID, uuid.Nil, taskID, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).SetDueDate(ownerID, listID, uuid.Nil, tm)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).SetDueDate(ownerID, listID, taskID, tm)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Complete(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Complete"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Complete(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Complete(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Complete(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Complete(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Complete(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Resume(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Resume"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Resume(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Resume(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Resume(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Resume(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Resume(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Pin(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Pin"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Pin(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Pin(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Pin(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Pin(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Pin(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Unpin(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Unpin"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Unpin(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Unpin(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Unpin(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Unpin(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Unpin(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Move(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Move"
+	var (
+		ownerID, taskID, targetListID = uuid.New(), uuid.New(), uuid.New()
+		res                           bool
+		err                           error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), taskID.String(), targetListID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Move(ownerID, taskID, targetListID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Move(uuid.Nil, taskID, targetListID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Move(ownerID, uuid.Nil, targetListID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "taskID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"targetListID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Move(ownerID, taskID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "targetListID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Move(ownerID, taskID, targetListID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Today(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Today"
+	var (
+		ownerID, taskID = uuid.New(), uuid.New()
+		res             bool
+		err             error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Today(ownerID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Today(uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Today", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Today(ownerID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Today", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Today(ownerID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Tomorrow(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Tomorrow"
+	var (
+		ownerID, taskID = uuid.New(), uuid.New()
+		res             bool
+		err             error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Tomorrow(ownerID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Tomorrow(uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Tomorrow", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Tomorrow(ownerID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Tomorrow", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Tomorrow(ownerID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Defer(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Defer"
+	var (
+		ownerID, taskID = uuid.New(), uuid.New()
+		res             bool
+		err             error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Defer(ownerID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Defer(uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Defer", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Defer(ownerID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Defer", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Defer(ownerID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Trash(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Trash"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).Trash(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Trash(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Trash(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).Trash(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).Trash(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_RestoreFromTrash(t *testing.T) {
+	defer beQuiet()()
+	const routine = "RestoreFromTrash"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		res                     bool
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(true, nil)
+		res, err = NewTaskService(r).RestoreFromTrash(ownerID, listID, taskID)
+		assert.True(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).RestoreFromTrash(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "ownerID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).RestoreFromTrash(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "listID").Error())
+			assert.False(t, res)
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			res, err = NewTaskService(r).RestoreFromTrash(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "taskID").Error())
+			assert.False(t, res)
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(false, unexpected)
+		res, err = NewTaskService(r).RestoreFromTrash(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+		assert.False(t, res)
+	})
+}
+
+func TestTaskService_Delete(t *testing.T) {
+	defer beQuiet()()
+	const routine = "Delete"
+	var (
+		ownerID, listID, taskID = uuid.New(), uuid.New(), uuid.New()
+		err                     error
+	)
+
+	t.Run("success", func(t *testing.T) {
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, ownerID.String(), listID.String(), taskID.String()).Return(nil)
+		err = NewTaskService(r).Delete(ownerID, listID, taskID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parameters are not uuid.Nil", func(t *testing.T) {
+		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			err = NewTaskService(r).Delete(uuid.Nil, listID, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "ownerID").Error())
+		})
+
+		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			err = NewTaskService(r).Delete(ownerID, uuid.Nil, taskID)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "listID").Error())
+		})
+
+		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
+			var r = mocks.NewTaskRepositoryMock()
+			r.AssertNotCalled(t, routine)
+			err = NewTaskService(r).Delete(ownerID, listID, uuid.Nil)
+			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "taskID").Error())
+		})
+	})
+
+	t.Run("got a repository error", func(t *testing.T) {
+		var unexpected = errors.New("unexpected error")
+		var r = mocks.NewTaskRepositoryMock()
+		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(unexpected)
+		err = NewTaskService(r).Delete(ownerID, listID, taskID)
+		assert.ErrorIs(t, err, unexpected)
+	})
+}

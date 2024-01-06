@@ -289,66 +289,224 @@ func (t *taskService) SetReminder(ownerID, listID, taskID uuid.UUID, remindAt ti
 }
 
 func (t *taskService) SetPriority(ownerID, listID, taskID uuid.UUID, priority types.TaskPriority) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("SetPriority", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("SetPriority", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("SetPriority", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.SetPriority(ownerID.String(), listID.String(), taskID.String(), priority)
 }
 
 func (t *taskService) SetDueDate(ownerID, listID, taskID uuid.UUID, dueDate time.Time) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("SetDueDate", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("SetDueDate", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("SetDueDate", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.SetDueDate(ownerID.String(), listID.String(), taskID.String(), dueDate)
 }
 
 func (t *taskService) Complete(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Complete", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Complete", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Complete", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Complete(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Resume(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Resume", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Resume", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Resume", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Resume(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Pin(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Pin", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Pin", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Pin", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Pin(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Unpin(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Unpin", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Unpin", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Unpin", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Unpin(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Move(ownerID, taskID, targetListID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Move", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Move", "taskID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == targetListID:
+		err = noda.NewNilParameterError("Move", "targetListID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Move(ownerID.String(), taskID.String(), targetListID.String())
 }
 
 func (t *taskService) Today(ownerID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Today", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Today", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Today(ownerID.String(), taskID.String())
 }
 
 func (t *taskService) Tomorrow(ownerID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Tomorrow", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Tomorrow", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Tomorrow(ownerID.String(), taskID.String())
 }
 
 func (t *taskService) Defer(ownerID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Defer", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Defer", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Defer(ownerID.String(), taskID.String())
 }
 
 func (t *taskService) Trash(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Trash", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Trash", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Trash", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.Trash(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) RestoreFromTrash(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
-	//TODO implement me
-	panic("implement me")
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("RestoreFromTrash", "ownerID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("RestoreFromTrash", "listID")
+		log.Println(err)
+		return false, err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("RestoreFromTrash", "taskID")
+		log.Println(err)
+		return false, err
+	}
+	return t.r.RestoreFromTrash(ownerID.String(), listID.String(), taskID.String())
 }
 
 func (t *taskService) Delete(ownerID, listID, taskID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+	var err error
+	switch {
+	case uuid.Nil == ownerID:
+		err = noda.NewNilParameterError("Delete", "ownerID")
+		log.Println(err)
+		return err
+	case uuid.Nil == listID:
+		err = noda.NewNilParameterError("Delete", "listID")
+		log.Println(err)
+		return err
+	case uuid.Nil == taskID:
+		err = noda.NewNilParameterError("Delete", "taskID")
+		log.Println(err)
+		return err
+	}
+	return t.r.Delete(ownerID.String(), listID.String(), taskID.String())
 }
