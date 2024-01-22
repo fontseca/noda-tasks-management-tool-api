@@ -33,7 +33,7 @@ func TestListHandler_HandleGroupedListCreation(t *testing.T) {
 			requestBody          = marshal(t, JSON{"name": next.Name, "description": next.Description})
 			insertedID           = uuid.New()
 			expectedStatusCode   = http.StatusCreated
-			expectedResponseBody = marshal(t, JSON{"insertedID": insertedID.String()})
+			expectedResponseBody = marshal(t, JSON{"inserted_id": insertedID.String()})
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
@@ -162,7 +162,7 @@ func TestListHandler_HandleScatteredListCreation(t *testing.T) {
 			requestBody          = marshal(t, JSON{"name": next.Name, "description": next.Description})
 			insertedID           = uuid.New()
 			expectedStatusCode   = http.StatusCreated
-			expectedResponseBody = marshal(t, JSON{"insertedID": insertedID.String()})
+			expectedResponseBody = marshal(t, JSON{"inserted_id": insertedID.String()})
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)

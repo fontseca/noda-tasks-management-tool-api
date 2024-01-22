@@ -58,7 +58,7 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 			return
 		}
 	}
-	var result = map[string]string{"insertedID": insertedID.String()}
+	var result = map[string]string{"inserted_id": insertedID.String()}
 	data, err := json.Marshal(result)
 	if nil != err {
 		log.Println(err)
