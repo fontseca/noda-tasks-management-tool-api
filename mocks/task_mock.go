@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"noda/data/model"
 	"noda/data/transfer"
@@ -147,6 +148,153 @@ func (o *TaskRepository) RestoreFromTrash(ownerID, listID, taskID string) (ok bo
 }
 
 func (o *TaskRepository) Delete(ownerID, listID, taskID string) error {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Error(0)
+}
+
+type TaskServiceMock struct {
+	mock.Mock
+}
+
+func NewTaskServiceMock() *TaskServiceMock {
+	return new(TaskServiceMock)
+}
+
+func (o *TaskServiceMock) Save(ownerID, listID uuid.UUID, creation *transfer.TaskCreation) (insertedID uuid.UUID, err error) {
+	var args = o.Called(ownerID, listID, creation)
+	return args.Get(0).(uuid.UUID), args.Error(1)
+}
+
+func (o *TaskServiceMock) Duplicate(ownerID, taskID uuid.UUID) (replicaID uuid.UUID, err error) {
+	var args = o.Called(ownerID, taskID)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		replicaID = arg0.(uuid.UUID)
+	}
+	return replicaID, args.Error(1)
+}
+
+func (o *TaskServiceMock) FetchByID(ownerID, listID, taskID uuid.UUID) (task *model.Task, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		task = arg0.(*model.Task)
+	}
+	return task, args.Error(1)
+}
+
+func (o *TaskServiceMock) Fetch(ownerID, listID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
+	var args = o.Called(ownerID, listID, pagination, needle, sortExpr)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		result = arg0.(*types.Result[model.Task])
+	}
+	return result, args.Error(1)
+}
+
+func (o *TaskServiceMock) FetchFromToday(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
+	var args = o.Called(ownerID, pagination, needle, sortExpr)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		result = arg0.(*types.Result[model.Task])
+	}
+	return result, args.Error(1)
+}
+
+func (o *TaskServiceMock) FetchFromTomorrow(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
+	var args = o.Called(ownerID, pagination, needle, sortExpr)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		result = arg0.(*types.Result[model.Task])
+	}
+	return result, args.Error(1)
+}
+
+func (o *TaskServiceMock) FetchFromDeferred(ownerID uuid.UUID, pagination *types.Pagination, needle, sortExpr string) (result *types.Result[model.Task], err error) {
+	var args = o.Called(ownerID, pagination, needle, sortExpr)
+	var arg0 = args.Get(0)
+	if nil != arg0 {
+		result = arg0.(*types.Result[model.Task])
+	}
+	return result, args.Error(1)
+}
+
+func (o *TaskServiceMock) Update(ownerID, listID, taskID uuid.UUID, update *transfer.TaskUpdate) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Reorder(ownerID, listID, taskID uuid.UUID, position uint64) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) SetReminder(ownerID, listID, taskID uuid.UUID, remindAt time.Time) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) SetPriority(ownerID, listID, taskID uuid.UUID, priority types.TaskPriority) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) SetDueDate(ownerID, listID, taskID uuid.UUID, dueDate time.Time) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Complete(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Resume(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Pin(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Unpin(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Move(ownerID, taskID, targetListID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Today(ownerID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Tomorrow(ownerID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Defer(ownerID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Trash(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) RestoreFromTrash(ownerID, listID, taskID uuid.UUID) (ok bool, err error) {
+	var args = o.Called(ownerID, listID, taskID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (o *TaskServiceMock) Delete(ownerID, listID, taskID uuid.UUID) error {
 	var args = o.Called(ownerID, listID, taskID)
 	return args.Error(0)
 }
