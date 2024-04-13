@@ -2,10 +2,10 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/repository"
 )
 
@@ -29,9 +29,9 @@ func (s *groupService) Save(ownerID uuid.UUID, newGroup *transfer.GroupCreation)
 	doTrim(&newGroup.Name, &newGroup.Description)
 	switch {
 	case 1<<5 < len(newGroup.Name):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
 	case 1<<9 < len(newGroup.Description):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
 	}
 	id, err := s.r.Save(ownerID.String(), newGroup)
 	if nil != err {
@@ -67,9 +67,9 @@ func (s *groupService) Update(ownerID, groupID uuid.UUID, up *transfer.GroupUpda
 	doTrim(&up.Name, &up.Description)
 	switch {
 	case 1<<5 < len(up.Name):
-		return false, noda.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
+		return false, failure.ErrTooLong.Clone().FormatDetails("name", "group", 1<<5)
 	case 1<<9 < len(up.Description):
-		return false, noda.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
+		return false, failure.ErrTooLong.Clone().FormatDetails("description", "group", 1<<9)
 	}
 	return s.r.Update(ownerID.String(), groupID.String(), up)
 }

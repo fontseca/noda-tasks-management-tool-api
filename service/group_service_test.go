@@ -4,10 +4,10 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/mocks"
 	"strings"
 	"testing"
@@ -40,7 +40,7 @@ func TestGroupService_SaveGroup(t *testing.T) {
 		s = NewGroupService(m)
 		res, err = s.Save(ownerID, next)
 		assert.Equal(t, uuid.Nil, res)
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "group", 32).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("name", "group", 32).Error())
 		next.Name = previousName
 	})
 
@@ -51,7 +51,7 @@ func TestGroupService_SaveGroup(t *testing.T) {
 		m.AssertNotCalled(t, "Save")
 		s = NewGroupService(m)
 		res, err = s.Save(ownerID, next)
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "group", 512).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("description", "group", 512).Error())
 		assert.Equal(t, uuid.Nil, res)
 		next.Description = previousDescription
 	})
@@ -163,7 +163,7 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 		s = NewGroupService(m)
 		res, err = s.Update(ownerID, groupID, up)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "group", 32).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("name", "group", 32).Error())
 		up.Name = previousName
 	})
 
@@ -174,7 +174,7 @@ func TestGroupService_UpdateGroup(t *testing.T) {
 		m.AssertNotCalled(t, "Update")
 		s = NewGroupService(m)
 		res, err = s.Update(ownerID, groupID, up)
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "group", 512).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("description", "group", 512).Error())
 		assert.False(t, res)
 		up.Description = previousDescription
 	})

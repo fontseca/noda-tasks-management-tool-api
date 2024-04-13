@@ -6,9 +6,9 @@ import (
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/lib/pq"
 	"log"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
+	"noda/failure"
 )
 
 type UserRepository interface {
@@ -51,9 +51,9 @@ func (r userRepository) Save(next *transfer.UserCreation) (string, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isDuplicatedEmailError(pqerr) {
-				return "", noda.ErrSameEmail
+				return "", failure.ErrSameEmail
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return "", err
 	}
@@ -71,9 +71,9 @@ func (r userRepository) Update(userID string, up *transfer.UserUpdate) (bool, er
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -90,9 +90,9 @@ func (r userRepository) PromoteToAdmin(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -109,9 +109,9 @@ func (r userRepository) DegradeToUser(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -128,9 +128,9 @@ func (r userRepository) Block(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -147,9 +147,9 @@ func (r userRepository) Unblock(userID string) (bool, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -176,7 +176,7 @@ func (r userRepository) Fetch(page, rpp int64, needle, sortExpr string) ([]*tran
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (r userRepository) Search(page, rpp int64, needle, sortExpr string) ([]*tra
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -232,9 +232,9 @@ func (r userRepository) FetchSettings(userID string, page, rpp int64, needle, so
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, noda.ErrUserNotFound
+				return nil, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -258,11 +258,11 @@ func (r userRepository) FetchOneSetting(userID, settingKey string) (*transfer.Us
 		case errors.As(err, &pqerr):
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNotFound
+				return nil, failure.ErrUserNotFound
 			case isNonexistentPredefinedUserSettingError(pqerr):
-				return nil, noda.ErrSettingNotFound
+				return nil, failure.ErrSettingNotFound
 			}
 		}
 		return nil, err
@@ -271,7 +271,7 @@ func (r userRepository) FetchOneSetting(userID, settingKey string) (*transfer.Us
 	setting := transfer.UserSetting{}
 	if err = sqlscan.ScanOne(&setting, result); err != nil {
 		if sqlscan.NotFound(err) {
-			return nil, noda.ErrSettingNotFound
+			return nil, failure.ErrSettingNotFound
 		}
 		log.Println(err)
 		return nil, err
@@ -291,11 +291,11 @@ func (r userRepository) UpdateUserSetting(userID, settingKey string, value strin
 		case errors.As(err, &pqerr):
 			switch {
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNotFound
+				return false, failure.ErrUserNotFound
 			case isNonexistentPredefinedUserSettingError(pqerr):
-				return false, noda.ErrSettingNotFound
+				return false, failure.ErrSettingNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return false, err
 	}
@@ -325,7 +325,7 @@ func (r userRepository) FetchBlocked(page, rpp int64, needle, sortExpr string) (
 		default:
 			log.Println(err)
 		case errors.As(err, &pqerr):
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -360,9 +360,9 @@ func (r userRepository) FetchByID(userID string) (*model.User, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, noda.ErrUserNotFound
+				return nil, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -401,9 +401,9 @@ func (r userRepository) FetchByEmail(email string) (*model.User, error) {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNotFoundEmailError(pqerr) {
-				return nil, noda.ErrUserNotFound
+				return nil, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -459,9 +459,9 @@ func (r userRepository) FetchShallowUserByID(userID string) (*transfer.User, err
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return nil, noda.ErrUserNotFound
+				return nil, failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return nil, err
 	}
@@ -485,9 +485,9 @@ func (r userRepository) RemoveHardly(userID string) error {
 			log.Println(err)
 		case errors.As(err, &pqerr):
 			if isNonexistentUserError(pqerr) {
-				return noda.ErrUserNotFound
+				return failure.ErrUserNotFound
 			}
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 		}
 		return err
 	}
@@ -509,10 +509,10 @@ func (r userRepository) RemoveSoftly(userID string) error {
 			log.Println(err)
 			return err
 		case errors.As(err, &pqerr):
-			log.Println(noda.PQErrorToString(pqerr))
+			log.Println(failure.PQErrorToString(pqerr))
 			return err
 		case errors.Is(err, sql.ErrNoRows):
-			return noda.ErrUserNotFound
+			return failure.ErrUserNotFound
 		}
 	}
 	return nil

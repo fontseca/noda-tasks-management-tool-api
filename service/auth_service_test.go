@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
+	"noda/global"
 	"noda/mocks"
 	"testing"
 	"time"
@@ -39,7 +40,7 @@ func TestAuthenticationService_SignUp(t *testing.T) {
 		var s = mocks.NewUserServiceMock()
 		s.AssertNotCalled(t, routine)
 		res, err = NewAuthenticationService(s).SignUp(nil)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("SignUp", "creation").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("SignUp", "creation").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -82,7 +83,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 				if _, ok := tk.Method.(*jwt.SigningMethodHMAC); !ok {
 					t.Fatal(fmt.Errorf("unexpected signing method: %v", tk.Header["alg"]))
 				}
-				return noda.Secret(), nil
+				return global.Secret(), nil
 			})
 			var claims = token.Claims.(jwt.MapClaims)
 			var iat = claims["iat"]
@@ -120,7 +121,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 		var s = mocks.NewUserServiceMock()
 		s.AssertNotCalled(t, routine)
 		res, err = NewAuthenticationService(s).SignIn(nil)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("SignIn", "credentials").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("SignIn", "credentials").Error())
 		assert.Nil(t, res)
 	})
 
@@ -155,7 +156,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 			var s = mocks.NewUserServiceMock()
 			s.AssertNotCalled(t, routine)
 			res, err = NewAuthenticationService(s).SignIn(credentials)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Email", "credentials", 240).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Email", "credentials", 240).Error())
 			assert.Nil(t, res)
 			credentials.Email = ""
 		})
@@ -165,7 +166,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 			var r = mocks.NewUserServiceMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewAuthenticationService(r).SignIn(credentials)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Password", "credentials", 72).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Password", "credentials", 72).Error())
 			assert.Nil(t, res)
 		})
 	})

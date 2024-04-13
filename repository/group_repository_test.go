@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
+	"noda/failure"
 	"regexp"
 	"testing"
 )
@@ -45,7 +45,7 @@ func TestGroupRepository_Save(t *testing.T) {
 			WithArgs(userID, next.Name, next.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Save(userID, next)
-		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
+		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Equal(t, "", res)
 	})
 
@@ -98,7 +98,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchByID(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
+		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
 
@@ -108,7 +108,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 		res, err = r.FetchByID(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -118,7 +118,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(errors.New("context deadline exceeded"))
 		res, err = r.FetchByID(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
 
@@ -255,7 +255,7 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
+		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Nil(t, res)
 	})
 
@@ -266,7 +266,7 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnError(errors.New("context deadline exceeded"))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
 
@@ -335,7 +335,7 @@ func TestGroupRepository_Update(t *testing.T) {
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Update(userID, groupID, up)
-		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
+		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
 
@@ -345,7 +345,7 @@ func TestGroupRepository_Update(t *testing.T) {
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 		res, err = r.Update(userID, groupID, up)
-		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.False(t, res)
 	})
 
@@ -355,7 +355,7 @@ func TestGroupRepository_Update(t *testing.T) {
 			WithArgs(userID, groupID, up.Name, up.Description).
 			WillReturnError(errors.New("context deadline exceeded"))
 		res, err = r.Update(userID, groupID, up)
-		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
 
@@ -411,7 +411,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Remove(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrUserNoLongerExists)
+		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.False(t, res)
 	})
 
@@ -421,7 +421,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
 		res, err = r.Remove(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrGroupNotFound)
+		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.False(t, res)
 	})
 
@@ -431,7 +431,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnError(errors.New("context deadline exceeded"))
 		res, err = r.Remove(userID, groupID)
-		assert.ErrorIs(t, err, noda.ErrDeadlineExceeded)
+		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.False(t, res)
 	})
 

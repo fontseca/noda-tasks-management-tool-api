@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"noda"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
+	"noda/global"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -31,7 +32,7 @@ func NewAuthenticationService(userService UserService) AuthenticationService {
 
 func (s *authenticationService) SignUp(creation *transfer.UserCreation) (insertedID uuid.UUID, err error) {
 	if nil == creation {
-		err = noda.NewNilParameterError("SignUp", "creation")
+		err = failure.NewNilParameterError("SignUp", "creation")
 		log.Println(err)
 		return uuid.Nil, err
 	}
@@ -40,16 +41,16 @@ func (s *authenticationService) SignUp(creation *transfer.UserCreation) (inserte
 
 func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (payload *types.TokenPayload, err error) {
 	if nil == credentials {
-		return nil, noda.NewNilParameterError("SignIn", "credentials")
+		return nil, failure.NewNilParameterError("SignIn", "credentials")
 	}
 	doTrim(&credentials.Email, &credentials.Password)
 	switch {
 	case 72 < len(credentials.Password):
-		return nil, noda.ErrTooLong.Clone().FormatDetails("Password", "credentials", 72)
+		return nil, failure.ErrTooLong.Clone().FormatDetails("Password", "credentials", 72)
 	case 240 < len(credentials.Email):
-		return nil, noda.ErrTooLong.Clone().FormatDetails("Email", "credentials", 240)
+		return nil, failure.ErrTooLong.Clone().FormatDetails("Email", "credentials", 240)
 	case !emailRegexp.MatchString(credentials.Email):
-		return nil, noda.ErrBadRequest.
+		return nil, failure.ErrBadRequest.
 			Clone().
 			SetDetails(fmt.Sprintf("Email address does not match regular expression: %q.", emailRegexp.String()))
 	}
@@ -63,19 +64,19 @@ func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (p
 			log.Println(err)
 			return nil, err
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return nil, noda.ErrIncorrectPassword
+			return nil, failure.ErrIncorrectPassword
 		}
 	}
 	var claims = jwt.MapClaims{
 		"iss":       "noda",
 		"sub":       "authentication",
 		"iat":       jwt.NewNumericDate(time.Now()),
-		"exp":       jwt.NewNumericDate(time.Now().Add(noda.JWTExpiresIn)),
+		"exp":       jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 		"user_id":   user.ID,
 		"user_role": user.Role,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := t.SignedString(noda.Secret())
+	ss, err := t.SignedString(global.Secret())
 	if err != nil {
 		log.Println(err)
 		return nil, err

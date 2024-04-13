@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/mocks"
 	"strconv"
 	"testing"
@@ -277,7 +277,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
-			expectedError          = noda.ErrUserNotFound
+			expectedError          = failure.ErrUserNotFound
 			expectedStatusCode     = expectedError.Status()
 			expectedInResponseBody = expectedError.Details()
 		)
@@ -356,7 +356,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 	})
 
 	t.Run("got an expected service error", func(t *testing.T) {
-		var expectedError = noda.ErrUserNotFound
+		var expectedError = failure.ErrUserNotFound
 		var expectedStatusCode = expectedError.Status()
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
@@ -497,7 +497,7 @@ func TestListHandler_HandleGroupedListsRetrieval(t *testing.T) {
 
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
-			expectedError      = noda.ErrUserNotFound
+			expectedError      = failure.ErrUserNotFound
 			expectedStatusCode = expectedError.Status()
 		)
 		var request = httptest.NewRequest(method, target, nil)
@@ -654,7 +654,7 @@ func TestListHandler_HandleRetrievalOfLists(t *testing.T) {
 
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
-			expectedError      = noda.ErrUserNotFound
+			expectedError      = failure.ErrUserNotFound
 			expectedStatusCode = expectedError.Status()
 		)
 		var request = httptest.NewRequest(method, target, nil)
@@ -801,7 +801,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
 			requestBody        = marshal(t, JSON{"name": "n", "description": "d"})
-			expectedError      = noda.ErrUserNotFound
+			expectedError      = failure.ErrUserNotFound
 			expectedStatusCode = expectedError.Status()
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
@@ -874,7 +874,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
 			requestBody        = marshal(t, JSON{"name": "n", "description": "d"})
-			expectedError      = noda.ErrUserNotFound
+			expectedError      = failure.ErrUserNotFound
 			expectedStatusCode = expectedError.Status()
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
@@ -980,7 +980,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
-			expectedError          = noda.ErrUserNotFound
+			expectedError          = failure.ErrUserNotFound
 			expectedStatusCode     = expectedError.Status()
 			expectedInResponseBody = expectedError.Details()
 		)
@@ -1067,7 +1067,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 
 	t.Run("got an expected service error", func(t *testing.T) {
 		var (
-			expectedError          = noda.ErrUserNotFound
+			expectedError          = failure.ErrUserNotFound
 			expectedStatusCode     = expectedError.Status()
 			expectedInResponseBody = expectedError.Details()
 		)

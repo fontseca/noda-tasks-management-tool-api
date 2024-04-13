@@ -2,7 +2,7 @@ package transfer
 
 import (
 	"fmt"
-	"noda"
+	"noda/failure"
 	"reflect"
 	"strings"
 
@@ -19,7 +19,7 @@ func validate(s any) error {
 		return name
 	})
 	if err := validate.Struct(s); err != nil {
-		errs := new(noda.AggregateDetails)
+		errs := new(failure.AggregateDetails)
 		for _, e := range err.(validator.ValidationErrors) {
 			errs.Append(fmt.Sprintf("Validation for %q failed on: %s.",
 				e.Field(), e.Tag()))

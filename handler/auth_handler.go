@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"noda"
 	"noda/data/transfer"
+	"noda/failure"
 	"noda/service"
 )
 
@@ -22,24 +22,24 @@ func (h *AuthenticationHandler) HandleSignUp(w http.ResponseWriter, r *http.Requ
 	next := &transfer.UserCreation{}
 	var err = parseRequestBody(w, r, next)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	err = next.Validate()
 	if nil != err {
-		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	insertedID, err := h.s.SignUp(next)
 	if err != nil {
 		var (
-			a *noda.AggregateDetails
-			e *noda.Error
+			a *failure.AggregateDetails
+			e *failure.Error
 		)
 		if errors.As(err, &a) {
-			noda.EmitError(w, noda.ErrPasswordRestrictions.Clone().SetDetails(a.Error()))
+			failure.EmitError(w, failure.ErrPasswordRestrictions.Clone().SetDetails(a.Error()))
 		} else if errors.As(err, &e) {
-			noda.EmitError(w, e)
+			failure.EmitError(w, e)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -59,18 +59,18 @@ func (h *AuthenticationHandler) HandleSignIn(w http.ResponseWriter, r *http.Requ
 	credentials := &transfer.UserCredentials{}
 	var err = parseRequestBody(w, r, credentials)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	res, err := h.s.SignIn(credentials)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(e, noda.ErrUserNotFound):
-				noda.EmitError(w, e.
+				failure.EmitError(w, e)
+			case errors.Is(e, failure.ErrUserNotFound):
+				failure.EmitError(w, e.
 					Clone().
 					SetDetails("Could not find any user with the email %q.").
 					FormatDetails(credentials.Email).

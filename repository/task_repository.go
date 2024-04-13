@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"log"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"time"
 )
 
@@ -61,11 +61,11 @@ func (r *taskRepository) Save(ownerID, listID string, creation *transfer.TaskCre
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return "", noda.ErrUserNoLongerExists
+				return "", failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return "", noda.ErrListNotFound
+				return "", failure.ErrListNotFound
 			}
 		} else {
 			log.Println(err)
@@ -86,11 +86,11 @@ func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, er
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return "", noda.ErrUserNoLongerExists
+				return "", failure.ErrUserNoLongerExists
 			case isNonexistentTaskError(pqerr):
-				return "", noda.ErrTaskNotFound
+				return "", failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -127,13 +127,13 @@ func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNoLongerExists
+				return nil, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return nil, noda.ErrListNotFound
+				return nil, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return nil, noda.ErrTaskNotFound
+				return nil, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -153,13 +153,13 @@ func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, 
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNoLongerExists
+				return nil, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return nil, noda.ErrListNotFound
+				return nil, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return nil, noda.ErrTaskNotFound
+				return nil, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -203,13 +203,13 @@ func (r *taskRepository) FetchFromToday(ownerID string, page, rpp int64, needle,
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNoLongerExists
+				return nil, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return nil, noda.ErrListNotFound
+				return nil, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return nil, noda.ErrTaskNotFound
+				return nil, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -253,13 +253,13 @@ func (r *taskRepository) FetchFromTomorrow(ownerID string, page, rpp int64, need
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNoLongerExists
+				return nil, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return nil, noda.ErrListNotFound
+				return nil, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return nil, noda.ErrTaskNotFound
+				return nil, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -303,13 +303,13 @@ func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, need
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return nil, noda.ErrUserNoLongerExists
+				return nil, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return nil, noda.ErrListNotFound
+				return nil, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return nil, noda.ErrTaskNotFound
+				return nil, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -355,13 +355,13 @@ func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -382,13 +382,13 @@ func (r *taskRepository) Reorder(ownerID, listID, taskID string, position uint64
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -409,13 +409,13 @@ func (r *taskRepository) SetReminder(ownerID, listID, taskID string, remindAt ti
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -436,13 +436,13 @@ func (r *taskRepository) SetPriority(ownerID, listID, taskID string, priority ty
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -463,13 +463,13 @@ func (r *taskRepository) SetDueDate(ownerID, listID, taskID string, dueDate time
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -490,13 +490,13 @@ func (r *taskRepository) Complete(ownerID, listID, taskID string) (ok bool, err 
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -517,13 +517,13 @@ func (r *taskRepository) Resume(ownerID, listID, taskID string) (ok bool, err er
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -544,13 +544,13 @@ func (r *taskRepository) Pin(ownerID, listID, taskID string) (ok bool, err error
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -571,13 +571,13 @@ func (r *taskRepository) Unpin(ownerID, listID, taskID string) (ok bool, err err
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -598,13 +598,13 @@ func (r *taskRepository) Move(ownerID, taskID, targetListID string) (ok bool, er
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -625,11 +625,11 @@ func (r *taskRepository) Today(ownerID, taskID string) (ok bool, err error) {
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -650,11 +650,11 @@ func (r *taskRepository) Tomorrow(ownerID, taskID string) (ok bool, err error) {
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -675,11 +675,11 @@ func (r *taskRepository) Defer(ownerID, taskID string) (ok bool, err error) {
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -700,13 +700,13 @@ func (r *taskRepository) Trash(ownerID, listID, taskID string) (ok bool, err err
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -727,13 +727,13 @@ func (r *taskRepository) RestoreFromTrash(ownerID, listID, taskID string) (ok bo
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return false, noda.ErrUserNoLongerExists
+				return false, failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return false, noda.ErrListNotFound
+				return false, failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return false, noda.ErrTaskNotFound
+				return false, failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)
@@ -753,13 +753,13 @@ func (r *taskRepository) Delete(ownerID, listID, taskID string) error {
 		if errors.As(err, &pqerr) {
 			switch {
 			default:
-				log.Println(noda.PQErrorToString(pqerr))
+				log.Println(failure.PQErrorToString(pqerr))
 			case isNonexistentUserError(pqerr):
-				return noda.ErrUserNoLongerExists
+				return failure.ErrUserNoLongerExists
 			case isNonexistentListError(pqerr):
-				return noda.ErrListNotFound
+				return failure.ErrListNotFound
 			case isNonexistentTaskError(pqerr):
-				return noda.ErrTaskNotFound
+				return failure.ErrTaskNotFound
 			}
 		} else {
 			log.Println(err)

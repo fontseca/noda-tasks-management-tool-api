@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/mocks"
 	"strings"
 	"testing"
@@ -42,7 +42,7 @@ func TestUserService_Save(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Save(nil)
 		assert.Equal(t, uuid.Nil, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Save", "creation").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Save", "creation").Error())
 	})
 
 	t.Run("must trim all string fields", func(t *testing.T) {
@@ -85,7 +85,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50).Error())
 			assert.Equal(t, uuid.Nil, res)
 			creation.FirstName = ""
 		})
@@ -95,7 +95,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50).Error())
 			assert.Equal(t, uuid.Nil, res)
 			creation.MiddleName = ""
 		})
@@ -105,7 +105,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("LastName", "user", 50).Error())
 			assert.Equal(t, uuid.Nil, res)
 			creation.LastName = ""
 		})
@@ -115,7 +115,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Surname", "user", 50).Error())
 			assert.Equal(t, uuid.Nil, res)
 			creation.Surname = ""
 		})
@@ -126,7 +126,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Email", "user", 240).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Email", "user", 240).Error())
 			assert.Equal(t, uuid.Nil, res)
 			creation.Email = ""
 		})
@@ -136,7 +136,7 @@ func TestUserService_Save(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Save(creation)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Password", "user", 72).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Password", "user", 72).Error())
 			assert.Equal(t, uuid.Nil, res)
 		})
 	})
@@ -249,7 +249,7 @@ func TestUserService_FetchByID(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchByID(uuid.Nil)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "id").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "id").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestUserService_FetchByEmail(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchByEmail(blankset)
-		assert.ErrorContains(t, err, noda.ErrUserNotFound.Error())
+		assert.ErrorContains(t, err, failure.ErrUserNotFound.Error())
 		assert.Nil(t, res)
 	})
 
@@ -342,7 +342,7 @@ func TestUserService_FetchRawUserByEmail(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchRawUserByEmail(blankset)
-		assert.ErrorContains(t, err, noda.ErrUserNotFound.Error())
+		assert.ErrorContains(t, err, failure.ErrUserNotFound.Error())
 		assert.Nil(t, res)
 	})
 
@@ -386,7 +386,7 @@ func TestUserService_Fetch(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Fetch(nil, needle, sortExpr)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Fetch", "pagination").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Fetch", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -453,7 +453,7 @@ func TestUserService_FetchBlocked(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchBlocked(nil, needle, sortExpr)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchBlocked", "pagination").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("FetchBlocked", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -543,14 +543,14 @@ func TestUserService_FetchSettings(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchSettings(uuid.Nil, pagination, needle, sortExpr)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchSettings", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("FetchSettings", "userID").Error())
 	})
 
 	t.Run("parameter \"pagination\" cannot be nil", func(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchSettings(userID, nil, needle, sortExpr)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchSettings", "pagination").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("FetchSettings", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -615,7 +615,7 @@ func TestUserService_FetchOneSetting(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).FetchOneSetting(uuid.Nil, settingKey)
 		assert.Nil(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("FetchOneSetting", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("FetchOneSetting", "userID").Error())
 	})
 
 	t.Run("must trim \"settingKey\" parameter", func(t *testing.T) {
@@ -660,7 +660,7 @@ func TestUserService_Update(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Update(uuid.Nil, placeholder)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Update", "userID").Error())
 	})
 
 	t.Run("parameter \"update\" cannot be nil", func(t *testing.T) {
@@ -668,7 +668,7 @@ func TestUserService_Update(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Update(userID, nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "update").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Update", "update").Error())
 	})
 
 	t.Run("must trim all string fields", func(t *testing.T) {
@@ -698,7 +698,7 @@ func TestUserService_Update(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Update(userID, update)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50).Error())
 			assert.False(t, res)
 			update.FirstName = ""
 		})
@@ -708,7 +708,7 @@ func TestUserService_Update(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Update(userID, update)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50).Error())
 			assert.False(t, res)
 			update.MiddleName = ""
 		})
@@ -718,7 +718,7 @@ func TestUserService_Update(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Update(userID, update)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("LastName", "user", 50).Error())
 			assert.False(t, res)
 			update.LastName = ""
 		})
@@ -728,7 +728,7 @@ func TestUserService_Update(t *testing.T) {
 			var r = mocks.NewUserRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewUserService(r).Update(userID, update)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Surname", "user", 50).Error())
 			assert.False(t, res)
 		})
 	})
@@ -769,7 +769,7 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).UpdateUserSetting(uuid.Nil, settingKey, placeholder)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("UpdateUserSetting", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("UpdateUserSetting", "userID").Error())
 	})
 
 	t.Run("parameter \"update\" cannot be nil", func(t *testing.T) {
@@ -777,7 +777,7 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).UpdateUserSetting(userID, settingKey, nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("UpdateUserSetting", "update").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("UpdateUserSetting", "update").Error())
 	})
 
 	t.Run("empty \"settingKey\"? then do nothing", func(t *testing.T) {
@@ -792,7 +792,7 @@ func TestUserService_UpdateUserSetting(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).UpdateUserSetting(userID, strings.Repeat("x", 1+50), nil)
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50).Error())
 		assert.False(t, res)
 	})
 
@@ -847,7 +847,7 @@ func TestUserService_Block(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Block(uuid.Nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Block", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Block", "userID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -881,7 +881,7 @@ func TestUserService_Unblock(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).Unblock(uuid.Nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("Unblock", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("Unblock", "userID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -915,7 +915,7 @@ func TestUserService_PromoteToAdmin(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).PromoteToAdmin(uuid.Nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("PromoteToAdmin", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("PromoteToAdmin", "userID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -949,7 +949,7 @@ func TestUserService_DegradeToUser(t *testing.T) {
 		r.AssertNotCalled(t, routine)
 		res, err = NewUserService(r).DegradeToUser(uuid.Nil)
 		assert.False(t, res)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("DegradeToUser", "userID").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("DegradeToUser", "userID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -980,7 +980,7 @@ func TestUserService_RemoveHardly(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		err = NewUserService(r).RemoveHardly(uuid.Nil)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("RemoveHardly", "id").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("RemoveHardly", "id").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -1010,7 +1010,7 @@ func TestUserService_RemoveSoftly(t *testing.T) {
 		var r = mocks.NewUserRepositoryMock()
 		r.AssertNotCalled(t, routine)
 		err = NewUserService(r).RemoveSoftly(uuid.Nil)
-		assert.ErrorContains(t, err, noda.NewNilParameterError("RemoveSoftly", "id").Error())
+		assert.ErrorContains(t, err, failure.NewNilParameterError("RemoveSoftly", "id").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {

@@ -3,9 +3,9 @@ package repository
 import (
 	"database/sql"
 	"github.com/google/uuid"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
+	"noda/failure"
 	"regexp"
 	"testing"
 
@@ -65,7 +65,7 @@ func TestUserRepository_Save(t *testing.T) {
 			WithArgs(n.FirstName, n.MiddleName, n.LastName, n.Surname, n.Email, n.Password).
 			WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"user_email_key\""})
 		res, err = r.Save(n)
-		assert.ErrorIs(t, err, noda.ErrSameEmail)
+		assert.ErrorIs(t, err, failure.ErrSameEmail)
 		assert.Equal(t, "", res)
 	})
 
@@ -133,7 +133,7 @@ func TestUserRepository_FetchByID(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchByID(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -200,7 +200,7 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchShallowUserByID(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -269,7 +269,7 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 			WithArgs(email).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user email"})
 		res, err = r.FetchByEmail(email)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -338,7 +338,7 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 			WithArgs(email).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user email"})
 		res, err = r.FetchShallowUserByEmail(email)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -574,7 +574,7 @@ func TestUserRepository_FetchSettings(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortExpr).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -635,7 +635,7 @@ func TestUserRepository_FetchOneSetting(t *testing.T) {
 			WithArgs(userID, setting.Key).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.FetchOneSetting(userID, setting.Key)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -645,7 +645,7 @@ func TestUserRepository_FetchOneSetting(t *testing.T) {
 			WithArgs(userID, setting.Key).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent predefined user setting key"})
 		res, err = r.FetchOneSetting(userID, setting.Key)
-		assert.ErrorIs(t, err, noda.ErrSettingNotFound)
+		assert.ErrorIs(t, err, failure.ErrSettingNotFound)
 		assert.Nil(t, res)
 	})
 
@@ -702,7 +702,7 @@ func TestUserRepository_Update(t *testing.T) {
 			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Update(userID, up)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -756,7 +756,7 @@ func TestUserRepository_UpdateUserSetting(t *testing.T) {
 			WithArgs(userID, settingKey, settingValue).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -766,7 +766,7 @@ func TestUserRepository_UpdateUserSetting(t *testing.T) {
 			WithArgs(userID, settingKey, settingValue).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent predefined user setting key"})
 		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
-		assert.ErrorIs(t, err, noda.ErrSettingNotFound)
+		assert.ErrorIs(t, err, failure.ErrSettingNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -818,7 +818,7 @@ func TestUserRepository_Block(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Block(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -870,7 +870,7 @@ func TestUserRepository_Unblock(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.Unblock(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -924,7 +924,7 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.PromoteToAdmin(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -978,7 +978,7 @@ func TestUserRepository_DegradeToUser(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		res, err = r.DegradeToUser(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
 	})
 
@@ -1020,7 +1020,7 @@ func TestUserRepository_RemoveHardly(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
 		err = r.RemoveHardly(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	})
 
 	t.Run("unexpected database error", func(t *testing.T) {
@@ -1062,7 +1062,7 @@ func TestUserRepository_RemoveSoftly(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(sql.ErrNoRows)
 		err = r.RemoveSoftly(userID)
-		assert.ErrorIs(t, err, noda.ErrUserNotFound)
+		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	})
 
 	t.Run("unexpected database error", func(t *testing.T) {

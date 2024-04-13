@@ -5,10 +5,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/mocks"
 	"strings"
 	"testing"
@@ -49,7 +49,7 @@ func TestTaskService_Save(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(uuid.Nil, listID, c)
 			assert.Equal(t, uuid.Nil, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Save", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Save", "ownerID").Error())
 		})
 
 		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestTaskService_Save(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(ownerID, uuid.Nil, c)
 			assert.Equal(t, uuid.Nil, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Save", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Save", "listID").Error())
 		})
 
 		t.Run("\"creation\" != nil", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestTaskService_Save(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(ownerID, listID, nil)
 			assert.Equal(t, uuid.Nil, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Save", "creation").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Save", "creation").Error())
 		})
 	})
 
@@ -108,7 +108,7 @@ func TestTaskService_Save(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(ownerID, listID, c)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Title", "creation", 128).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Title", "creation", 128).Error())
 			assert.Equal(t, uuid.Nil, res)
 			c.Title = ""
 		})
@@ -118,7 +118,7 @@ func TestTaskService_Save(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(ownerID, listID, c)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Headline", "creation", 64).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Headline", "creation", 64).Error())
 			assert.Equal(t, uuid.Nil, res)
 			c.Headline = ""
 		})
@@ -128,7 +128,7 @@ func TestTaskService_Save(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Save(ownerID, listID, c)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Description", "creation", 512).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Description", "creation", 512).Error())
 			assert.Equal(t, uuid.Nil, res)
 			c.Description = ""
 		})
@@ -168,7 +168,7 @@ func TestTaskService_Duplicate(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Duplicate(uuid.Nil, taskID)
 			assert.Equal(t, uuid.Nil, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Duplicate", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Duplicate", "ownerID").Error())
 		})
 
 		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestTaskService_Duplicate(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Duplicate(ownerID, uuid.Nil)
 			assert.Equal(t, uuid.Nil, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Duplicate", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Duplicate", "taskID").Error())
 		})
 	})
 
@@ -216,7 +216,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchByID(uuid.Nil, task.ListID, task.ID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "ownerID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -224,7 +224,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchByID(task.OwnerID, uuid.Nil, task.ID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "listID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -232,7 +232,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchByID", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "taskID").Error())
 			assert.Nil(t, res)
 		})
 	})
@@ -285,7 +285,7 @@ func TestTaskService_Fetch(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Fetch(uuid.Nil, listID, pagination, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Fetch", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Fetch", "ownerID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -293,7 +293,7 @@ func TestTaskService_Fetch(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Fetch(ownerID, uuid.Nil, pagination, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Fetch", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Fetch", "listID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -301,7 +301,7 @@ func TestTaskService_Fetch(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Fetch(ownerID, listID, nil, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Fetch", "pagination").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Fetch", "pagination").Error())
 			assert.Nil(t, res)
 		})
 	})
@@ -381,7 +381,7 @@ func TestTaskService_FetchFromToday(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromToday(uuid.Nil, pagination, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromToday", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromToday", "ownerID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -389,7 +389,7 @@ func TestTaskService_FetchFromToday(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromToday(ownerID, nil, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromToday", "pagination").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromToday", "pagination").Error())
 			assert.Nil(t, res)
 		})
 	})
@@ -469,7 +469,7 @@ func TestTaskService_FetchFromTomorrow(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromTomorrow(uuid.Nil, pagination, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromTomorrow", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromTomorrow", "ownerID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -477,7 +477,7 @@ func TestTaskService_FetchFromTomorrow(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromTomorrow(ownerID, nil, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromTomorrow", "pagination").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromTomorrow", "pagination").Error())
 			assert.Nil(t, res)
 		})
 	})
@@ -557,7 +557,7 @@ func TestTaskService_FetchFromDeferred(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromDeferred(uuid.Nil, pagination, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromDeferred", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromDeferred", "ownerID").Error())
 			assert.Nil(t, res)
 		})
 
@@ -565,7 +565,7 @@ func TestTaskService_FetchFromDeferred(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).FetchFromDeferred(ownerID, nil, needle, sortExpr)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("FetchFromDeferred", "pagination").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchFromDeferred", "pagination").Error())
 			assert.Nil(t, res)
 		})
 	})
@@ -637,7 +637,7 @@ func TestTaskService_Update(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(uuid.Nil, listID, taskID, u)
 			assert.False(t, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Update", "ownerID").Error())
 		})
 
 		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
@@ -645,7 +645,7 @@ func TestTaskService_Update(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(ownerID, uuid.Nil, taskID, u)
 			assert.False(t, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Update", "listID").Error())
 		})
 
 		t.Run("\"update\" != nil", func(t *testing.T) {
@@ -653,7 +653,7 @@ func TestTaskService_Update(t *testing.T) {
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(ownerID, listID, taskID, nil)
 			assert.False(t, res)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Update", "update").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Update", "update").Error())
 		})
 	})
 
@@ -681,7 +681,7 @@ func TestTaskService_Update(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Title", "update", 128).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Title", "update", 128).Error())
 			assert.False(t, res)
 			u.Title = ""
 		})
@@ -691,7 +691,7 @@ func TestTaskService_Update(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Headline", "update", 64).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Headline", "update", 64).Error())
 			assert.False(t, res)
 			u.Headline = ""
 		})
@@ -701,7 +701,7 @@ func TestTaskService_Update(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Update(ownerID, listID, taskID, u)
-			assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("Description", "update", 512).Error())
+			assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("Description", "update", 512).Error())
 			assert.False(t, res)
 			u.Description = ""
 		})
@@ -740,7 +740,7 @@ func TestTaskService_Reorder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Reorder(uuid.Nil, listID, taskID, 1)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Reorder", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -748,7 +748,7 @@ func TestTaskService_Reorder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Reorder(ownerID, uuid.Nil, taskID, 1)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Reorder", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -756,7 +756,7 @@ func TestTaskService_Reorder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Reorder(ownerID, listID, uuid.Nil, 1)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Reorder", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Reorder", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -794,7 +794,7 @@ func TestTaskService_SetReminder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetReminder(uuid.Nil, listID, taskID, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetReminder", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -802,7 +802,7 @@ func TestTaskService_SetReminder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetReminder(ownerID, uuid.Nil, taskID, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetReminder", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -810,7 +810,7 @@ func TestTaskService_SetReminder(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetReminder(ownerID, listID, uuid.Nil, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetReminder", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetReminder", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -849,7 +849,7 @@ func TestTaskService_SetPriority(t *testing.T) {
 				var r = mocks.NewTaskRepositoryMock()
 				r.AssertNotCalled(t, routine)
 				res, err = NewTaskService(r).SetPriority(uuid.Nil, listID, taskID, p)
-				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "ownerID").Error())
+				assert.ErrorContains(t, err, failure.NewNilParameterError("SetPriority", "ownerID").Error())
 				assert.False(t, res)
 			})
 
@@ -857,7 +857,7 @@ func TestTaskService_SetPriority(t *testing.T) {
 				var r = mocks.NewTaskRepositoryMock()
 				r.AssertNotCalled(t, routine)
 				res, err = NewTaskService(r).SetPriority(ownerID, uuid.Nil, taskID, p)
-				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "listID").Error())
+				assert.ErrorContains(t, err, failure.NewNilParameterError("SetPriority", "listID").Error())
 				assert.False(t, res)
 			})
 
@@ -865,7 +865,7 @@ func TestTaskService_SetPriority(t *testing.T) {
 				var r = mocks.NewTaskRepositoryMock()
 				r.AssertNotCalled(t, routine)
 				res, err = NewTaskService(r).SetPriority(ownerID, listID, uuid.Nil, p)
-				assert.ErrorContains(t, err, noda.NewNilParameterError("SetPriority", "taskID").Error())
+				assert.ErrorContains(t, err, failure.NewNilParameterError("SetPriority", "taskID").Error())
 				assert.False(t, res)
 			})
 		})
@@ -906,7 +906,7 @@ func TestTaskService_SetDueDate(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetDueDate(uuid.Nil, listID, taskID, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetDueDate", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -914,7 +914,7 @@ func TestTaskService_SetDueDate(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetDueDate(ownerID, uuid.Nil, taskID, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetDueDate", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -922,7 +922,7 @@ func TestTaskService_SetDueDate(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).SetDueDate(ownerID, listID, uuid.Nil, tm)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("SetDueDate", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("SetDueDate", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -959,7 +959,7 @@ func TestTaskService_Complete(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Complete(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Complete", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -967,7 +967,7 @@ func TestTaskService_Complete(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Complete(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Complete", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -975,7 +975,7 @@ func TestTaskService_Complete(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Complete(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Complete", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Complete", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1012,7 +1012,7 @@ func TestTaskService_Resume(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Resume(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Resume", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1020,7 +1020,7 @@ func TestTaskService_Resume(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Resume(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Resume", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -1028,7 +1028,7 @@ func TestTaskService_Resume(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Resume(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Resume", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Resume", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1065,7 +1065,7 @@ func TestTaskService_Pin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Pin(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Pin", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1073,7 +1073,7 @@ func TestTaskService_Pin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Pin(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Pin", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -1081,7 +1081,7 @@ func TestTaskService_Pin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Pin(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Pin", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Pin", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1118,7 +1118,7 @@ func TestTaskService_Unpin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Unpin(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Unpin", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1126,7 +1126,7 @@ func TestTaskService_Unpin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Unpin(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Unpin", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -1134,7 +1134,7 @@ func TestTaskService_Unpin(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Unpin(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Unpin", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Unpin", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1171,7 +1171,7 @@ func TestTaskService_Move(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Move(uuid.Nil, taskID, targetListID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Move", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1179,7 +1179,7 @@ func TestTaskService_Move(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Move(ownerID, uuid.Nil, targetListID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Move", "taskID").Error())
 			assert.False(t, res)
 		})
 
@@ -1187,7 +1187,7 @@ func TestTaskService_Move(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Move(ownerID, taskID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Move", "targetListID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Move", "targetListID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1224,7 +1224,7 @@ func TestTaskService_Today(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Today(uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Today", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Today", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1232,7 +1232,7 @@ func TestTaskService_Today(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Today(ownerID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Today", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Today", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1269,7 +1269,7 @@ func TestTaskService_Tomorrow(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Tomorrow(uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Tomorrow", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Tomorrow", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1277,7 +1277,7 @@ func TestTaskService_Tomorrow(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Tomorrow(ownerID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Tomorrow", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Tomorrow", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1314,7 +1314,7 @@ func TestTaskService_Defer(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Defer(uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Defer", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Defer", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1322,7 +1322,7 @@ func TestTaskService_Defer(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Defer(ownerID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Defer", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Defer", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1359,7 +1359,7 @@ func TestTaskService_Trash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Trash(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Trash", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1367,7 +1367,7 @@ func TestTaskService_Trash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Trash(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Trash", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -1375,7 +1375,7 @@ func TestTaskService_Trash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).Trash(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Trash", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Trash", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1412,7 +1412,7 @@ func TestTaskService_RestoreFromTrash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).RestoreFromTrash(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("RestoreFromTrash", "ownerID").Error())
 			assert.False(t, res)
 		})
 
@@ -1420,7 +1420,7 @@ func TestTaskService_RestoreFromTrash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).RestoreFromTrash(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("RestoreFromTrash", "listID").Error())
 			assert.False(t, res)
 		})
 
@@ -1428,7 +1428,7 @@ func TestTaskService_RestoreFromTrash(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			res, err = NewTaskService(r).RestoreFromTrash(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("RestoreFromTrash", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("RestoreFromTrash", "taskID").Error())
 			assert.False(t, res)
 		})
 	})
@@ -1463,21 +1463,21 @@ func TestTaskService_Delete(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			err = NewTaskService(r).Delete(uuid.Nil, listID, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "ownerID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Delete", "ownerID").Error())
 		})
 
 		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			err = NewTaskService(r).Delete(ownerID, uuid.Nil, taskID)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "listID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Delete", "listID").Error())
 		})
 
 		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
 			err = NewTaskService(r).Delete(ownerID, listID, uuid.Nil)
-			assert.ErrorContains(t, err, noda.NewNilParameterError("Delete", "taskID").Error())
+			assert.ErrorContains(t, err, failure.NewNilParameterError("Delete", "taskID").Error())
 		})
 	})
 

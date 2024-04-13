@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"net/http"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/service"
 	"strings"
 )
@@ -33,12 +33,12 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 	var next = new(transfer.ListCreation)
 	var err = parseRequestBody(w, r, next)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	err = next.Validate()
 	if nil != err {
-		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	var userID, _ = extractUserPayload(r)
@@ -200,7 +200,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 	var up = new(transfer.ListUpdate)
 	err = parseRequestBody(w, r, up)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	if "" == up.Name && "" == up.Description {

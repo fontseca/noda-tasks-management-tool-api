@@ -9,8 +9,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"noda"
 	"noda/data/types"
+	"noda/failure"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,21 +28,21 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 	page, err := strconv.ParseInt(extractQueryParameter(r, "page", "1"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
-		var e = noda.ErrBadQueryParameter.Clone()
+		var e = failure.ErrBadQueryParameter.Clone()
 		switch {
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Is(err, strconv.ErrSyntax):
-			noda.EmitError(w, e.SetDetails("Value for parameter \"page\" is not a valid decimal number."))
+			failure.EmitError(w, e.SetDetails("Value for parameter \"page\" is not a valid decimal number."))
 		case errors.Is(err, strconv.ErrRange):
 			var details = fmt.Sprintf("Parameter \"page\" has value %s, which is out of raneg for signed 64 bits numbers.", err.Num)
-			noda.EmitError(w, e.SetDetails(details))
+			failure.EmitError(w, e.SetDetails(details))
 		}
 		return nil
 	}
 
-	agg := noda.AggregateDetails{}
+	agg := failure.AggregateDetails{}
 
 	if page <= 0 {
 		agg.Append("The parameter \"page\" must be a positive number.")
@@ -51,16 +51,16 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 	rpp, err := strconv.ParseInt(extractQueryParameter(r, "rpp", "10"), 10, 64)
 	if err != nil {
 		err, _ := err.(*strconv.NumError)
-		var e = noda.ErrBadQueryParameter.Clone()
+		var e = failure.ErrBadQueryParameter.Clone()
 		switch {
 		default:
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Is(err, strconv.ErrSyntax):
-			noda.EmitError(w, e.SetDetails("Value for parameter \"rpp\" is not a valid decimal number."))
+			failure.EmitError(w, e.SetDetails("Value for parameter \"rpp\" is not a valid decimal number."))
 		case errors.Is(err, strconv.ErrRange):
 			var details = fmt.Sprintf("Parameter \"rpp\" has value %s, which is out of raneg for signed 64 bits numbers.", err.Num)
-			noda.EmitError(w, e.SetDetails(details))
+			failure.EmitError(w, e.SetDetails(details))
 		}
 		return nil
 	}
@@ -76,14 +76,14 @@ func parsePagination(w http.ResponseWriter, r *http.Request) *types.Pagination {
 		}
 	}
 
-	noda.EmitError(w, noda.ErrBadQueryParameter.Clone().SetDetails(agg.Error()))
+	failure.EmitError(w, failure.ErrBadQueryParameter.Clone().SetDetails(agg.Error()))
 	return nil
 }
 
 func extractSorting(w http.ResponseWriter, r *http.Request) string {
 	sortBy := extractQueryParameter(r, "sort_by", "")
 	if len(r.URL.Query()["sort_by"]) > 1 {
-		noda.EmitError(w, noda.ErrMultipleValuesForQueryParameter.
+		failure.EmitError(w, failure.ErrMultipleValuesForQueryParameter.
 			Clone().
 			FormatDetails("sort_by"))
 		return "?"
@@ -102,7 +102,7 @@ func extractSorting(w http.ResponseWriter, r *http.Request) string {
 		"Must start with either one plus sign (+) or one minus sign (-).",
 		"Must contain one or more word characters (alphanumeric characters and underscores).",
 	})
-	noda.EmitError(w, noda.ErrQueryParameterNotParsed.Clone().SetDetails(string(details)))
+	failure.EmitError(w, failure.ErrQueryParameterNotParsed.Clone().SetDetails(string(details)))
 	return "?"
 }
 
@@ -154,10 +154,10 @@ func parseParameterToUUID(w http.ResponseWriter, r *http.Request, parameter stri
 			w.WriteHeader(http.StatusInternalServerError)
 			return uuid.Nil
 		case strings.Contains(err.Error(), "invalid UUID format"):
-			noda.EmitError(w, noda.ErrInvalidUUIDFormat)
+			failure.EmitError(w, failure.ErrInvalidUUIDFormat)
 			return uuid.Nil
 		case strings.Contains(err.Error(), "invalid UUID length"):
-			noda.EmitError(w, noda.ErrInvalidUUIDLength)
+			failure.EmitError(w, failure.ErrInvalidUUIDLength)
 			return uuid.Nil
 		}
 	}
@@ -187,9 +187,9 @@ func didNotParse(id uuid.UUID) bool {
 
 func gotAndHandledServiceError(w http.ResponseWriter, err error) bool {
 	if nil != err {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
-			noda.EmitError(w, e)
+			failure.EmitError(w, e)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}

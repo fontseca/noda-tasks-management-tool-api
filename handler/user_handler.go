@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"noda"
 	"noda/data/transfer"
+	"noda/failure"
 	"noda/service"
 	"strings"
 
@@ -139,7 +139,7 @@ func (h *UserHandler) HandleBlockUser(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, _ := extractUserPayload(r)
 	if userToBlock == userID {
-		noda.EmitError(w, noda.ErrSelfOperation)
+		failure.EmitError(w, failure.ErrSelfOperation)
 		return
 	}
 	userWasBlocked, err := h.s.Block(userToBlock)
@@ -159,7 +159,7 @@ func (h *UserHandler) HandleUnblockUser(w http.ResponseWriter, r *http.Request) 
 	}
 	userID, _ := extractUserPayload(r)
 	if userToUnblock == userID {
-		noda.EmitError(w, noda.ErrSelfOperation)
+		failure.EmitError(w, failure.ErrSelfOperation)
 		return
 	}
 	userWasUnblocked, err := h.s.Unblock(userToUnblock)
@@ -179,7 +179,7 @@ func (h *UserHandler) HandleUserDeletion(w http.ResponseWriter, r *http.Request)
 	}
 	userID, _ := extractUserPayload(r)
 	if userToDelete == userID {
-		noda.EmitError(w, noda.ErrSelfOperation)
+		failure.EmitError(w, failure.ErrSelfOperation)
 		return
 	}
 	err := h.s.RemoveHardly(userToDelete)
@@ -193,13 +193,13 @@ func (h *UserHandler) HandleRetrievalOfLoggedInUser(w http.ResponseWriter, r *ht
 	userID, _ := extractUserPayload(r)
 	user, err := h.s.FetchByID(userID)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(err, noda.ErrUserNotFound):
-				noda.EmitError(w, noda.ErrUserNoLongerExists)
+				failure.EmitError(w, e)
+			case errors.Is(err, failure.ErrUserNotFound):
+				failure.EmitError(w, failure.ErrUserNoLongerExists)
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -225,13 +225,13 @@ func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter,
 	var needle = extractQueryParameter(r, "search", "")
 	settings, err := h.s.FetchSettings(userID, pagination, needle, sortExpr)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(err, noda.ErrUserNotFound):
-				noda.EmitError(w, noda.ErrUserNoLongerExists)
+				failure.EmitError(w, e)
+			case errors.Is(err, failure.ErrUserNotFound):
+				failure.EmitError(w, failure.ErrUserNoLongerExists)
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -253,13 +253,13 @@ func (h *UserHandler) HandleRetrievalOfOneSettingOfLoggedUser(w http.ResponseWri
 	userID, _ := extractUserPayload(r)
 	setting, err := h.s.FetchOneSetting(userID, settingKey)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(err, noda.ErrUserNotFound):
-				noda.EmitError(w, noda.ErrUserNoLongerExists)
+				failure.EmitError(w, e)
+			case errors.Is(err, failure.ErrUserNotFound):
+				failure.EmitError(w, failure.ErrUserNoLongerExists)
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -279,20 +279,20 @@ func (h *UserHandler) HandleUpdateOneSettingForLoggedUser(w http.ResponseWriter,
 	up := &transfer.UserSettingUpdate{}
 	var err = parseRequestBody(w, r, up)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
 	settingKey := chi.URLParam(r, "setting_key")
 	wasUpdated, err := h.s.UpdateUserSetting(userID, settingKey, up)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(err, noda.ErrUserNotFound):
-				noda.EmitError(w, noda.ErrUserNoLongerExists)
+				failure.EmitError(w, e)
+			case errors.Is(err, failure.ErrUserNotFound):
+				failure.EmitError(w, failure.ErrUserNoLongerExists)
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -309,23 +309,23 @@ func (h *UserHandler) HandleUpdateForLoggedUser(w http.ResponseWriter, r *http.R
 	up := &transfer.UserUpdate{}
 	var err = parseRequestBody(w, r, up)
 	if nil != err {
-		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	if err = up.Validate(); err != nil {
-		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
 	userWasUpdated, err := h.s.Update(userID, up)
 	if err != nil {
-		var e *noda.Error
+		var e *failure.Error
 		if errors.As(err, &e) {
 			switch {
 			default:
-				noda.EmitError(w, e)
-			case errors.Is(err, noda.ErrUserNotFound):
-				noda.EmitError(w, noda.ErrUserNoLongerExists)
+				failure.EmitError(w, e)
+			case errors.Is(err, failure.ErrUserNotFound):
+				failure.EmitError(w, failure.ErrUserNoLongerExists)
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)

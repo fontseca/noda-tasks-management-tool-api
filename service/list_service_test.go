@@ -5,10 +5,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/mocks"
 	"strings"
 	"testing"
@@ -88,7 +88,7 @@ func TestListService_Save(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Save(uuid.Nil, groupID, next)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Save", "ownerID").Error())
+			failure.NewNilParameterError("Save", "ownerID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -98,7 +98,7 @@ func TestListService_Save(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Save(ownerID, groupID, nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Save", "creation").Error())
+			failure.NewNilParameterError("Save", "creation").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -110,7 +110,7 @@ func TestListService_Save(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Save(ownerID, groupID, next)
 		next.Name = previousName
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -122,7 +122,7 @@ func TestListService_Save(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Save(ownerID, groupID, next)
 		next.Description = description
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -198,7 +198,7 @@ func TestListService_FetchByID(t *testing.T) {
 		res, err = s.FetchByID(uuid.Nil, groupID, listID)
 		assert.Nil(t, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchByID", "ownerID").Error())
+			failure.NewNilParameterError("FetchByID", "ownerID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
@@ -208,7 +208,7 @@ func TestListService_FetchByID(t *testing.T) {
 		res, err = s.FetchByID(ownerID, groupID, uuid.Nil)
 		assert.Nil(t, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchByID", "listID").Error())
+			failure.NewNilParameterError("FetchByID", "listID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -270,7 +270,7 @@ func TestListService_GetTodayListID(t *testing.T) {
 		res, err = s.GetTodayListID(uuid.Nil)
 		assert.Equal(t, uuid.Nil, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("GetTodayListID", "ownerID").Error())
+			failure.NewNilParameterError("GetTodayListID", "ownerID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -332,7 +332,7 @@ func TestListService_GetTomorrowListID(t *testing.T) {
 		res, err = s.GetTomorrowListID(uuid.Nil)
 		assert.Equal(t, uuid.Nil, res)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("GetTomorrowListID", "ownerID").Error())
+			failure.NewNilParameterError("GetTomorrowListID", "ownerID").Error())
 	})
 
 	t.Run("got a repository error", func(t *testing.T) {
@@ -381,7 +381,7 @@ func TestListService_Fetch(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Fetch(uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Fetch", "ownerID").Error())
+			failure.NewNilParameterError("Fetch", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -391,7 +391,7 @@ func TestListService_Fetch(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Fetch(ownerID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Fetch", "pagination").Error())
+			failure.NewNilParameterError("Fetch", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -442,7 +442,7 @@ func TestListService_FetchGrouped(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FetchGrouped(uuid.Nil, groupID, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchGrouped", "ownerID").Error())
+			failure.NewNilParameterError("FetchGrouped", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -452,7 +452,7 @@ func TestListService_FetchGrouped(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FetchGrouped(ownerID, uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchGrouped", "groupID").Error())
+			failure.NewNilParameterError("FetchGrouped", "groupID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -462,7 +462,7 @@ func TestListService_FetchGrouped(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FetchGrouped(ownerID, groupID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchGrouped", "pagination").Error())
+			failure.NewNilParameterError("FetchGrouped", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -607,7 +607,7 @@ func TestListService_FetchScattered(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FetchScattered(uuid.Nil, pagination, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchScattered", "ownerID").Error())
+			failure.NewNilParameterError("FetchScattered", "ownerID").Error())
 		assert.Nil(t, res)
 	})
 
@@ -617,7 +617,7 @@ func TestListService_FetchScattered(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.FetchScattered(ownerID, nil, "", "")
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("FetchScattered", "pagination").Error())
+			failure.NewNilParameterError("FetchScattered", "pagination").Error())
 		assert.Nil(t, res)
 	})
 
@@ -760,7 +760,7 @@ func TestListService_Remove(t *testing.T) {
 		s = NewListService(m)
 		err = s.Remove(uuid.Nil, groupID, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Remove", "ownerID").Error())
+			failure.NewNilParameterError("Remove", "ownerID").Error())
 	})
 
 	t.Run("parameter listID cannot be uuid.Nil", func(t *testing.T) {
@@ -769,7 +769,7 @@ func TestListService_Remove(t *testing.T) {
 		s = NewListService(m)
 		err = s.Remove(ownerID, groupID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Remove", "listID").Error())
+			failure.NewNilParameterError("Remove", "listID").Error())
 	})
 
 	t.Run("got a repository error (list could not be deleted)", func(t *testing.T) {
@@ -830,7 +830,7 @@ func TestListService_Duplicate(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Duplicate(uuid.Nil, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Duplicate", "ownerID").Error())
+			failure.NewNilParameterError("Duplicate", "ownerID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -840,7 +840,7 @@ func TestListService_Duplicate(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Duplicate(ownerID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Duplicate", "listID").Error())
+			failure.NewNilParameterError("Duplicate", "listID").Error())
 		assert.Equal(t, uuid.Nil, res)
 	})
 
@@ -881,7 +881,7 @@ func TestListService_Scatter(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Scatter(uuid.Nil, listID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Scatter", "ownerID").Error())
+			failure.NewNilParameterError("Scatter", "ownerID").Error())
 		assert.False(t, res)
 	})
 
@@ -891,7 +891,7 @@ func TestListService_Scatter(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Scatter(ownerID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Scatter", "listID").Error())
+			failure.NewNilParameterError("Scatter", "listID").Error())
 		assert.False(t, res)
 	})
 
@@ -932,7 +932,7 @@ func TestListService_Move(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Move(uuid.Nil, listID, groupID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Move", "ownerID").Error())
+			failure.NewNilParameterError("Move", "ownerID").Error())
 		assert.False(t, res)
 	})
 
@@ -942,7 +942,7 @@ func TestListService_Move(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Move(ownerID, uuid.Nil, groupID)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Move", "listID").Error())
+			failure.NewNilParameterError("Move", "listID").Error())
 		assert.False(t, res)
 	})
 
@@ -952,7 +952,7 @@ func TestListService_Move(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Move(ownerID, listID, uuid.Nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Move", "targetGroupID").Error())
+			failure.NewNilParameterError("Move", "targetGroupID").Error())
 		assert.False(t, res)
 	})
 
@@ -1009,7 +1009,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(uuid.Nil, groupID, listID, up)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Update", "ownerID").Error())
+			failure.NewNilParameterError("Update", "ownerID").Error())
 		assert.False(t, res)
 	})
 
@@ -1019,7 +1019,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(ownerID, groupID, uuid.Nil, up)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Update", "listID").Error())
+			failure.NewNilParameterError("Update", "listID").Error())
 		assert.False(t, res)
 	})
 
@@ -1029,7 +1029,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(ownerID, groupID, listID, nil)
 		assert.ErrorContains(t, err,
-			noda.NewNilParameterError("Update", "up").Error())
+			failure.NewNilParameterError("Update", "up").Error())
 		assert.False(t, res)
 	})
 
@@ -1041,7 +1041,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(ownerID, groupID, listID, up)
 		up.Name = previousName
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("name", "list", 32).Error())
 		assert.False(t, res)
 	})
 
@@ -1053,7 +1053,7 @@ func TestListService_Update(t *testing.T) {
 		s = NewListService(m)
 		res, err = s.Update(ownerID, groupID, listID, up)
 		up.Description = previousDescription
-		assert.ErrorContains(t, err, noda.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
+		assert.ErrorContains(t, err, failure.ErrTooLong.Clone().FormatDetails("description", "list", 512).Error())
 		assert.False(t, res)
 	})
 

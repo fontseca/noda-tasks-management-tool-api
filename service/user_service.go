@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"noda"
 	"noda/data/model"
 	"noda/data/transfer"
 	"noda/data/types"
+	"noda/failure"
 	"noda/repository"
 	"regexp"
 	"strings"
@@ -47,7 +47,7 @@ func NewUserService(repository repository.UserRepository) UserService {
 
 func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUID, err error) {
 	if nil == creation {
-		err = noda.NewNilParameterError("Save", "creation")
+		err = failure.NewNilParameterError("Save", "creation")
 		log.Println(err)
 		return uuid.Nil, err
 	}
@@ -61,17 +61,17 @@ func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUI
 	)
 	switch {
 	case 50 < len(creation.FirstName):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
 	case 50 < len(creation.MiddleName):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
 	case 50 < len(creation.LastName):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
 	case 50 < len(creation.Surname):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
 	case 72 < len(creation.Password):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Password", "user", 72)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("Password", "user", 72)
 	case 240 < len(creation.Email):
-		return uuid.Nil, noda.ErrTooLong.Clone().FormatDetails("Email", "user", 240)
+		return uuid.Nil, failure.ErrTooLong.Clone().FormatDetails("Email", "user", 240)
 	}
 	if err := assertPasswordIsValid(&creation.Password, &creation.Email); err != nil {
 		return uuid.Nil, err
@@ -83,7 +83,7 @@ func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUI
 			log.Println(err)
 			return uuid.Nil, err
 		case errors.Is(err, bcrypt.ErrPasswordTooLong):
-			return uuid.Nil, noda.ErrPasswordTooLong
+			return uuid.Nil, failure.ErrPasswordTooLong
 		}
 	}
 	creation.Password = string(hashedPassword)
@@ -99,8 +99,8 @@ func (s *userService) Save(creation *transfer.UserCreation) (insertedID uuid.UUI
 	return parsed, nil
 }
 
-func assertPasswordIsValid(password, email *string) *noda.AggregateDetails {
-	passwordErrors := new(noda.AggregateDetails)
+func assertPasswordIsValid(password, email *string) *failure.AggregateDetails {
+	passwordErrors := new(failure.AggregateDetails)
 	emailWithoutAt := strings.Split(*email, "@")[0]
 	if strings.Contains(emailWithoutAt, *password) {
 		passwordErrors.Append("Password seems to be similar to email.")
@@ -135,11 +135,11 @@ func assertPasswordIsValid(password, email *string) *noda.AggregateDetails {
 func (s *userService) Update(userID uuid.UUID, update *transfer.UserUpdate) (ok bool, err error) {
 	switch {
 	case uuid.Nil == userID:
-		err = noda.NewNilParameterError("Update", "userID")
+		err = failure.NewNilParameterError("Update", "userID")
 		log.Println(err)
 		return false, err
 	case nil == update:
-		err = noda.NewNilParameterError("Update", "update")
+		err = failure.NewNilParameterError("Update", "update")
 		log.Println(err)
 		return false, err
 	}
@@ -151,41 +151,41 @@ func (s *userService) Update(userID uuid.UUID, update *transfer.UserUpdate) (ok 
 	)
 	switch {
 	case 50 < len(update.FirstName):
-		return false, noda.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
+		return false, failure.ErrTooLong.Clone().FormatDetails("FirstName", "user", 50)
 	case 50 < len(update.MiddleName):
-		return false, noda.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
+		return false, failure.ErrTooLong.Clone().FormatDetails("MiddleName", "user", 50)
 	case 50 < len(update.LastName):
-		return false, noda.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
+		return false, failure.ErrTooLong.Clone().FormatDetails("LastName", "user", 50)
 	case 50 < len(update.Surname):
-		return false, noda.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
+		return false, failure.ErrTooLong.Clone().FormatDetails("Surname", "user", 50)
 	}
 	return s.r.Update(userID.String(), update)
 }
 
 func (s *userService) PromoteToAdmin(userID uuid.UUID) (ok bool, err error) {
 	if uuid.Nil == userID {
-		return false, noda.NewNilParameterError("PromoteToAdmin", "userID")
+		return false, failure.NewNilParameterError("PromoteToAdmin", "userID")
 	}
 	return s.r.PromoteToAdmin(userID.String())
 }
 
 func (s *userService) DegradeToUser(userID uuid.UUID) (ok bool, err error) {
 	if uuid.Nil == userID {
-		return false, noda.NewNilParameterError("DegradeToUser", "userID")
+		return false, failure.NewNilParameterError("DegradeToUser", "userID")
 	}
 	return s.r.DegradeToUser(userID.String())
 }
 
 func (s *userService) Block(userID uuid.UUID) (ok bool, err error) {
 	if uuid.Nil == userID {
-		return false, noda.NewNilParameterError("Block", "userID")
+		return false, failure.NewNilParameterError("Block", "userID")
 	}
 	return s.r.Block(userID.String())
 }
 
 func (s *userService) Unblock(userID uuid.UUID) (ok bool, err error) {
 	if uuid.Nil == userID {
-		return false, noda.NewNilParameterError("Unblock", "userID")
+		return false, failure.NewNilParameterError("Unblock", "userID")
 	}
 	return s.r.Unblock(userID.String())
 }
@@ -193,14 +193,14 @@ func (s *userService) Unblock(userID uuid.UUID) (ok bool, err error) {
 func (s *userService) FetchByEmail(email string) (user *transfer.User, err error) {
 	doTrim(&email)
 	if "" == email {
-		return nil, noda.ErrUserNotFound
+		return nil, failure.ErrUserNotFound
 	}
 	return s.r.FetchShallowUserByEmail(email)
 }
 
 func (s *userService) FetchByID(id uuid.UUID) (user *transfer.User, err error) {
 	if uuid.Nil == id {
-		err = noda.NewNilParameterError("FetchByID", "id")
+		err = failure.NewNilParameterError("FetchByID", "id")
 		log.Println(err)
 		return nil, err
 	}
@@ -210,14 +210,14 @@ func (s *userService) FetchByID(id uuid.UUID) (user *transfer.User, err error) {
 func (s *userService) FetchRawUserByEmail(email string) (user *model.User, err error) {
 	doTrim(&email)
 	if "" == email {
-		return nil, noda.ErrUserNotFound
+		return nil, failure.ErrUserNotFound
 	}
 	return s.r.FetchByEmail(email)
 }
 
 func (s *userService) Fetch(pagination *types.Pagination, needle, sortExpr string) (result *types.Result[transfer.User], err error) {
 	if nil == pagination {
-		err = noda.NewNilParameterError("Fetch", "pagination")
+		err = failure.NewNilParameterError("Fetch", "pagination")
 		log.Println(err)
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (s *userService) FetchBlocked(
 	needle, sortExpr string,
 ) (result *types.Result[transfer.User], err error) {
 	if nil == pagination {
-		err = noda.NewNilParameterError("FetchBlocked", "pagination")
+		err = failure.NewNilParameterError("FetchBlocked", "pagination")
 		log.Println(err)
 		return nil, err
 	}
@@ -279,12 +279,12 @@ func (s *userService) FetchSettings(
 	needle, sortExpr string,
 ) (result *types.Result[transfer.UserSetting], err error) {
 	if uuid.Nil == userID {
-		err = noda.NewNilParameterError("FetchSettings", "userID")
+		err = failure.NewNilParameterError("FetchSettings", "userID")
 		log.Println(err)
 		return nil, err
 	}
 	if nil == pagination {
-		err = noda.NewNilParameterError("FetchSettings", "pagination")
+		err = failure.NewNilParameterError("FetchSettings", "pagination")
 		log.Println(err)
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (s *userService) FetchSettings(
 
 func (s *userService) FetchOneSetting(userID uuid.UUID, settingKey string) (setting *transfer.UserSetting, err error) {
 	if uuid.Nil == userID {
-		err = noda.NewNilParameterError("FetchOneSetting", "userID")
+		err = failure.NewNilParameterError("FetchOneSetting", "userID")
 		log.Println(err)
 		return nil, err
 	}
@@ -338,13 +338,13 @@ func (s *userService) UpdateUserSetting(
 ) (ok bool, err error) {
 	switch {
 	case 50 < len(settingKey):
-		return false, noda.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50)
+		return false, failure.ErrTooLong.Clone().FormatDetails("settingKey", "setting update", 50)
 	case uuid.Nil == userID:
-		err = noda.NewNilParameterError("UpdateUserSetting", "userID")
+		err = failure.NewNilParameterError("UpdateUserSetting", "userID")
 		log.Println(err)
 		return false, err
 	case nil == update:
-		err = noda.NewNilParameterError("UpdateUserSetting", "update")
+		err = failure.NewNilParameterError("UpdateUserSetting", "update")
 		log.Println(err)
 		return false, err
 	}
@@ -367,14 +367,14 @@ func (s *userService) UpdateUserSetting(
 
 func (s *userService) RemoveHardly(id uuid.UUID) error {
 	if uuid.Nil == id {
-		return noda.NewNilParameterError("RemoveHardly", "id")
+		return failure.NewNilParameterError("RemoveHardly", "id")
 	}
 	return s.r.RemoveHardly(id.String())
 }
 
 func (s *userService) RemoveSoftly(id uuid.UUID) error {
 	if uuid.Nil == id {
-		return noda.NewNilParameterError("RemoveSoftly", "id")
+		return failure.NewNilParameterError("RemoveSoftly", "id")
 	}
 	return s.r.RemoveSoftly(id.String())
 }

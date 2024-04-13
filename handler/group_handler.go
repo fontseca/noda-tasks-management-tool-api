@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"noda"
 	"noda/data/transfer"
+	"noda/failure"
 	"noda/service"
 )
 
@@ -21,12 +21,12 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 	var group = new(transfer.GroupCreation)
 	var err = parseRequestBody(w, r, group)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	err = group.Validate()
 	if nil != err {
-		noda.EmitError(w, noda.ErrBadRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrBadRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
@@ -87,7 +87,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 	var up = new(transfer.GroupUpdate)
 	err := parseRequestBody(w, r, up)
 	if nil != err {
-		noda.EmitError(w, noda.ErrMalformedRequest.Clone().SetDetails(err.Error()))
+		failure.EmitError(w, failure.ErrMalformedRequest.Clone().SetDetails(err.Error()))
 		return
 	}
 	userID, _ := extractUserPayload(r)
