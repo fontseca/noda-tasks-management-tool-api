@@ -1,4 +1,4 @@
-package noda
+package failure
 
 import (
 	"encoding/json"
