@@ -20,6 +20,13 @@ var (
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
+	ErrNotAllowed = &Error{
+		code:    ErrorCode("U0001"),
+		message: "Unsupported HTTP method.",
+		details: "The target resource doesn't support this method.",
+		hint:    "Check the 'Allow' header in the response for a list of supported methods.",
+		status:  http.StatusMethodNotAllowed,
+	}
 	ErrBadQueryParameter = &Error{
 		code:    ErrorCode("U0002"),
 		message: "Query parameter failure.",
