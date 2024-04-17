@@ -1,9 +1,9 @@
 package global
 
 import (
-  "log"
-  "os"
-  "strings"
+	"log"
+	"os"
+	"strings"
 )
 
 var secret string
