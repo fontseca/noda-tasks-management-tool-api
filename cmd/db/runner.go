@@ -2,10 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
-	"noda"
-	"noda/server"
+	"noda/failure"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,21 +28,29 @@ func init() {
 	root := findRootDirectory()
 	databasePath = path.Join(root, "database")
 	indexPath = path.Join(databasePath, "index.yaml")
-
 }
 
-type Files []string
+type files []string
 
-type Index struct {
-	Init       Files `yaml:"init"`
-	Extensions Files `yaml:"extensions"`
-	Domains    Files `yaml:"domains"`
-	Types      Files `yaml:"types"`
-	Tables     Files `yaml:"tables"`
-	Views      Files `yaml:"views"`
-	Indexes    Files `yaml:"indexes"`
-	Routines   Files `yaml:"routines"`
-	Seeds      Files `yaml:"seeds"`
+type index struct {
+	init       files `yaml:"init"`
+	extensions files `yaml:"extensions"`
+	domains    files `yaml:"domains"`
+	types      files `yaml:"types"`
+	tables     files `yaml:"tables"`
+	views      files `yaml:"views"`
+	indexes    files `yaml:"indexes"`
+	routines   files `yaml:"routines"`
+	seeds      files `yaml:"seeds"`
+}
+
+// mustGetEnv tries to get an env var or exists.
+func mustGetEnv(key string) string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if "" == value {
+		log.Fatalf("could not load env var: %s", key)
+	}
+	return value
 }
 
 func main() {
@@ -51,14 +59,22 @@ func main() {
 		log.Fatalf("could not read %q: %v", indexPath, err)
 	}
 
-	var index Index
+	var index index
 	err = yaml.Unmarshal(buf, &index)
 	if err != nil {
 		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
 	}
 
-	dbRootConf := server.GetDatabaseConfigWithValues("postgres", "", "", "postgres", "postgres")
-	db, err = sql.Open("postgres", dbRootConf.Conn())
+	dbUser := mustGetEnv("RUNNER_ROOT_DB_USER")
+	dbPassword := mustGetEnv("RUNNER_ROOT_DB_PASSWORD")
+	dbHost := mustGetEnv("RUNNER_ROOT_DB_HOST")
+	dbPort := mustGetEnv("RUNNER_ROOT_DB_PORT")
+	dbName := mustGetEnv("RUNNER_ROOT_DB_NAME")
+
+	dbRootConf := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	db, err = sql.Open("postgres", dbRootConf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,14 +84,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ExecuteScriptsOf("init", index.Init)
+	executeScriptsOf("init", index.init)
 
 	if err = db.Close(); err != nil {
 		log.Fatal(err)
 	}
 
-	dbAdminConf := server.GetDatabaseConfigWithValues("noda", "", "", "admin", "admin")
-	db, err = sql.Open("postgres", dbAdminConf.Conn())
+	dbUser = mustGetEnv("NODA_ROOT_DB_USER")
+	dbPassword = mustGetEnv("NODA_ROOT_DB_PASSWORD")
+	dbHost = mustGetEnv("NODA_ROOT_DB_HOST")
+	dbPort = mustGetEnv("NODA_ROOT_DB_PORT")
+	dbName = mustGetEnv("NODA_ROOT_DB_NAME")
+
+	dbAdminConf := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+	db, err = sql.Open("postgres", dbAdminConf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,22 +108,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ExecuteScriptsOf("extensions", index.Extensions)
-	ExecuteScriptsOf("domains", index.Domains)
-	ExecuteScriptsOf("types", index.Types)
-	ExecuteScriptsOf("tables", index.Tables)
-	ExecuteScriptsOf("views", index.Views)
-	ExecuteScriptsOf("indexes", index.Indexes)
-	ExecuteScriptsOf("routines", index.Routines)
-	ExecuteScriptsOf("seeds", index.Seeds)
+	executeScriptsOf("extensions", index.extensions)
+	executeScriptsOf("domains", index.domains)
+	executeScriptsOf("types", index.types)
+	executeScriptsOf("tables", index.tables)
+	executeScriptsOf("views", index.views)
+	executeScriptsOf("indexes", index.indexes)
+	executeScriptsOf("routines", index.routines)
+	executeScriptsOf("seeds", index.seeds)
 }
 
-func ExecuteScriptsOf(directory string, filesWithPrecedence Files) {
+func executeScriptsOf(directory string, filesWithPrecedence files) {
 	length := len(filesWithPrecedence)
 	executionPrecedenceMatters := length > 0
-	var alreadyExecutedFiles Files = nil
+	var alreadyExecutedFiles files = nil
 	if executionPrecedenceMatters {
-		alreadyExecutedFiles = make(Files, length)
+		alreadyExecutedFiles = make(files, length)
 		for _, shallowFileName := range filesWithPrecedence {
 			ext := filepath.Ext(shallowFileName)
 			if ext != "" {
@@ -109,13 +132,13 @@ func ExecuteScriptsOf(directory string, filesWithPrecedence Files) {
 			}
 			absoluteScriptPath := path.Join(databasePath, directory, shallowFileName+".sql")
 			alreadyExecutedFiles = append(alreadyExecutedFiles, absoluteScriptPath)
-			TryExecuteScript(absoluteScriptPath)
+			tryExecuteScript(absoluteScriptPath)
 		}
 	}
 	TraverseDirectory(path.Join(databasePath, directory), alreadyExecutedFiles)
 }
 
-func TraverseDirectory(directory string, alreadyExecutedFiles Files) {
+func TraverseDirectory(directory string, alreadyExecutedFiles files) {
 	files, err := os.ReadDir(directory)
 	if err != nil {
 		log.Fatalf("could not open directory %q: %v",
@@ -130,17 +153,17 @@ func TraverseDirectory(directory string, alreadyExecutedFiles Files) {
 				continue
 			}
 			if !slices.Contains[[]string](alreadyExecutedFiles, absoluteFilePath) {
-				TryExecuteScript(absoluteFilePath)
+				tryExecuteScript(absoluteFilePath)
 			}
 		}
 	}
 }
 
-func LogNextFileToExecute(filename string) {
+func logNextFileToExecute(filename string) {
 	fmt.Printf("Attempting to load and execute file: \033[1;32m%s\033[0m ...\n", filename)
 }
 
-func ReadQueryFromFile(script string) string {
+func readQueryFromFile(script string) string {
 	buf, err := os.ReadFile(script)
 	if err != nil {
 		log.Fatal(err)
@@ -148,14 +171,13 @@ func ReadQueryFromFile(script string) string {
 	return string(buf)
 }
 
-func TryExecuteScript(filename string) {
-	LogNextFileToExecute(filepath.Base(filename))
-	query := ReadQueryFromFile(filename)
+func tryExecuteScript(filename string) {
+	logNextFileToExecute(filepath.Base(filename))
+	query := readQueryFromFile(filename)
 	if _, err := db.Exec(query); err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			log.Fatal(noda.PQErrorToString(pqErr))
-		} else {
-			log.Fatal(err)
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			log.Fatal(failure.PQErrorToString(pqErr))
 		}
 	}
 
