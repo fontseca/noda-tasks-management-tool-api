@@ -65,11 +65,13 @@ func main() {
 		log.Fatalf("error unmarshalling %q: %v", indexPath, err)
 	}
 
-	dbUser := mustGetEnv("RUNNER_ROOT_DB_USER")
-	dbPassword := mustGetEnv("RUNNER_ROOT_DB_PASSWORD")
-	dbHost := mustGetEnv("RUNNER_ROOT_DB_HOST")
-	dbPort := mustGetEnv("RUNNER_ROOT_DB_PORT")
-	dbName := mustGetEnv("RUNNER_ROOT_DB_NAME")
+	var (
+		dbUser     = mustGetEnv("RUNNER_ROOT_DB_USER")
+		dbPassword = mustGetEnv("RUNNER_ROOT_DB_PASSWORD")
+		dbHost     = mustGetEnv("RUNNER_ROOT_DB_HOST")
+		dbPort     = mustGetEnv("RUNNER_ROOT_DB_PORT")
+		dbName     = mustGetEnv("RUNNER_ROOT_DB_NAME")
+	)
 
 	dbRootConf := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 		dbUser, dbPassword, dbHost, dbPort, dbName)

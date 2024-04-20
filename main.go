@@ -320,12 +320,15 @@ func main() {
 
 	log.SetOutput(io.MultiWriter(os.Stderr, failLogFile))
 
-	serverPort := mustGetEnv("SERVER_PORT")
-	dbUser := mustGetEnv("DB_USER")
-	dbPassword := mustGetEnv("DB_PASSWORD")
-	dbHost := mustGetEnv("DB_HOST")
-	dbPort := mustGetEnv("DB_PORT")
-	dbName := mustGetEnv("DB_NAME")
+	var (
+		serverPort = mustGetEnv("SERVER_PORT")
+		dbUser     = mustGetEnv("DB_USER")
+		dbPassword = mustGetEnv("DB_PASSWORD")
+		dbHost     = mustGetEnv("DB_HOST")
+		dbPort     = mustGetEnv("DB_PORT")
+		dbName     = mustGetEnv("DB_NAME")
+	)
+
 	dataSourceName := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 		dbUser, dbPassword, dbHost, dbPort, dbName)
 	db, err := sql.Open("postgres", dataSourceName)
