@@ -325,7 +325,7 @@ type errorBody struct {
 	Hint    string    `json:"hint,omitempty"`
 }
 
-func EmitError(w http.ResponseWriter, e *Error) {
+func EmitError(w http.ResponseWriter, e *Error, wroteHeader ...bool) {
 	var response = &errorBody{
 		Code:    e.code,
 		Message: e.message,
@@ -346,7 +346,9 @@ func EmitError(w http.ResponseWriter, e *Error) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(e.status)
+	if 0 != len(wroteHeader) && !wroteHeader[0] {
+		w.WriteHeader(e.status)
+	}
 	w.Write(res)
 }
 

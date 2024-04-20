@@ -228,7 +228,7 @@ func withNotFoundHandler(next http.Handler) http.Handler {
 		recorder := newResponseRecorder(w)
 		next.ServeHTTP(recorder, r)
 		if http.StatusNotFound == recorder.statusCode() {
-			failure.EmitError(w, failure.ErrTargetNotFound)
+			failure.EmitError(w, failure.ErrTargetNotFound, true)
 		}
 	})
 }
@@ -240,7 +240,7 @@ func withMethodNotAllowedHandler(next http.Handler) http.Handler {
 		recorder := newResponseRecorder(w)
 		next.ServeHTTP(recorder, r)
 		if http.StatusMethodNotAllowed == recorder.statusCode() {
-			failure.EmitError(w, failure.ErrNotAllowed)
+			failure.EmitError(w, failure.ErrNotAllowed, true)
 		}
 	})
 }
