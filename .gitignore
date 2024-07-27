@@ -26,3 +26,4 @@ go.work
 .vscode
 .commit.log
 .idea
+*.log
