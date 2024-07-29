@@ -1,35 +1,46 @@
 version: '3.8'
 
-volumes:
-  db_data:
+networks:
+  noda_network:
 
 services:
-  server:
-    container_name: noda_server
-    build: 
-      context: .
-      dockerfile: Dockerfile
+  backend:
+    container_name: noda_backend
+    image: golang:1.22.5-alpine3.20
     volumes:
       - type: bind
         source: .
-        target: /home/noda/app
-    command: sleep infinity
-    network_mode: service:db
+        target: /src
+    command: sh -c "cd /src && go mod download && sleep infinity"
+    ports:
+      - "7890:5792"
+    networks:
+      - noda_network
     environment:
-      DB_USER: "noda"
-      DB_NAME: "noda"
-      DB_USER_PASSWORD: "noda"
-  db:
-    container_name: noda_db
+      - SERVER_PORT=5792
+      - DB_NAME=master
+      - DB_USER=postgres
+      - DB_PORT=5432
+      - DB_HOST=noda_database
+      - DB_PASSWORD=secret
+      - JWT_SECRET='AJW[;>qs)-gkpQfM@};K7jRS?d)T)3vx$3[]aUp>3$%+3rE;w@X{,2@/[(XT8^G*])
+
+  database:
+    container_name: noda_database
     image: postgres:16rc1-alpine3.18
     restart: unless-stopped
+    networks:
+      - noda_network
     ports:
-    - "5432:5432"
+      - "7891:5432"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 10s
       timeout: 5s
       retries: 3
     volumes:
-      - db_data:/var/lib/postgresql/data
-    env_file: .env
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database:/src
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - PROJECT_DIR=/src
