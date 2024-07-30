@@ -5,15 +5,12 @@ go 1.22.5
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/georgysavva/scany/v2 v2.1.3
-	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.22.0
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -27,4 +24,5 @@ require (
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
