@@ -19,7 +19,7 @@ services:
     environment:
       - SERVER_PORT=5792
       - DB_NAME=master
-      - DB_USER=postgres
+      - DB_USER=worker
       - DB_PORT=5432
       - DB_HOST=noda_database
       - DB_PASSWORD=secret
