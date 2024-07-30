@@ -346,7 +346,7 @@ func EmitError(w http.ResponseWriter, e *Error, wroteHeader ...bool) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if 0 != len(wroteHeader) && !wroteHeader[0] {
+	if 0 == len(wroteHeader) || !wroteHeader[0] {
 		w.WriteHeader(e.status)
 	}
 	w.Write(res)
