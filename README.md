@@ -253,12 +253,12 @@ DONE 699 tests in 6.567s
 | User  | `GET`       | `/me/tasks/completed`                         | Retrieve all the completed tasks.                   |
 | User  | `GET`       | `/me/tasks/archived`                          | Retrieve archived tasks.                            |
 | User  | `GET`       | `/me/tasks/trashed`                           | Retrieve trashed tasks.                             |
-| User  | `GET`       | `/me/tasks/{task_id}`                         | Retrieve a task.                                    |
-| User  | `PATCH`     | `/me/tasks/{task_id}`                         | Partially update a task.                            |
-| User  | `DELETE`    | `/me/tasks/{task_id}`                         | Permanently remove a task and all related data.     |
-| User  | `PUT`       | `/me/tasks/{task_id}/trash`                   | Move a task to trash.                               |
-| User  | `DELETE`    | `/me/tasks/{task_id}/trash`                   | Recover a task from trash.                          |
-| User  | `PUT`       | `/me/tasks/{task_id}/reorder`                 | Rearrange a task in its list.                       |
+| User  | `GET`       | `/me/tasks/{task_uuid}`                         | Retrieve a task.                                    |
+| User  | `PATCH`     | `/me/tasks/{task_uuid}`                         | Partially update a task.                            |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}`                         | Permanently remove a task and all related data.     |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/trash`                   | Move a task to trash.                               |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/trash`                   | Recover a task from trash.                          |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/reorder`                 | Rearrange a task in its list.                       |
 | User  | `GET`       | `/me/lists/{list_uuid}/tasks`                   | Retrieve all the tasks of an ungrouped list.        |
 | User  | `POST`      | `/me/lists/{list_uuid}/tasks`                   | Create a task and save it in an ungrouped list.     |
 | User  | `GET`       | `/me/groups/{group_uuid}/lists/{list_uuid}/tasks` | Retrieve all the tasks of a list in a group.        |
@@ -268,13 +268,13 @@ DONE 699 tests in 6.567s
 
 | Actor | HTTP Method | Endpoint                                         | Description                            |
 |-------|-------------|--------------------------------------------------|----------------------------------------|
-| User  | `GET`       | `/me/tasks/{task_id}/steps`                      | Retrieve the steps to achieve a task.  |
-| User  | `POST`      | `/me/tasks/{task_id}/steps`                      | Add a new step to achieve a task.      |
-| User  | `PATCH`     | `/me/tasks/{task_id}/steps/{step_id}`            | Partially update a step.               |
-| User  | `PUT`       | `/me/tasks/{task_id}/steps/{step_id}/accomplish` | Mark a step as accomplished.           |
-| User  | `DELETE`    | `/me/tasks/{task_id}/steps/{step_id}/accomplish` | Unmark a step as accomplished.         |
-| User  | `DELETE`    | `/me/tasks/{task_id}/steps/{step_id}`            | Permanently remove a step from a task. |
-| User  | `POST`      | `/me/tasks/{task_id}/steps/{step_id}/reorder`    | Rearrange a step in a task.            |
+| User  | `GET`       | `/me/tasks/{task_uuid}/steps`                      | Retrieve the steps to achieve a task.  |
+| User  | `POST`      | `/me/tasks/{task_uuid}/steps`                      | Add a new step to achieve a task.      |
+| User  | `PATCH`     | `/me/tasks/{task_uuid}/steps/{step_id}`            | Partially update a step.               |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/steps/{step_id}/accomplish` | Mark a step as accomplished.           |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_id}/accomplish` | Unmark a step as accomplished.         |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_id}`            | Permanently remove a step from a task. |
+| User  | `POST`      | `/me/tasks/{task_uuid}/steps/{step_id}/reorder`    | Rearrange a step in a task.            |
 
 ### Tags management
 
@@ -289,9 +289,9 @@ DONE 699 tests in 6.567s
 
 | Actor | HTTP Method | Endpoint                                          | Description                                      |
 |-------|-------------|---------------------------------------------------|--------------------------------------------------|
-| User  | `GET`       | `/me/tasks/{task_id}/attachments`                 | Retrieve all the attachments in a task (if any). |
-| User  | `GET`       | `/me/tasks/{task_id}/attachments/{attachment_id}` | Get an attachments in a task.                    |
-| User  | `DELETE`    | `/me/tasks/{task_id}/attachments/{attachment_id}` | Permanently remove an attachments in a task.     |
+| User  | `GET`       | `/me/tasks/{task_uuid}/attachments`                 | Retrieve all the attachments in a task (if any). |
+| User  | `GET`       | `/me/tasks/{task_uuid}/attachments/{attachment_id}` | Get an attachments in a task.                    |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/attachments/{attachment_id}` | Permanently remove an attachments in a task.     |
 
 ## Recommendations
 

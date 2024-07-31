@@ -89,7 +89,7 @@ Asserts the existence of a task that belongs to a user.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to assert existence.
+3. `IN task_uuid UUID`: The task to assert existence.
 
 ### Functions
 
@@ -114,7 +114,7 @@ Duplicates a task and its content, into the same list.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN task_id UUID`: The task to duplicate.
+2. `IN task_uuid UUID`: The task to duplicate.
 
 **Returns** `UUID`
 
@@ -128,7 +128,7 @@ Retrieves a task by its ID.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to duplicate.
+3. `IN task_uuid UUID`: The task to duplicate.
 
 **Returns** `SETOF "task"`
 
@@ -265,7 +265,7 @@ Pins task. Pinned tasks should always be retrieved first.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to pin.
+3. `IN task_uuid UUID`: The task to pin.
 
 **Returns** `BOOLEAN`
 
@@ -296,7 +296,7 @@ Moves a task from one list to another one.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN task_id UUID`: The task to move.
+2. `IN task_uuid UUID`: The task to move.
 3. `IN dst_list UUID`: The list to move the task to.
 
 **Returns** `BOOLEAN`
@@ -308,7 +308,7 @@ Moves a task to the today list.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN task_id UUID`: The task to move.
+2. `IN task_uuid UUID`: The task to move.
 
 **Returns** `BOOLEAN`
 
@@ -319,7 +319,7 @@ Moves a task to the tomorrow list.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN task_id UUID`: The task to move.
+2. `IN task_uuid UUID`: The task to move.
 
 **Returns** `BOOLEAN`
 
@@ -330,7 +330,7 @@ Moves a task to the deferred list.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN task_id UUID`: The task to move.
+2. `IN task_uuid UUID`: The task to move.
 
 **Returns** `BOOLEAN`
 
@@ -342,7 +342,7 @@ Throws a task to the trash. Moves a task to the `trashed_task` table.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to trash.
+3. `IN task_uuid UUID`: The task to trash.
 
 **Returns** `BOOLEAN`
 
@@ -354,7 +354,7 @@ Recovers a task from trash. Moves a task back to the `task` table.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to recover from trash.
+3. `IN task_uuid UUID`: The task to recover from trash.
 
 **Returns** `BOOLEAN`
 
@@ -366,6 +366,6 @@ Permanently deletes a task.
 
 1. `IN owner_id UUID`: The owner of the task.
 2. `IN list_uuid UUID`: The list the task belongs to.
-3. `IN task_id UUID`: The task to delete.
+3. `IN task_uuid UUID`: The task to delete.
 
 **Returns** `BOOLEAN`
