@@ -33,7 +33,7 @@ func TestAuthenticationHandler_HandleSignUp(t *testing.T) {
 		var (
 			inserted             = uuid.New()
 			expectedStatusCode   = http.StatusCreated
-			expectedResponseBody = marshal(t, JSON{"user_id": inserted.String()})
+			expectedResponseBody = marshal(t, JSON{"user_uuid": inserted.String()})
 			requestBody          = marshal(t, creation)
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))

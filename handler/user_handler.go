@@ -83,7 +83,7 @@ func (h *UserHandler) HandleBlockedUsersRetrieval(w http.ResponseWriter, r *http
 }
 
 func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.Request) {
-	var userID = parseParameterToUUID(w, r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userID) {
 		return
 	}
@@ -101,7 +101,7 @@ func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.R
 }
 
 func (h *UserHandler) HandleAdminPromotion(w http.ResponseWriter, r *http.Request) {
-	var userID = parseParameterToUUID(w, r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userID) {
 		return
 	}
@@ -116,7 +116,7 @@ func (h *UserHandler) HandleAdminPromotion(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *UserHandler) HandleDegradeAdminToUser(w http.ResponseWriter, r *http.Request) {
-	var userID = parseParameterToUUID(w, r, "user_id")
+	var userID = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userID) {
 		return
 	}
@@ -131,7 +131,7 @@ func (h *UserHandler) HandleDegradeAdminToUser(w http.ResponseWriter, r *http.Re
 }
 
 func (h *UserHandler) HandleBlockUser(w http.ResponseWriter, r *http.Request) {
-	var userToBlock = parseParameterToUUID(w, r, "user_id")
+	var userToBlock = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userToBlock) {
 		return
 	}
@@ -151,7 +151,7 @@ func (h *UserHandler) HandleBlockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) HandleUnblockUser(w http.ResponseWriter, r *http.Request) {
-	var userToUnblock = parseParameterToUUID(w, r, "user_id")
+	var userToUnblock = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userToUnblock) {
 		return
 	}
@@ -171,7 +171,7 @@ func (h *UserHandler) HandleUnblockUser(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) HandleUserDeletion(w http.ResponseWriter, r *http.Request) {
-	var userToDelete = parseParameterToUUID(w, r, "user_id")
+	var userToDelete = parseParameterToUUID(w, r, "user_uuid")
 	if didNotParse(userToDelete) {
 		return
 	}

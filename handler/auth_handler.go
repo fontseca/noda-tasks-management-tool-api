@@ -45,7 +45,7 @@ func (h *AuthenticationHandler) HandleSignUp(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-	var payload = map[string]string{"user_id": insertedID.String()}
+	var payload = map[string]string{"user_uuid": insertedID.String()}
 	data, err := json.Marshal(payload)
 	if nil != err {
 		log.Println(err)

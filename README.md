@@ -205,10 +205,10 @@ DONE 699 tests in 6.567s
 |-------|-----------|--------------------------|-------------------------------------------------------|
 | Admin | `GET`     | `/users`                 | Retrieve all users.                                   |
 | Admin | `GET`     | `/users/search`          | Search for users.                                     |
-| Admin | `GET`     | `/users/{user_id}`       | Retrieve a user.                                      |
-| Admin | `DELETE`  | `/users/{user_id}`       | Permanently remove a user and all its related data.   |
-| Admin | `PUT`     | `/users/{user_id}/block` | Block one user.                                       |
-| Admin | `DELETE`  | `/users/{user_id}/block` | Unblock one user.                                     |
+| Admin | `GET`     | `/users/{user_uuid}`       | Retrieve a user.                                      |
+| Admin | `DELETE`  | `/users/{user_uuid}`       | Permanently remove a user and all its related data.   |
+| Admin | `PUT`     | `/users/{user_uuid}/block` | Block one user.                                       |
+| Admin | `DELETE`  | `/users/{user_uuid}/block` | Unblock one user.                                     |
 | Admin | `GET`     | `/users/blocked`         | Retrieve all blocked users.                           |
 | User  | `GET`     | `/me`                    | Get the logged in user.                               |
 | User  | `PUT`     | `/me`                    | Partially update the account of the logged in user.   |

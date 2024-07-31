@@ -112,7 +112,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 			if assert.Equal(t, "authentication", sub) {
 				assert.Equal(t, sub, res.Subject)
 			}
-			assert.Equal(t, user.UUID.String(), claims["user_id"])
+			assert.Equal(t, user.UUID.String(), claims["user_uuid"])
 			assert.Equal(t, user.Role, types.Role(claims["user_role"].(float64)))
 		}
 	})

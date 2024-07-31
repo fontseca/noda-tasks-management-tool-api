@@ -87,7 +87,7 @@ func withAuthorization(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		id, err := uuid.Parse(claims["user_id"].(string))
+		id, err := uuid.Parse(claims["user_uuid"].(string))
 		if err != nil {
 			failure.EmitError(w, failure.ErrCorruptedClaim)
 			return
@@ -358,14 +358,14 @@ func main() {
 	mux.Handle("PUT /me/settings/{setting_key}", withAuthorization(userHandler.HandleUpdateOneSettingForLoggedUser))
 
 	mux.Handle("GET /users", withAdminPrivileges(userHandler.HandleUsersRetrieval))
-	mux.Handle("GET /users/{user_id}", withAdminPrivileges(userHandler.HandleRetrievalOfUserByID))
+	mux.Handle("GET /users/{user_uuid}", withAdminPrivileges(userHandler.HandleRetrievalOfUserByID))
 	mux.Handle("GET /users/search", withAdminPrivileges(userHandler.HandleUsersSearch))
-	mux.Handle("DELETE /users/{user_id}", withAdminPrivileges(userHandler.HandleUserDeletion))
-	mux.Handle("PUT /users/{user_id}/block", withAdminPrivileges(userHandler.HandleBlockUser))
-	mux.Handle("DELETE /users/{user_id}/block", withAdminPrivileges(userHandler.HandleUnblockUser))
+	mux.Handle("DELETE /users/{user_uuid}", withAdminPrivileges(userHandler.HandleUserDeletion))
+	mux.Handle("PUT /users/{user_uuid}/block", withAdminPrivileges(userHandler.HandleBlockUser))
+	mux.Handle("DELETE /users/{user_uuid}/block", withAdminPrivileges(userHandler.HandleUnblockUser))
 	mux.Handle("GET /users/blocked", withAdminPrivileges(userHandler.HandleBlockedUsersRetrieval))
-	mux.Handle("PUT /users/{user_id}/make_admin", withAdminPrivileges(userHandler.HandleAdminPromotion))
-	mux.Handle("DELETE /users/{user_id}/make_admin", withAdminPrivileges(userHandler.HandleDegradeAdminToUser))
+	mux.Handle("PUT /users/{user_uuid}/make_admin", withAdminPrivileges(userHandler.HandleAdminPromotion))
+	mux.Handle("DELETE /users/{user_uuid}/make_admin", withAdminPrivileges(userHandler.HandleDegradeAdminToUser))
 
 	var (
 		authenticationService = service.NewAuthenticationService(userService)

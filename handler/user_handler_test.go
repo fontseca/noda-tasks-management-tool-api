@@ -200,7 +200,7 @@ func TestUserHandler_HandleRetrievalOfLoggedUserSettings(t *testing.T) {
 func TestUserHandler_HandleRetrievalOfUserByID(t *testing.T) {
 	const (
 		method  = "GET"
-		target  = "/users/{user_id}"
+		target  = "/users/{user_uuid}"
 		routine = "FetchByID"
 	)
 
@@ -212,7 +212,7 @@ func TestUserHandler_HandleRetrievalOfUserByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"user_id": userID.String()})
+		withPathParameters(&request, parameters{"user_uuid": userID.String()})
 		var s = mocks.NewUserServiceMock()
 		s.On(routine, userID).Return(user, nil)
 		var recorder = httptest.NewRecorder()
@@ -233,7 +233,7 @@ func TestUserHandler_HandleRetrievalOfUserByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"user_id": userID.String()})
+		withPathParameters(&request, parameters{"user_uuid": userID.String()})
 		var s = mocks.NewUserServiceMock()
 		s.On(routine, mock.Anything).Return(nil, unexpected)
 		var recorder = httptest.NewRecorder()
