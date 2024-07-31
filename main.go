@@ -395,14 +395,14 @@ func main() {
 
 	mux.Handle("POST /me/lists", withAuthorization(listHandler.HandleScatteredListCreation))
 	mux.Handle("GET /me/lists", withAuthorization(listHandler.HandleRetrievalOfLists))
-	mux.Handle("GET /me/lists/{list_id}", withAuthorization(listHandler.HandleScatteredListRetrievalByID))
-	mux.Handle("PATCH /me/lists/{list_id}", withAuthorization(listHandler.HandlePartialUpdateOfScatteredList))
-	mux.Handle("DELETE /me/lists/{list_id}", withAuthorization(listHandler.HandleScatteredListDeletion))
+	mux.Handle("GET /me/lists/{list_uuid}", withAuthorization(listHandler.HandleScatteredListRetrievalByID))
+	mux.Handle("PATCH /me/lists/{list_uuid}", withAuthorization(listHandler.HandlePartialUpdateOfScatteredList))
+	mux.Handle("DELETE /me/lists/{list_uuid}", withAuthorization(listHandler.HandleScatteredListDeletion))
 	mux.Handle("POST /me/groups/{group_uuid}/lists", withAuthorization(listHandler.HandleGroupedListCreation))
 	mux.Handle("GET /me/groups/{group_uuid}/lists", withAuthorization(listHandler.HandleGroupedListsRetrieval))
-	mux.Handle("GET /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListRetrievalByID))
-	mux.Handle("PATCH /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandlePartialUpdateOfGroupedList))
-	mux.Handle("DELETE /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListDeletion))
+	mux.Handle("GET /me/groups/{group_uuid}/lists/{list_uuid}", withAuthorization(listHandler.HandleGroupedListRetrievalByID))
+	mux.Handle("PATCH /me/groups/{group_uuid}/lists/{list_uuid}", withAuthorization(listHandler.HandlePartialUpdateOfGroupedList))
+	mux.Handle("DELETE /me/groups/{group_uuid}/lists/{list_uuid}", withAuthorization(listHandler.HandleGroupedListDeletion))
 
 	serverLogFile, err := os.OpenFile("server.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if nil != err {

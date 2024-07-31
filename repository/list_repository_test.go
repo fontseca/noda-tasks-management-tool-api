@@ -91,7 +91,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"list_id", "owner_id", "group_uuid", "name", "description", "created_at", "updated_at"}
+		columns = []string{"list_uuid", "owner_id", "group_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	mock.

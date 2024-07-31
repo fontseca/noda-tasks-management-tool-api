@@ -89,7 +89,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 			return
 		}
 	}
-	var listID = parseParameterToUUID(w, r, "list_id")
+	var listID = parseParameterToUUID(w, r, "list_uuid")
 	if didNotParse(listID) {
 		return
 	}
@@ -184,7 +184,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		err        error
 		target     string
 	)
-	var listID = parseParameterToUUID(w, r, "list_id")
+	var listID = parseParameterToUUID(w, r, "list_uuid")
 	if didNotParse(listID) {
 		return
 	}
@@ -237,7 +237,7 @@ func (h *ListHandler) doDeleteList(t listType, w http.ResponseWriter, r *http.Re
 			return
 		}
 	}
-	var listID = parseParameterToUUID(w, r, "list_id")
+	var listID = parseParameterToUUID(w, r, "list_uuid")
 	if didNotParse(listID) {
 		return
 	}

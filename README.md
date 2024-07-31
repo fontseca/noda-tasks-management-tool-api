@@ -232,14 +232,14 @@ DONE 699 tests in 6.567s
 |:-----:|:-----------:|-----------------------------------------|------------------------------------------------------------|
 | User  |    `GET`    | `/me/lists`                             | Retrieve all the ungrouped lists.                          |
 | User  |   `POST`    | `/me/lists`                             | Create a new ungrouped list.                               |
-| User  |    `GET`    | `/me/lists/{list_id}`                   | Retrieve a ungrouped list.                                 |
-| User  |   `PATCH`   | `/me/lists/{list_id}`                   | Partially update a ungrouped list.                         |
-| User  |  `DELETE`   | `/me/lists/{list_id}`                   | Permanently remove an ungrouped list and all related data. |
+| User  |    `GET`    | `/me/lists/{list_uuid}`                   | Retrieve a ungrouped list.                                 |
+| User  |   `PATCH`   | `/me/lists/{list_uuid}`                   | Partially update a ungrouped list.                         |
+| User  |  `DELETE`   | `/me/lists/{list_uuid}`                   | Permanently remove an ungrouped list and all related data. |
 | User  |    `GET`    | `/me/groups/{group_uuid}/lists`           | Retrieve all the lists of a group.                         |
 | User  |   `POST`    | `/me/groups/{group_uuid}/lists`           | Create a new list for a group.                             |
-| User  |    `GET`    | `/me/groups/{group_uuid}/lists/{list_id}` | Retrieve a list of a group.                                |
-| User  |   `PATCH`   | `/me/groups/{group_uuid}/lists/{list_id}` | Partially update a list of a group.                        |
-| User  |  `DELETE`   | `/me/groups/{group_uuid}/lists/{list_id}` | Permanently remove a list of a group and all related data. |
+| User  |    `GET`    | `/me/groups/{group_uuid}/lists/{list_uuid}` | Retrieve a list of a group.                                |
+| User  |   `PATCH`   | `/me/groups/{group_uuid}/lists/{list_uuid}` | Partially update a list of a group.                        |
+| User  |  `DELETE`   | `/me/groups/{group_uuid}/lists/{list_uuid}` | Permanently remove a list of a group and all related data. |
 
 ### Tasks management
 
@@ -259,10 +259,10 @@ DONE 699 tests in 6.567s
 | User  | `PUT`       | `/me/tasks/{task_id}/trash`                   | Move a task to trash.                               |
 | User  | `DELETE`    | `/me/tasks/{task_id}/trash`                   | Recover a task from trash.                          |
 | User  | `PUT`       | `/me/tasks/{task_id}/reorder`                 | Rearrange a task in its list.                       |
-| User  | `GET`       | `/me/lists/{list_id}/tasks`                   | Retrieve all the tasks of an ungrouped list.        |
-| User  | `POST`      | `/me/lists/{list_id}/tasks`                   | Create a task and save it in an ungrouped list.     |
-| User  | `GET`       | `/me/groups/{group_uuid}/lists/{list_id}/tasks` | Retrieve all the tasks of a list in a group.        |
-| User  | `POST`      | `/me/groups/{group_uuid}/lists/{list_id}/tasks` | Create a task and save it in a list within a group. |
+| User  | `GET`       | `/me/lists/{list_uuid}/tasks`                   | Retrieve all the tasks of an ungrouped list.        |
+| User  | `POST`      | `/me/lists/{list_uuid}/tasks`                   | Create a task and save it in an ungrouped list.     |
+| User  | `GET`       | `/me/groups/{group_uuid}/lists/{list_uuid}/tasks` | Retrieve all the tasks of a list in a group.        |
+| User  | `POST`      | `/me/groups/{group_uuid}/lists/{list_uuid}/tasks` | Create a task and save it in a list within a group. |
 
 ### Steps management
 

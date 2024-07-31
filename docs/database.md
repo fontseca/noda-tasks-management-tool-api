@@ -88,19 +88,19 @@ Asserts the existence of a task that belongs to a user.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to assert existence.
 
 ### Functions
 
 ### `make_task`
 
-Creates a new task that'll belong to `list_id`. `list_id` can be the ID of any user-defined or special list except for deferred list, in that case it throws a list not found exception. If `list_id` is `NULL` the task will belong to the today list of `owner_id`.
+Creates a new task that'll belong to `list_uuid`. `list_uuid` can be the ID of any user-defined or special list except for deferred list, in that case it throws a list not found exception. If `list_uuid` is `NULL` the task will belong to the today list of `owner_id`.
 
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id? UUID`: The list the task belongs to.
+2. `IN list_uuid? UUID`: The list the task belongs to.
 3. `IN creation task_creation_t`: The creation object.
 
 **Returns** `UUID`
@@ -127,19 +127,19 @@ Retrieves a task by its ID.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to duplicate.
 
 **Returns** `SETOF "task"`
 
 ### `fetch_tasks`
 
-Retrieves the tasks that belong to `list_id`.
+Retrieves the tasks that belong to `list_uuid`.
 
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 
 **Returns** `SETOF "task"`
 
@@ -180,7 +180,7 @@ Updates the title, headline or description of a task individually or all of them
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN update task_update_t`: The update object.
 
 **Returns** `BOOLEAN`
@@ -194,7 +194,7 @@ Changes the order of the task inside the list.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN new_position pos_t`: The new position of the task.
 
 **Returns** `BOOLEAN`
@@ -206,7 +206,7 @@ Sets the date to remind for this task.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN remind_at TIMESTAMPTZ`: The date to remind.
 
 **Returns** `BOOLEAN`
@@ -218,7 +218,7 @@ Sets the priority of the task.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN new_priority task_priority_t`: The new priority.
 
 **Returns** `BOOLEAN`
@@ -230,7 +230,7 @@ Sets the due date of the task.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN due_date TIMESTAMPTZ`: The due date.
 
 **Returns** `BOOLEAN`
@@ -242,7 +242,7 @@ Sets the status of the task as completed.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 
 **Returns** `BOOLEAN`
 
@@ -253,7 +253,7 @@ Sets the status of the task as uncompleted.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 
 **Returns** `BOOLEAN`
 
@@ -264,7 +264,7 @@ Pins task. Pinned tasks should always be retrieved first.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to pin.
 
 **Returns** `BOOLEAN`
@@ -341,7 +341,7 @@ Throws a task to the trash. Moves a task to the `trashed_task` table.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to trash.
 
 **Returns** `BOOLEAN`
@@ -353,7 +353,7 @@ Recovers a task from trash. Moves a task back to the `task` table.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to recover from trash.
 
 **Returns** `BOOLEAN`
@@ -365,7 +365,7 @@ Permanently deletes a task.
 **Parameters**
 
 1. `IN owner_id UUID`: The owner of the task.
-2. `IN list_id UUID`: The list the task belongs to.
+2. `IN list_uuid UUID`: The list the task belongs to.
 3. `IN task_id UUID`: The task to delete.
 
 **Returns** `BOOLEAN`

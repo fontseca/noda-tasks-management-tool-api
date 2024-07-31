@@ -203,7 +203,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 	var listID, groupID = uuid.New(), uuid.New()
 	const (
 		method        = "GET"
-		target        = "/me/groups/{group_uuid}/lists/{list_id}"
+		target        = "/me/groups/{group_uuid}/lists/{list_uuid}"
 		serviceMethod = "FetchByID"
 	)
 
@@ -223,7 +223,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": list.GroupUUID.String(), "list_id": list.UUID.String()})
+		withPathParameters(&request, parameters{"group_uuid": list.GroupUUID.String(), "list_uuid": list.UUID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, list.OwnerUUID, list.GroupUUID, list.UUID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
@@ -256,14 +256,14 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		assert.Contains(t, string(responseBody), expectedInResponseBody)
 	})
 
-	t.Run("parsing \"list_id\" failed: UUID is too short", func(t *testing.T) {
+	t.Run("parsing \"list_uuid\" failed: UUID is too short", func(t *testing.T) {
 		var (
 			expectedStatusCode     = http.StatusBadRequest
 			expectedInResponseBody = "Invalid UUID length."
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": "x"})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": "x"})
 		var s = mocks.NewListServiceMock()
 		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
@@ -283,7 +283,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
@@ -303,7 +303,7 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
@@ -321,7 +321,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 	var listID = uuid.New()
 	const (
 		method        = "GET"
-		target        = "/me/lists/{list_id}"
+		target        = "/me/lists/{list_uuid}"
 		serviceMethod = "FetchByID"
 	)
 
@@ -341,7 +341,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": list.UUID.String()})
+		withPathParameters(&request, parameters{"list_uuid": list.UUID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, list.OwnerUUID, uuid.Nil, list.UUID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
@@ -360,7 +360,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		var expectedStatusCode = expectedError.Status()
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, expectedError)
@@ -378,7 +378,7 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, unexpected)
@@ -695,7 +695,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 	var groupID, listID = uuid.New(), uuid.New()
 	const (
 		method        = "PATCH"
-		target        = "/me/groups/{group_uuid}/lists/{list_id}"
+		target        = "/me/groups/{group_uuid}/lists/{list_uuid}"
 		serviceMethod = "Update"
 	)
 
@@ -707,7 +707,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, groupID, listID, up).Return(true, nil)
 		var recorder = httptest.NewRecorder()
@@ -729,7 +729,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.AssertNotCalled(t, serviceMethod)
 		NewListHandler(s).HandlePartialUpdateOfGroupedList(recorder, request)
@@ -750,7 +750,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 			s                      = mocks.NewListServiceMock()
 		)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		s.AssertNotCalled(t, serviceMethod)
 		NewListHandler(s).HandlePartialUpdateOfGroupedList(recorder, request)
 		var response = recorder.Result()
@@ -767,7 +767,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": "", "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": "", "list_uuid": listID.String()})
 		var m = mocks.NewListServiceMock()
 		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
@@ -779,14 +779,14 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		assert.Contains(t, string(responseBody), expectedInResponseBody)
 	})
 
-	t.Run("parsing \"list_id\" failed: UUID is too short", func(t *testing.T) {
+	t.Run("parsing \"list_uuid\" failed: UUID is too short", func(t *testing.T) {
 		var (
 			expectedStatusCode     = http.StatusBadRequest
 			expectedInResponseBody = "Invalid UUID length."
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": "x"})
+		withPathParameters(&request, parameters{"list_uuid": "x"})
 		var m = mocks.NewListServiceMock()
 		m.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
@@ -806,7 +806,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(false, expectedError)
@@ -827,7 +827,7 @@ func TestListHandler_HandlePartialUpdateOfListByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(false, unexpected)
@@ -845,7 +845,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 	var listID = uuid.New()
 	const (
 		method        = "PATCH"
-		target        = "/me/lists/{list_id}"
+		target        = "/me/lists/{list_uuid}"
 		serviceMethod = "Update"
 	)
 
@@ -857,7 +857,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, uuid.Nil, listID, up).Return(true, nil)
 		var recorder = httptest.NewRecorder()
@@ -879,7 +879,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, uuid.Nil, listID, mock.AnythingOfType("*transfer.ListUpdate")).
 			Return(false, expectedError)
@@ -900,7 +900,7 @@ func TestListHandler_HandlePartialUpdateOfScatteredList(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, uuid.Nil, listID, mock.AnythingOfType("*transfer.ListUpdate")).
 			Return(false, unexpected)
@@ -918,7 +918,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 	var listID, groupID = uuid.New(), uuid.New()
 	const (
 		method        = "DELETE"
-		target        = "/me/groups/{group_uuid}/lists/{list_id}"
+		target        = "/me/groups/{group_uuid}/lists/{list_uuid}"
 		serviceMethod = "Remove"
 	)
 
@@ -926,7 +926,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 		var expectedStatusCode = http.StatusNoContent
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, groupID, listID).Return(nil)
 		var recorder = httptest.NewRecorder()
@@ -959,14 +959,14 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 		assert.Contains(t, string(responseBody), expectedInResponseBody)
 	})
 
-	t.Run("parsing \"list_id\" failed: UUID is too short", func(t *testing.T) {
+	t.Run("parsing \"list_uuid\" failed: UUID is too short", func(t *testing.T) {
 		var (
 			expectedStatusCode     = http.StatusBadRequest
 			expectedInResponseBody = "Invalid UUID length."
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": "x"})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": "x"})
 		var s = mocks.NewListServiceMock()
 		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
@@ -986,7 +986,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(expectedError)
@@ -1006,7 +1006,7 @@ func TestListHandler_HandleGroupedListDeletion(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(unexpected)
@@ -1024,7 +1024,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 	var listID, groupID = uuid.New(), uuid.Nil
 	const (
 		method        = "DELETE"
-		target        = "/me/lists/{list_id}"
+		target        = "/me/lists/{list_uuid}"
 		serviceMethod = "Remove"
 	)
 
@@ -1032,7 +1032,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 		var expectedStatusCode = http.StatusNoContent
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, userID, groupID, listID).Return(nil)
 		var recorder = httptest.NewRecorder()
@@ -1046,14 +1046,14 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 		assert.Empty(t, result.Cookies(), "No cookie is expected, but got: %d.", len(result.Cookies()))
 	})
 
-	t.Run("parsing \"list_id\" failed: UUID is too short", func(t *testing.T) {
+	t.Run("parsing \"list_uuid\" failed: UUID is too short", func(t *testing.T) {
 		var (
 			expectedStatusCode     = http.StatusBadRequest
 			expectedInResponseBody = "Invalid UUID length."
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": "x"})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": "x"})
 		var s = mocks.NewListServiceMock()
 		s.AssertNotCalled(t, serviceMethod)
 		var recorder = httptest.NewRecorder()
@@ -1073,7 +1073,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(expectedError)
@@ -1093,7 +1093,7 @@ func TestListHandler_HandleScatteredListDeletion(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_id": listID.String()})
+		withPathParameters(&request, parameters{"group_uuid": groupID.String(), "list_uuid": listID.String()})
 		var s = mocks.NewListServiceMock()
 		s.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).
 			Return(unexpected)

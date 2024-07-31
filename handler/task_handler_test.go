@@ -18,7 +18,7 @@ import (
 func TestTaskHandler_HandleCreateTask(t *testing.T) {
 	const (
 		method        = "POST"
-		target        = "/me/lists/{list_id}/tasks"
+		target        = "/me/lists/{list_uuid}/tasks"
 		serviceMethod = "Save"
 	)
 	var (
@@ -44,7 +44,7 @@ func TestTaskHandler_HandleCreateTask(t *testing.T) {
 		var recorder = httptest.NewRecorder()
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var m = mocks.NewTaskServiceMock()
 		m.On(serviceMethod, userID, listID, creation).Return(insertedID, nil)
 		NewTaskHandler(m).HandleCreateTask(recorder, request)
@@ -64,7 +64,7 @@ func TestTaskHandler_HandleCreateTask(t *testing.T) {
 		var recorder = httptest.NewRecorder()
 		var request = httptest.NewRequest(method, target, bytes.NewReader(requestBody))
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": listID.String()})
+		withPathParameters(&request, parameters{"list_uuid": listID.String()})
 		var m = mocks.NewTaskServiceMock()
 		m.On(serviceMethod, mock.Anything, mock.Anything, mock.Anything).Return(uuid.Nil, unexpected)
 		NewTaskHandler(m).HandleCreateTask(recorder, request)

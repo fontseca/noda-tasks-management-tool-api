@@ -95,7 +95,7 @@ func TestTaskRepository_Duplicate(t *testing.T) {
 var taskTableColumns = []string{
 	"task_id",
 	"owner_id",
-	"list_id",
+	"list_uuid",
 	"position_in_list",
 	"title",
 	"headline",

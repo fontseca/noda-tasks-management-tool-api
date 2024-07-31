@@ -35,7 +35,7 @@ func (h *TaskHandler) doCreateTask(belongsToAList bool, w http.ResponseWriter, r
 	var userID, _ = extractUserPayload(r)
 	var listID uuid.UUID
 	if belongsToAList {
-		listID = parseParameterToUUID(w, r, "list_id")
+		listID = parseParameterToUUID(w, r, "list_uuid")
 		if didNotParse(listID) {
 			return
 		}
