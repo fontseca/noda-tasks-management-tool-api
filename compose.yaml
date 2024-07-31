@@ -11,7 +11,14 @@ services:
       - type: bind
         source: .
         target: /src
-    command: sh -c "cd /src && go mod download && sleep infinity"
+    command: >
+      sh -c "
+      cd /src &&
+      echo 'Installing Go dependencies...' &&
+      go mod download &&
+      echo 'Go dependencies installed.' &&
+      sleep infinity
+      "
     ports:
       - "7890:7890"
     networks:

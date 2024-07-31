@@ -134,6 +134,15 @@ d8f3bcf2c1ae   golang:1.22.5-alpine3.20    "sh -c ' cd /src && …"   3 seconds 
     docker compose up --detach
     ```
 
+   In the backend service, wait for the project packages to be installed before running the server.
+
+    ```shell
+    docker logs noda_backend --follow
+    Installing Go dependencies...
+    Go dependencies installed.
+    ^C
+    ```
+
 3. Bootstrap the database objects:
 
     ```shell
