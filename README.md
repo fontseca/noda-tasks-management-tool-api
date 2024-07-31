@@ -26,6 +26,7 @@ and Docker Compose for easy development.
   * [Installation](#installation)
     * [Prerequisites](#prerequisites)
     * [Step-by-step setup](#step-by-step-setup)
+  * [Debugging](#debugging)
   * [Running the tests](#running-the-tests)
   * [Screenshots](#screenshots)
     * [Database](#database)
@@ -160,6 +161,22 @@ d8f3bcf2c1ae   golang:1.22.5-alpine3.20    "sh -c ' cd /src && …"   3 seconds 
 
 Now you can start making requests to the web API at `http://0.0.0.0:7890`.
 
+## Debugging
+
+First, install [Delve](https://github.com/go-delve/delve) inside the container, if not installed yet:
+
+```shell
+docker exec --interactive --tty noda_backend go install github.com/go-delve/delve/cmd/dlv@latest
+```
+
+Once installed, start the debugging server:
+
+```shell
+docker exec --interactive --tty noda_backend sh -c 'cd /src && dlv debug --listen=:$SERVER_PORT --headless=true --api-version=2'
+```
+
+> **Note:** The debugging server uses the same port as the actual application.
+
 ## Running the tests
 
 You run the tests of at leas one of the packages `repository`, `service` and `handler` with the command:
@@ -215,19 +232,19 @@ DONE 699 tests in 6.567s
 
 ### Users management
 
-| Actor | HTTP Verb | Endpoint                 | Description                                           |
-|-------|-----------|--------------------------|-------------------------------------------------------|
-| Admin | `GET`     | `/users`                 | Retrieve all users.                                   |
-| Admin | `GET`     | `/users/search`          | Search for users.                                     |
+| Actor | HTTP Verb | Endpoint                   | Description                                           |
+|-------|-----------|----------------------------|-------------------------------------------------------|
+| Admin | `GET`     | `/users`                   | Retrieve all users.                                   |
+| Admin | `GET`     | `/users/search`            | Search for users.                                     |
 | Admin | `GET`     | `/users/{user_uuid}`       | Retrieve a user.                                      |
 | Admin | `DELETE`  | `/users/{user_uuid}`       | Permanently remove a user and all its related data.   |
 | Admin | `PUT`     | `/users/{user_uuid}/block` | Block one user.                                       |
 | Admin | `DELETE`  | `/users/{user_uuid}/block` | Unblock one user.                                     |
-| Admin | `GET`     | `/users/blocked`         | Retrieve all blocked users.                           |
-| User  | `GET`     | `/me`                    | Get the logged in user.                               |
-| User  | `PUT`     | `/me`                    | Partially update the account of the logged in user.   |
-| User  | `DELETE`  | `/me`                    | Permanently remove the account of the logged in user. |
-| User  | `GET`     | `/me/settings`           | Retrieve all the settings of the logged in user.      |
+| Admin | `GET`     | `/users/blocked`           | Retrieve all blocked users.                           |
+| User  | `GET`     | `/me`                      | Get the logged in user.                               |
+| User  | `PUT`     | `/me`                      | Partially update the account of the logged in user.   |
+| User  | `DELETE`  | `/me`                      | Permanently remove the account of the logged in user. |
+| User  | `GET`     | `/me/settings`             | Retrieve all the settings of the logged in user.      |
 
 ### Groups management
 
@@ -242,48 +259,48 @@ DONE 699 tests in 6.567s
 
 ### Lists management
 
-| Actor | HTTP Method | Endpoint                                | Description                                                |
-|:-----:|:-----------:|-----------------------------------------|------------------------------------------------------------|
-| User  |    `GET`    | `/me/lists`                             | Retrieve all the ungrouped lists.                          |
-| User  |   `POST`    | `/me/lists`                             | Create a new ungrouped list.                               |
-| User  |    `GET`    | `/me/lists/{list_uuid}`                   | Retrieve a ungrouped list.                                 |
-| User  |   `PATCH`   | `/me/lists/{list_uuid}`                   | Partially update a ungrouped list.                         |
-| User  |  `DELETE`   | `/me/lists/{list_uuid}`                   | Permanently remove an ungrouped list and all related data. |
-| User  |    `GET`    | `/me/groups/{group_uuid}/lists`           | Retrieve all the lists of a group.                         |
-| User  |   `POST`    | `/me/groups/{group_uuid}/lists`           | Create a new list for a group.                             |
+| Actor | HTTP Method | Endpoint                                    | Description                                                |
+|:-----:|:-----------:|---------------------------------------------|------------------------------------------------------------|
+| User  |    `GET`    | `/me/lists`                                 | Retrieve all the ungrouped lists.                          |
+| User  |   `POST`    | `/me/lists`                                 | Create a new ungrouped list.                               |
+| User  |    `GET`    | `/me/lists/{list_uuid}`                     | Retrieve a ungrouped list.                                 |
+| User  |   `PATCH`   | `/me/lists/{list_uuid}`                     | Partially update a ungrouped list.                         |
+| User  |  `DELETE`   | `/me/lists/{list_uuid}`                     | Permanently remove an ungrouped list and all related data. |
+| User  |    `GET`    | `/me/groups/{group_uuid}/lists`             | Retrieve all the lists of a group.                         |
+| User  |   `POST`    | `/me/groups/{group_uuid}/lists`             | Create a new list for a group.                             |
 | User  |    `GET`    | `/me/groups/{group_uuid}/lists/{list_uuid}` | Retrieve a list of a group.                                |
 | User  |   `PATCH`   | `/me/groups/{group_uuid}/lists/{list_uuid}` | Partially update a list of a group.                        |
 | User  |  `DELETE`   | `/me/groups/{group_uuid}/lists/{list_uuid}` | Permanently remove a list of a group and all related data. |
 
 ### Tasks management
 
-| Actor | HTTP Method | Endpoint                                      | Description                                         |
-|-------|-------------|-----------------------------------------------|-----------------------------------------------------|
-| User  | `GET`       | `/me/today`                                   | Retrieve all the tasks from the Today list.         |
-| User  | `GET`       | `/me/tomorrow`                                | Retrieve all the tasks for tomorrow.                |
-| User  | `GET`       | `/me/tasks`                                   | Retrieve all the tasks.                             |
-| User  | `POST`      | `/me/tasks`                                   | Create a new task and store in the Today list.      |
-| User  | `GET`       | `/me/tasks/search`                            | Search for tasks.                                   |
-| User  | `GET`       | `/me/tasks/completed`                         | Retrieve all the completed tasks.                   |
-| User  | `GET`       | `/me/tasks/archived`                          | Retrieve archived tasks.                            |
-| User  | `GET`       | `/me/tasks/trashed`                           | Retrieve trashed tasks.                             |
-| User  | `GET`       | `/me/tasks/{task_uuid}`                         | Retrieve a task.                                    |
-| User  | `PATCH`     | `/me/tasks/{task_uuid}`                         | Partially update a task.                            |
-| User  | `DELETE`    | `/me/tasks/{task_uuid}`                         | Permanently remove a task and all related data.     |
-| User  | `PUT`       | `/me/tasks/{task_uuid}/trash`                   | Move a task to trash.                               |
-| User  | `DELETE`    | `/me/tasks/{task_uuid}/trash`                   | Recover a task from trash.                          |
-| User  | `PUT`       | `/me/tasks/{task_uuid}/reorder`                 | Rearrange a task in its list.                       |
-| User  | `GET`       | `/me/lists/{list_uuid}/tasks`                   | Retrieve all the tasks of an ungrouped list.        |
-| User  | `POST`      | `/me/lists/{list_uuid}/tasks`                   | Create a task and save it in an ungrouped list.     |
+| Actor | HTTP Method | Endpoint                                          | Description                                         |
+|-------|-------------|---------------------------------------------------|-----------------------------------------------------|
+| User  | `GET`       | `/me/today`                                       | Retrieve all the tasks from the Today list.         |
+| User  | `GET`       | `/me/tomorrow`                                    | Retrieve all the tasks for tomorrow.                |
+| User  | `GET`       | `/me/tasks`                                       | Retrieve all the tasks.                             |
+| User  | `POST`      | `/me/tasks`                                       | Create a new task and store in the Today list.      |
+| User  | `GET`       | `/me/tasks/search`                                | Search for tasks.                                   |
+| User  | `GET`       | `/me/tasks/completed`                             | Retrieve all the completed tasks.                   |
+| User  | `GET`       | `/me/tasks/archived`                              | Retrieve archived tasks.                            |
+| User  | `GET`       | `/me/tasks/trashed`                               | Retrieve trashed tasks.                             |
+| User  | `GET`       | `/me/tasks/{task_uuid}`                           | Retrieve a task.                                    |
+| User  | `PATCH`     | `/me/tasks/{task_uuid}`                           | Partially update a task.                            |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}`                           | Permanently remove a task and all related data.     |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/trash`                     | Move a task to trash.                               |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/trash`                     | Recover a task from trash.                          |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/reorder`                   | Rearrange a task in its list.                       |
+| User  | `GET`       | `/me/lists/{list_uuid}/tasks`                     | Retrieve all the tasks of an ungrouped list.        |
+| User  | `POST`      | `/me/lists/{list_uuid}/tasks`                     | Create a task and save it in an ungrouped list.     |
 | User  | `GET`       | `/me/groups/{group_uuid}/lists/{list_uuid}/tasks` | Retrieve all the tasks of a list in a group.        |
 | User  | `POST`      | `/me/groups/{group_uuid}/lists/{list_uuid}/tasks` | Create a task and save it in a list within a group. |
 
 ### Steps management
 
-| Actor | HTTP Method | Endpoint                                         | Description                            |
-|-------|-------------|--------------------------------------------------|----------------------------------------|
-| User  | `GET`       | `/me/tasks/{task_uuid}/steps`                      | Retrieve the steps to achieve a task.  |
-| User  | `POST`      | `/me/tasks/{task_uuid}/steps`                      | Add a new step to achieve a task.      |
+| Actor | HTTP Method | Endpoint                                             | Description                            |
+|-------|-------------|------------------------------------------------------|----------------------------------------|
+| User  | `GET`       | `/me/tasks/{task_uuid}/steps`                        | Retrieve the steps to achieve a task.  |
+| User  | `POST`      | `/me/tasks/{task_uuid}/steps`                        | Add a new step to achieve a task.      |
 | User  | `PATCH`     | `/me/tasks/{task_uuid}/steps/{step_uuid}`            | Partially update a step.               |
 | User  | `PUT`       | `/me/tasks/{task_uuid}/steps/{step_uuid}/accomplish` | Mark a step as accomplished.           |
 | User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_uuid}/accomplish` | Unmark a step as accomplished.         |
@@ -292,18 +309,18 @@ DONE 699 tests in 6.567s
 
 ### Tags management
 
-| Actor | HTTP Method | Endpoint            | Description                           |
-|-------|-------------|---------------------|---------------------------------------|
-| User  | `GET`       | `/me/tags`          | Retrieve the steps to achieve a task. |
-| User  | `POST`      | `/me/tags`          | Create a new tag.                     |
+| Actor | HTTP Method | Endpoint              | Description                           |
+|-------|-------------|-----------------------|---------------------------------------|
+| User  | `GET`       | `/me/tags`            | Retrieve the steps to achieve a task. |
+| User  | `POST`      | `/me/tags`            | Create a new tag.                     |
 | User  | `PATCH`     | `/me/tags/{tag_uuid}` | Partially update a tag.               |
 | User  | `DELETE`    | `/me/tags/{tag_uuid}` | Permanently remove a tag.             |
 
 ### Attachments management
 
-| Actor | HTTP Method | Endpoint                                          | Description                                      |
-|-------|-------------|---------------------------------------------------|--------------------------------------------------|
-| User  | `GET`       | `/me/tasks/{task_uuid}/attachments`                 | Retrieve all the attachments in a task (if any). |
+| Actor | HTTP Method | Endpoint                                              | Description                                      |
+|-------|-------------|-------------------------------------------------------|--------------------------------------------------|
+| User  | `GET`       | `/me/tasks/{task_uuid}/attachments`                   | Retrieve all the attachments in a task (if any). |
 | User  | `GET`       | `/me/tasks/{task_uuid}/attachments/{attachment_uuid}` | Get an attachments in a task.                    |
 | User  | `DELETE`    | `/me/tasks/{task_uuid}/attachments/{attachment_uuid}` | Permanently remove an attachments in a task.     |
 
