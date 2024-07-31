@@ -155,7 +155,7 @@ var (
 	ErrUserNotFound = &Error{
 		code:    ErrorCode("R0001"),
 		message: "Not found.",
-		details: "Could not find any user with this ID.",
+		details: "Could not find any user with this UUID.",
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
@@ -169,28 +169,28 @@ var (
 	ErrGroupNotFound = &Error{
 		code:    ErrorCode("R002"),
 		message: "Not found.",
-		details: "Could not find any group with this ID.",
+		details: "Could not find any group with this UUID.",
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
 	ErrListNotFound = &Error{
 		code:    ErrorCode("R0003"),
 		message: "Not found.",
-		details: "Could not find any list with this ID.",
+		details: "Could not find any list with this UUID.",
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
 	ErrTaskNotFound = &Error{
 		code:    ErrorCode("R0008"),
 		message: "Not found.",
-		details: "Could not find any task with this ID.",
+		details: "Could not find any task with this UUID.",
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
 	ErrSettingNotFound = &Error{
 		code:    ErrorCode("R0004"),
 		message: "Not found.",
-		details: "Could not find any user setting with this ID.",
+		details: "Could not find any user setting with this key.",
 		hint:    "",
 		status:  http.StatusNotFound,
 	}
