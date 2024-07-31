@@ -106,7 +106,12 @@ control, scale and reuse. However, since I still need it, I make it accessible f
 To run the project you require the database to be running. Once you've finished all the following steps, you must end up
 having something like:
 
-![Docker services running](assets/img_1.png)
+```shell
+docker ps
+CONTAINER ID   IMAGE                       COMMAND                  CREATED         STATUS                            PORTS                                       NAMES
+5d7ce9611cfc   postgres:16rc1-alpine3.18   "docker-entrypoint.s…"   3 seconds ago   Up 2 seconds (health: starting)   0.0.0.0:7891->5432/tcp, :::7891->5432/tcp   noda_database
+d8f3bcf2c1ae   golang:1.22.5-alpine3.20    "sh -c ' cd /src && …"   3 seconds ago   Up 2 seconds                      0.0.0.0:7890->7890/tcp, :::7890->7890/tcp   noda_backend
+```
 
 ### Prerequisites
 
