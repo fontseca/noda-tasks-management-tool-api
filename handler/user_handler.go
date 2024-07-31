@@ -77,6 +77,7 @@ func (h *UserHandler) HandleBlockedUsersRetrieval(w http.ResponseWriter, r *http
 	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
@@ -95,6 +96,7 @@ func (h *UserHandler) HandleRetrievalOfUserByID(w http.ResponseWriter, r *http.R
 	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
@@ -111,6 +113,7 @@ func (h *UserHandler) HandleAdminPromotion(w http.ResponseWriter, r *http.Reques
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	redirect(w, r, "/users/"+userID.String())
 }
@@ -126,6 +129,7 @@ func (h *UserHandler) HandleDegradeAdminToUser(w http.ResponseWriter, r *http.Re
 	}
 	if userWasPromoted {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	redirect(w, r, "/users/"+userID.String())
 }
@@ -146,6 +150,7 @@ func (h *UserHandler) HandleBlockUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if userWasBlocked {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	redirect(w, r, "/users/"+userID.String())
 }
