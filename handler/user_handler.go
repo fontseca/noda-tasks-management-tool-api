@@ -9,8 +9,6 @@ import (
 	"noda/failure"
 	"noda/service"
 	"strings"
-
-	"github.com/go-chi/chi/v5"
 )
 
 type UserHandler struct {
@@ -249,7 +247,7 @@ func (h *UserHandler) HandleRetrievalOfLoggedUserSettings(w http.ResponseWriter,
 }
 
 func (h *UserHandler) HandleRetrievalOfOneSettingOfLoggedUser(w http.ResponseWriter, r *http.Request) {
-	settingKey := chi.URLParam(r, "setting_key")
+	settingKey := r.PathValue("setting_key")
 	userID, _ := extractUserPayload(r)
 	setting, err := h.s.FetchOneSetting(userID, settingKey)
 	if err != nil {
@@ -283,7 +281,7 @@ func (h *UserHandler) HandleUpdateOneSettingForLoggedUser(w http.ResponseWriter,
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	settingKey := chi.URLParam(r, "setting_key")
+	settingKey := r.PathValue("setting_key")
 	wasUpdated, err := h.s.UpdateUserSetting(userID, settingKey, up)
 	if err != nil {
 		var e *failure.Error
@@ -301,6 +299,7 @@ func (h *UserHandler) HandleUpdateOneSettingForLoggedUser(w http.ResponseWriter,
 	}
 	if wasUpdated {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	redirect(w, r, "/me/settings/"+settingKey)
 }
@@ -334,6 +333,7 @@ func (h *UserHandler) HandleUpdateForLoggedUser(w http.ResponseWriter, r *http.R
 	}
 	if userWasUpdated {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	redirect(w, r, r.URL.Path)
 }

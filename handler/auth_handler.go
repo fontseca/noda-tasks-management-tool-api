@@ -50,6 +50,7 @@ func (h *AuthenticationHandler) HandleSignUp(w http.ResponseWriter, r *http.Requ
 	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)
@@ -85,6 +86,7 @@ func (h *AuthenticationHandler) HandleSignIn(w http.ResponseWriter, r *http.Requ
 	if nil != err {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.Write(data)
 }

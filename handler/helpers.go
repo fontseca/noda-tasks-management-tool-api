@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"io"
 	"log"
@@ -145,7 +144,7 @@ func parseRequestBody(w http.ResponseWriter, r *http.Request, target any) error 
 }
 
 func parseParameterToUUID(w http.ResponseWriter, r *http.Request, parameter string) uuid.UUID {
-	var key = chi.URLParam(r, parameter)
+	var key = r.PathValue(parameter)
 	id, err := uuid.Parse(key)
 	if nil != err {
 		switch {

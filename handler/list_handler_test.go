@@ -210,9 +210,9 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		var (
 			list = &model.List{
-				ID:          listID,
-				OwnerID:     userID,
-				GroupID:     groupID,
+				UUID:        listID,
+				OwnerUUID:   userID,
+				GroupUUID:   groupID,
 				Name:        "list name",
 				Description: "list description",
 				UpdatedAt:   time.Now(),
@@ -223,9 +223,9 @@ func TestListHandler_HandleGroupedListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"group_id": list.GroupID.String(), "list_id": list.ID.String()})
+		withPathParameters(&request, parameters{"group_id": list.GroupUUID.String(), "list_id": list.UUID.String()})
 		var s = mocks.NewListServiceMock()
-		s.On(serviceMethod, list.OwnerID, list.GroupID, list.ID).Return(list, nil)
+		s.On(serviceMethod, list.OwnerUUID, list.GroupUUID, list.UUID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleGroupedListRetrievalByID(recorder, request)
 		var result = recorder.Result()
@@ -328,9 +328,9 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		var (
 			list = &model.List{
-				ID:          listID,
-				OwnerID:     userID,
-				GroupID:     uuid.Nil,
+				UUID:        listID,
+				OwnerUUID:   userID,
+				GroupUUID:   uuid.Nil,
 				Name:        "list name",
 				Description: "list description",
 				UpdatedAt:   time.Now(),
@@ -341,9 +341,9 @@ func TestListHandler_HandleScatteredListRetrievalByID(t *testing.T) {
 		)
 		var request = httptest.NewRequest(method, target, nil)
 		withLoggedUser(&request)
-		withPathParameters(&request, parameters{"list_id": list.ID.String()})
+		withPathParameters(&request, parameters{"list_id": list.UUID.String()})
 		var s = mocks.NewListServiceMock()
-		s.On(serviceMethod, list.OwnerID, uuid.Nil, list.ID).Return(list, nil)
+		s.On(serviceMethod, list.OwnerUUID, uuid.Nil, list.UUID).Return(list, nil)
 		var recorder = httptest.NewRecorder()
 		NewListHandler(s).HandleScatteredListRetrievalByID(recorder, request)
 		var result = recorder.Result()

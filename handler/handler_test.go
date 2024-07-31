@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"io"
 	"log"
@@ -44,11 +43,9 @@ func withLoggedUser(request **http.Request) {
 type parameters map[string]string
 
 func withPathParameters(request **http.Request, params parameters) {
-	var rctx = chi.NewRouteContext()
 	for key, value := range params {
-		rctx.URLParams.Add(key, value)
+		(*request).SetPathValue(key, value)
 	}
-	*request = (*request).WithContext(context.WithValue((*request).Context(), chi.RouteCtxKey, rctx))
 }
 
 func beQuiet() func() {

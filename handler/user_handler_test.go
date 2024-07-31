@@ -206,7 +206,7 @@ func TestUserHandler_HandleRetrievalOfUserByID(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		var (
-			user                 = &transfer.User{ID: userID}
+			user                 = &transfer.User{UUID: userID}
 			expectedStatusCode   = http.StatusOK
 			expectedResponseBody = string(marshal(t, user))
 		)
