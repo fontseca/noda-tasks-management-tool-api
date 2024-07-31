@@ -270,11 +270,11 @@ DONE 699 tests in 6.567s
 |-------|-------------|--------------------------------------------------|----------------------------------------|
 | User  | `GET`       | `/me/tasks/{task_uuid}/steps`                      | Retrieve the steps to achieve a task.  |
 | User  | `POST`      | `/me/tasks/{task_uuid}/steps`                      | Add a new step to achieve a task.      |
-| User  | `PATCH`     | `/me/tasks/{task_uuid}/steps/{step_id}`            | Partially update a step.               |
-| User  | `PUT`       | `/me/tasks/{task_uuid}/steps/{step_id}/accomplish` | Mark a step as accomplished.           |
-| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_id}/accomplish` | Unmark a step as accomplished.         |
-| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_id}`            | Permanently remove a step from a task. |
-| User  | `POST`      | `/me/tasks/{task_uuid}/steps/{step_id}/reorder`    | Rearrange a step in a task.            |
+| User  | `PATCH`     | `/me/tasks/{task_uuid}/steps/{step_uuid}`            | Partially update a step.               |
+| User  | `PUT`       | `/me/tasks/{task_uuid}/steps/{step_uuid}/accomplish` | Mark a step as accomplished.           |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_uuid}/accomplish` | Unmark a step as accomplished.         |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/steps/{step_uuid}`            | Permanently remove a step from a task. |
+| User  | `POST`      | `/me/tasks/{task_uuid}/steps/{step_uuid}/reorder`    | Rearrange a step in a task.            |
 
 ### Tags management
 
