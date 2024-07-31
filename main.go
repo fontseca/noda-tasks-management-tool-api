@@ -322,11 +322,11 @@ func main() {
 
 	var (
 		serverPort = mustGetEnv("SERVER_PORT")
-		dbUser     = mustGetEnv("DB_USER")
-		dbPassword = mustGetEnv("DB_PASSWORD")
-		dbHost     = mustGetEnv("DB_HOST")
-		dbPort     = mustGetEnv("DB_PORT")
-		dbName     = mustGetEnv("DB_NAME")
+		dbUser     = mustGetEnv("PG_USER")
+		dbPassword = mustGetEnv("PG_PASSWORD")
+		dbHost     = mustGetEnv("PG_HOST")
+		dbPort     = mustGetEnv("PG_PORT")
+		dbName     = mustGetEnv("PG_NAME")
 	)
 
 	dataSourceName := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",

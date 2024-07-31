@@ -13,16 +13,16 @@ services:
         target: /src
     command: sh -c "cd /src && go mod download && sleep infinity"
     ports:
-      - "7890:5792"
+      - "7890:7890"
     networks:
       - noda_network
     environment:
-      - SERVER_PORT=5792
-      - DB_NAME=master
-      - DB_USER=worker
-      - DB_PORT=5432
-      - DB_HOST=noda_database
-      - DB_PASSWORD=secret
+      - SERVER_PORT=7890
+      - PG_NAME=master
+      - PG_USER=worker
+      - PG_PORT=5432
+      - PG_HOST=noda_database
+      - PG_PASSWORD=secret
       - JWT_SECRET='AJW[;>qs)-gkpQfM@};K7jRS?d)T)3vx$3[]aUp>3$%+3rE;w@X{,2@/[(XT8^G*])
 
   database:
