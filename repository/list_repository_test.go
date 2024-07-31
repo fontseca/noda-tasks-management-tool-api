@@ -23,7 +23,7 @@ func TestListRepository_Save(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT make_list ($1, $2, $3, $4);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."make" ($1, $2, $3, $4);`)
 		res   string
 		err   error
 		next  = &transfer.ListCreation{Name: "list name", Description: "list desc"}
@@ -52,7 +52,7 @@ func TestListRepository_Save(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Save(userID, groupID, next)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
@@ -60,7 +60,7 @@ func TestListRepository_Save(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, next.Name, next.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Save(userID, groupID, next)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
@@ -80,12 +80,12 @@ func TestListRepository_FetchByID(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT * FROM fetch_list_by_id ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT * FROM "lists"."fetch_by_uuid" ($1, $2, $3);`)
 		res   *model.List
 		err   error
 		list  = &model.List{
-			ID:          uuid.MustParse(listID),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.MustParse(listID),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   time.Now(),
@@ -99,7 +99,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 		WithArgs(userID, groupID, listID).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
@@ -109,7 +109,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 		WithArgs(userID, nil, listID).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchByID(userID, "", listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
@@ -117,7 +117,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Nil(t, res)
@@ -125,7 +125,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 	assert.Nil(t, res)
@@ -133,7 +133,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
 	assert.Nil(t, res)
@@ -141,7 +141,7 @@ func TestListRepository_FetchByID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, nil, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.FetchByID(userID, "", listID)
 	assert.Error(t, err, failure.ErrListNotFound)
 	assert.Nil(t, res)
@@ -169,7 +169,7 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT get_today_list_id ($1);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."get_today_list_uuid" ($1);`)
 		res   string
 		err   error
 	)
@@ -179,15 +179,15 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"get_today_list_id"}).
-			AddRow("the actual ID"))
+			AddRow("the actual UUID"))
 	res, err = r.GetTodayListID(userID)
 	assert.NoError(t, err)
-	assert.Equal(t, "the actual ID", res)
+	assert.Equal(t, "the actual UUID", res)
 
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.GetTodayListID(userID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Empty(t, res)
@@ -215,7 +215,7 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT get_tomorrow_list_id ($1);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."get_tomorrow_list_uuid" ($1);`)
 		res   string
 		err   error
 	)
@@ -225,15 +225,15 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 		WithArgs(userID).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"get_tomorrow_list_id"}).
-			AddRow("the actual ID"))
+			AddRow("the actual UUID"))
 	res, err = r.GetTomorrowListID(userID)
 	assert.NoError(t, err)
-	assert.Equal(t, "the actual ID", res)
+	assert.Equal(t, "the actual UUID", res)
 
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.GetTomorrowListID(userID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Equal(t, "", res)
@@ -262,28 +262,28 @@ func TestListRepository_Fetch(t *testing.T) {
 	var (
 		r     = NewListRepository(db)
 		query = regexp.QuoteMeta(`
-		SELECT "list_id" AS "id",
-		       "owner_id",
-		       "group_id",
+		SELECT "list_uuid" AS "uuid",
+		       "owner_uuid",
+		       "group_uuid",
 		       "name",
 		       "description",
 		       "created_at",
 		       "updated_at"
-     FROM fetch_lists ($1, $2, $3, $4, $5);`)
+      FROM "lists"."fetch" ($1, $2, $3, $4, $5);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
 		sortBy    = ""
 		list      = &model.List{
-			ID:          uuid.MustParse(listID),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.MustParse(listID),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
+		columns = []string{"uuid", "owner_uuid", "group_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	page, rpp = 1, 2
@@ -292,8 +292,8 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
@@ -304,16 +304,16 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
@@ -324,11 +324,11 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
@@ -339,13 +339,13 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
@@ -364,7 +364,7 @@ func TestListRepository_Fetch(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Nil(t, res)
@@ -391,7 +391,7 @@ func TestListRepository_Fetch(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -404,28 +404,28 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	var (
 		r     = NewListRepository(db)
 		query = regexp.QuoteMeta(`
-		SELECT "list_id" AS "id",
-		       "owner_id",
-		       "group_id",
+		SELECT "list_uuid" AS "uuid",
+           "owner_uuid",
+           "group_uuid",
 		       "name",
 		       "description",
 		       "created_at",
 		       "updated_at"
-      FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`)
+      FROM "lists"."fetch_grouped" ($1, $2, $3, $4, $5, $6);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
 		sortBy    = ""
 		list      = &model.List{
-			ID:          uuid.MustParse(listID),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.MustParse(listID),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
+		columns = []string{"uuid", "owner_uuid", "group_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	page, rpp = 1, 2
@@ -434,8 +434,8 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
@@ -446,16 +446,16 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
@@ -466,11 +466,11 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
@@ -481,13 +481,13 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
@@ -506,7 +506,7 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Nil(t, res)
@@ -515,7 +515,7 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 	assert.Nil(t, res)
@@ -542,7 +542,7 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 		WithArgs(userID, groupID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -555,28 +555,28 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	var (
 		r     = NewListRepository(db)
 		query = regexp.QuoteMeta(`
-		SELECT "list_id" AS "id",
-		       "owner_id",
-		       "group_id",
+		SELECT "list_uuid" AS "uuid",
+           "owner_uuid",
+           "group_uuid",
 		       "name",
 		       "description",
 		       "created_at",
 		       "updated_at"
-      FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`)
+      FROM "lists"."fetch_scattered" ($1, $2, $3, $4, $5);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
 		sortBy    = ""
 		list      = &model.List{
-			ID:          uuid.MustParse(listID),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.MustParse(listID),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		columns = []string{"id", "owner_id", "group_id", "name", "description", "created_at", "updated_at"}
+		columns = []string{"uuid", "owner_uuid", "group_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	/* Success with 2 records.  */
@@ -587,8 +587,8 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
@@ -601,16 +601,16 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 10)
@@ -623,11 +623,11 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 5)
@@ -638,13 +638,13 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.NoError(t, err)
 	assert.Len(t, res, 7)
@@ -663,7 +663,7 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Nil(t, res)
@@ -690,7 +690,7 @@ func TestListRepository_FetchScattered(t *testing.T) {
 		WithArgs(userID, page, rpp, needle, sortBy).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
-			AddRow(list.ID, list.OwnerID, list.GroupID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
+			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
 	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
 	assert.Error(t, err)
 	assert.Nil(t, res)
@@ -702,7 +702,7 @@ func TestListRepository_Remove(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT delete_list ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."delete" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -740,7 +740,7 @@ func TestListRepository_Remove(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.False(t, res)
@@ -748,7 +748,7 @@ func TestListRepository_Remove(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 	assert.False(t, res)
@@ -756,7 +756,7 @@ func TestListRepository_Remove(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Remove(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
 	assert.False(t, res)
@@ -784,7 +784,7 @@ func TestListRepository_Duplicate(t *testing.T) {
 	defer db.Close()
 	var (
 		r         = NewListRepository(db)
-		query     = regexp.QuoteMeta(`SELECT duplicate_list ($1, $2);`)
+		query     = regexp.QuoteMeta(`SELECT "lists"."duplicate" ($1, $2);`)
 		replicaID = uuid.New().String()
 		res       string
 		err       error
@@ -803,7 +803,7 @@ func TestListRepository_Duplicate(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.Empty(t, res)
@@ -811,7 +811,7 @@ func TestListRepository_Duplicate(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Duplicate(userID, listID)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
 	assert.Empty(t, res)
@@ -839,7 +839,7 @@ func TestListRepository_Scatter(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT convert_to_scattered_list ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."convert_to_scattered_list" ($1, $2);`)
 		res   bool
 		err   error
 	)
@@ -857,7 +857,7 @@ func TestListRepository_Scatter(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Scatter(userID, listID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.False(t, res)
@@ -865,7 +865,7 @@ func TestListRepository_Scatter(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Scatter(userID, listID)
 	assert.False(t, res)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
@@ -903,7 +903,7 @@ func TestListRepository_Move(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT move_list ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."move" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -931,7 +931,7 @@ func TestListRepository_Move(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.False(t, res)
@@ -939,7 +939,7 @@ func TestListRepository_Move(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Move(userID, listID, groupID)
 	assert.False(t, res)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
@@ -947,7 +947,7 @@ func TestListRepository_Move(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 	res, err = r.Move(userID, listID, groupID)
 	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 	assert.False(t, res)
@@ -985,7 +985,7 @@ func TestListRepository_Update(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT update_list ($1, $2, $3, $4, $5);`)
+		query = regexp.QuoteMeta(`SELECT "lists"."update" ($1, $2, $3, $4, $5);`)
 		res   bool
 		err   error
 		up    = new(transfer.ListUpdate)
@@ -1024,7 +1024,7 @@ func TestListRepository_Update(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 	assert.False(t, res)
@@ -1032,7 +1032,7 @@ func TestListRepository_Update(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 	assert.False(t, res)
@@ -1040,7 +1040,7 @@ func TestListRepository_Update(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID, up.Name, up.Description).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with ID"})
+		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
 	assert.False(t, res)

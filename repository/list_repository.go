@@ -40,7 +40,7 @@ func NewListRepository(db *sql.DB) ListRepository {
 func (r *listRepository) Save(ownerID, groupID string, creation *transfer.ListCreation) (insertedID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT make_list ($1, $2, $3, $4);`
+	query := `SELECT "lists"."make" ($1, $2, $3, $4);`
 	var row *sql.Row
 	if groupID != "" {
 		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, creation.Name, creation.Description)
@@ -72,7 +72,7 @@ func (r *listRepository) Save(ownerID, groupID string, creation *transfer.ListCr
 func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT * FROM fetch_list_by_id ($1, $2, $3);`
+	query := `SELECT * FROM "lists"."fetch_by_uuid" ($1, $2, $3);`
 	var result *sql.Row
 	if strings.Trim(groupID, " ") != "" {
 		result = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID)
@@ -81,7 +81,7 @@ func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model
 	}
 	list = &model.List{}
 	err = result.Scan(
-		&list.ID, &list.OwnerID, &list.GroupID, &list.Name, &list.Description, &list.CreatedAt, &list.UpdatedAt)
+		&list.UUID, &list.OwnerUUID, &list.GroupUUID, &list.Name, &list.Description, &list.CreatedAt, &list.UpdatedAt)
 	if err != nil {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -109,7 +109,7 @@ func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model
 func (r *listRepository) GetTodayListID(ownerID string) (listID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT get_today_list_id ($1);`
+	query := `SELECT "lists"."get_today_list_uuid" ($1);`
 	result := r.db.QueryRowContext(ctx, query, ownerID)
 	err = result.Scan(&listID)
 	if err != nil {
@@ -134,7 +134,7 @@ func (r *listRepository) GetTodayListID(ownerID string) (listID string, err erro
 func (r *listRepository) GetTomorrowListID(ownerID string) (listID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT get_tomorrow_list_id ($1);`
+	query := `SELECT "lists"."get_tomorrow_list_uuid" ($1);`
 	result := r.db.QueryRowContext(ctx, query, ownerID)
 	err = result.Scan(&listID)
 	if err != nil {
@@ -163,14 +163,14 @@ func (r *listRepository) Fetch(
 ) (lists []*model.List, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT "list_id" AS "id",
-		       "owner_id",
-		       "group_id",
-		       "name",
-		       "description",
-		       "created_at",
-		       "updated_at"
-      FROM fetch_lists ($1, $2, $3, $4, $5);`
+	query := `SELECT "list_uuid" AS "uuid",
+		               "owner_uuid",
+		               "group_uuid",
+		               "name",
+		               "description",
+		               "created_at",
+		               "updated_at"
+              FROM "lists"."fetch" ($1, $2, $3, $4, $5);`
 	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if err != nil {
 		var pqerr *pq.Error
@@ -207,14 +207,14 @@ func (r *listRepository) FetchGrouped(
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
-    SELECT "list_id" AS "id",
-		       "owner_id",
-		       "group_id",
+    SELECT "list_uuid" AS "uuid",
+           "owner_uuid",
+           "group_uuid",
 		       "name",
 		       "description",
 		       "created_at",
 		       "updated_at"
-      FROM fetch_grouped_lists ($1, $2, $3, $4, $5, $6);`
+      FROM "lists"."fetch_grouped" ($1, $2, $3, $4, $5, $6);`
 	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortExpr)
 	if err != nil {
 		var pqerr *pq.Error
@@ -253,14 +253,14 @@ func (r *listRepository) FetchScattered(
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
-	SELECT "list_id" AS "id",
-		     "owner_id",
-		     "group_id",
+	SELECT "list_uuid" AS "uuid",
+         "owner_uuid",
+         "group_uuid",
 		     "name",
 		     "description",
 		     "created_at",
 		     "updated_at"
-    FROM fetch_scattered_lists ($1, $2, $3, $4, $5);`
+    FROM "lists"."fetch_scattered" ($1, $2, $3, $4, $5);`
 	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
@@ -292,7 +292,7 @@ func (r *listRepository) FetchScattered(
 func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT delete_list ($1, $2, $3);`
+	query := `SELECT "lists"."delete" ($1, $2, $3);`
 	var result *sql.Row
 	if "" == strings.Trim(groupID, " ") {
 		result = r.db.QueryRowContext(ctx, query, ownerID, nil, listID)
@@ -326,7 +326,7 @@ func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err e
 func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT duplicate_list ($1, $2);`
+	query := `SELECT "lists"."duplicate" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID)
 	err = result.Scan(&replicaID)
 	if err != nil {
@@ -355,7 +355,7 @@ func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, er
 func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT convert_to_scattered_list ($1, $2);`
+	query := `SELECT "lists"."convert_to_scattered_list" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID)
 	err = result.Scan(&ok)
 	if err != nil {
@@ -382,7 +382,7 @@ func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
 func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT move_list ($1, $2, $3);`
+	query := `SELECT "lists"."move" ($1, $2, $3);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID, targetGroupID)
 	err = result.Scan(&ok)
 	if err != nil {
@@ -411,7 +411,7 @@ func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, e
 func (r *listRepository) Update(ownerID, groupID, listID string, update *transfer.ListUpdate) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT update_list ($1, $2, $3, $4, $5);`
+	query := `SELECT "lists"."update" ($1, $2, $3, $4, $5);`
 	var row *sql.Row
 	if "" != strings.Trim(groupID, " ") {
 		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID, update.Name, update.Description)
