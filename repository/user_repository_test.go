@@ -22,7 +22,7 @@ func TestUserRepository_Save(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewUserRepository(db)
-		query = regexp.QuoteMeta(`SELECT make_user ($1, $2, $3, $4, $5, $6);`)
+		query = regexp.QuoteMeta(`SELECT "users"."make" ($1, $2, $3, $4, $5, $6);`)
 		res   string
 		err   error
 		n     = &transfer.UserCreation{
@@ -88,26 +88,26 @@ func TestUserRepository_FetchByID(t *testing.T) {
 		r     = NewUserRepository(db)
 		res   *model.User
 		err   error
-		user  = &model.User{ID: uuid.MustParse(userID)}
+		user  = &model.User{UUID: uuid.MustParse(userID)}
 		query = regexp.QuoteMeta(`
-	  SELECT "user_id" AS "id",
-	         "role_id" AS "role",
-	         "first_name",
-	         "middle_name",
-	         "last_name",
-	         "surname",
-	         "picture_url",
-	         "email",
-	  			 "password",
-	         "created_at",
-	         "updated_at"
-	    FROM fetch_user_by_id ($1);`)
+   	SELECT "user_uuid" AS "uuid",
+   	       "role_id" AS "role",
+   	       "first_name",
+   	       "middle_name",
+   	       "last_name",
+   	       "surname",
+   	       "picture_url",
+   	       "email",
+   				 "password",
+   	       "created_at",
+   	       "updated_at"
+   	  FROM "users"."fetch_by_id" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
@@ -131,7 +131,7 @@ func TestUserRepository_FetchByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.FetchByID(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
@@ -156,25 +156,25 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 		r     = NewUserRepository(db)
 		res   *transfer.User
 		err   error
-		user  = &transfer.User{ID: uuid.MustParse(userID)}
+		user  = &transfer.User{UUID: uuid.MustParse(userID)}
 		query = regexp.QuoteMeta(`
-	  SELECT "user_id" AS "id",
-	         "role_id" AS "role",
-	         "first_name",
-	         "middle_name",
-	         "last_name",
-	         "surname",
-	         "picture_url",
-	         "email",
-	         "created_at",
-	         "updated_at"
-	    FROM fetch_user_by_id ($1);`)
+  	SELECT "user_uuid" AS "uuid",
+  	       "role_id" AS "role",
+  	       "first_name",
+  	       "middle_name",
+  	       "last_name",
+  	       "surname",
+  	       "picture_url",
+  	       "email",
+  	       "created_at",
+  	       "updated_at"
+  	  FROM "users"."fetch_by_uuid" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
@@ -198,7 +198,7 @@ func TestUserRepository_FetchShallowUserByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.FetchShallowUserByID(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
@@ -224,9 +224,9 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 		res   *model.User
 		err   error
 		email = "foo@bar.com"
-		user  = &model.User{ID: uuid.MustParse(userID)}
+		user  = &model.User{UUID: uuid.MustParse(userID)}
 		query = regexp.QuoteMeta(`
-	  SELECT "user_id" AS "id",
+	  SELECT "user_uuid" AS "uuid",
 	         "role_id" AS "role",
 	         "first_name",
 	         "middle_name",
@@ -237,13 +237,13 @@ func TestUserRepository_FetchByEmail(t *testing.T) {
 	  			 "password",
 	         "created_at",
 	         "updated_at"
-	    FROM fetch_user_by_email ($1);`)
+	    FROM "users"."fetch_by_email" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
@@ -293,9 +293,9 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 		res   *transfer.User
 		err   error
 		email = "foo@bar.com"
-		user  = &transfer.User{ID: uuid.MustParse(userID)}
+		user  = &transfer.User{UUID: uuid.MustParse(userID)}
 		query = regexp.QuoteMeta(`
-	  SELECT "user_id" AS "id",
+	  SELECT "user_uuid" AS "uuid",
 	         "role_id" AS "role",
 	         "first_name",
 	         "middle_name",
@@ -306,13 +306,13 @@ func TestUserRepository_FetchShallowUserByEmail(t *testing.T) {
 	  			 "password",
 	         "created_at",
 	         "updated_at"
-	    FROM fetch_user_by_email ($1);`)
+	    FROM "users"."fetch_by_email" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, "password", user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "password", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, "password", user.CreatedAt, user.UpdatedAt)
 		mock.
 			ExpectQuery(query).
 			WithArgs(email).
@@ -363,9 +363,9 @@ func TestUserRepository_Fetch(t *testing.T) {
 		page, rpp int64
 		needle    = "foo"
 		sortExpr  = "-first_name"
-		user      = &transfer.User{ID: uuid.MustParse(userID)}
+		user      = &transfer.User{UUID: uuid.MustParse(userID)}
 		query     = regexp.QuoteMeta(`
-  	SELECT "user_id" AS "id",
+  	SELECT "user_uuid" AS "uuid",
   	       "role_id" AS "role",
   	       "first_name",
   	       "middle_name",
@@ -375,14 +375,14 @@ func TestUserRepository_Fetch(t *testing.T) {
   	       "email",
   	       "created_at",
   	       "updated_at"
-      FROM fetch_users ($1, $2, $3, $4);`)
+      FROM "users"."fetch" ($1, $2, $3, $4);`)
 	)
 
 	t.Run("success with rpp=2", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 2
 		mock.
 			ExpectQuery(query).
@@ -395,10 +395,10 @@ func TestUserRepository_Fetch(t *testing.T) {
 
 	t.Run("success with rpp=3", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 3
 		mock.
 			ExpectQuery(query).
@@ -415,7 +415,7 @@ func TestUserRepository_Fetch(t *testing.T) {
 			WithArgs(page, rpp, needle, sortExpr).
 			WillReturnRows(
 				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
+					AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
 		res, err = r.Fetch(page, rpp, needle, sortExpr)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -442,9 +442,9 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 		page, rpp int64
 		needle    = "foo"
 		sortExpr  = "-first_name"
-		user      = &transfer.User{ID: uuid.MustParse(userID)}
+		user      = &transfer.User{UUID: uuid.MustParse(userID)}
 		query     = regexp.QuoteMeta(`
-  	SELECT "user_id" AS "id",
+  	SELECT "user_uuid" AS "uuid",
   	       "role_id" AS "role",
   	       "first_name",
   	       "middle_name",
@@ -454,14 +454,14 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
   	       "email",
   	       "created_at",
   	       "updated_at"
-      FROM fetch_blocked_users ($1, $2, $3, $4);`)
+      FROM "users"."fetch_blocked" ($1, $2, $3, $4);`)
 	)
 
 	t.Run("success with rpp=2", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 2
 		mock.
 			ExpectQuery(query).
@@ -474,10 +474,10 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 
 	t.Run("success with rpp=3", func(t *testing.T) {
 		var rows = sqlmock.
-			NewRows([]string{"id", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
-			AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
+			NewRows([]string{"uuid", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt).
+			AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt)
 		rpp = 3
 		mock.
 			ExpectQuery(query).
@@ -494,7 +494,7 @@ func TestUserRepository_FetchBlocked(t *testing.T) {
 			WithArgs(page, rpp, needle, sortExpr).
 			WillReturnRows(
 				sqlmock.NewRows([]string{"unknown_column", "role", "first_name", "middle_name", "last_name", "surname", "picture_url", "email", "created_at", "updated_at"}).
-					AddRow(user.ID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
+					AddRow(user.UUID, user.Role, user.FirstName, user.MiddleName, user.LastName, user.Surname, user.PictureUrl, user.Email, user.CreatedAt, user.UpdatedAt))
 		res, err = r.FetchBlocked(page, rpp, needle, sortExpr)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -522,7 +522,7 @@ func TestUserRepository_FetchSettings(t *testing.T) {
 		needle    = "foo"
 		sortExpr  = "-first_name"
 		setting   = new(transfer.UserSetting)
-		query     = regexp.QuoteMeta("SELECT * FROM fetch_user_settings ($1, $2, $3, $4, $5);")
+		query     = regexp.QuoteMeta(`SELECT * FROM "users"."fetch_settings_of" ($1, $2, $3, $4, $5);`)
 	)
 
 	t.Run("success with rpp=2", func(t *testing.T) {
@@ -572,7 +572,7 @@ func TestUserRepository_FetchSettings(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortExpr).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.FetchSettings(userID, page, rpp, needle, sortExpr)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
@@ -600,7 +600,7 @@ func TestUserRepository_FetchOneSetting(t *testing.T) {
 			Key:   "key",
 			Value: "value",
 		}
-		query = regexp.QuoteMeta("SELECT * FROM fetch_one_user_setting ($1, $2);")
+		query = regexp.QuoteMeta(`SELECT * FROM "users"."fetch_one_user_setting" ($1, $2);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -633,7 +633,7 @@ func TestUserRepository_FetchOneSetting(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, setting.Key).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.FetchOneSetting(userID, setting.Key)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Nil(t, res)
@@ -668,7 +668,7 @@ func TestUserRepository_Update(t *testing.T) {
 		r     = NewUserRepository(db)
 		res   bool
 		err   error
-		query = regexp.QuoteMeta(`SELECT update_user ($1, $2, $3, $4, $5, NULL, NULL, NULL);`)
+		query = regexp.QuoteMeta(`SELECT "users"."update" ($1, $2, $3, $4, $5, NULL, NULL, NULL);`)
 		up    = &transfer.UserUpdate{}
 	)
 
@@ -700,7 +700,7 @@ func TestUserRepository_Update(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, up.FirstName, up.MiddleName, up.LastName, up.Surname).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Update(userID, up)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -725,7 +725,7 @@ func TestUserRepository_UpdateUserSetting(t *testing.T) {
 		r            = NewUserRepository(db)
 		res          bool
 		err          error
-		query        = regexp.QuoteMeta("SELECT update_user_setting ($1, $2, $3);")
+		query        = regexp.QuoteMeta(`SELECT "users"."update_setting_of" ($1, $2, $3);`)
 		settingKey   = "key"
 		settingValue = "new value"
 	)
@@ -754,7 +754,7 @@ func TestUserRepository_UpdateUserSetting(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, settingKey, settingValue).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.UpdateUserSetting(userID, settingKey, settingValue)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -789,7 +789,7 @@ func TestUserRepository_Block(t *testing.T) {
 		r     = NewUserRepository(db)
 		res   bool
 		err   error
-		query = regexp.QuoteMeta("SELECT block_user ($1);")
+		query = regexp.QuoteMeta(`SELECT "users"."block" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -816,7 +816,7 @@ func TestUserRepository_Block(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Block(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -841,7 +841,7 @@ func TestUserRepository_Unblock(t *testing.T) {
 		r     = NewUserRepository(db)
 		res   bool
 		err   error
-		query = regexp.QuoteMeta("SELECT unblock_user ($1);")
+		query = regexp.QuoteMeta(`SELECT "users"."unblock" ($1);`)
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -868,7 +868,7 @@ func TestUserRepository_Unblock(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Unblock(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -891,7 +891,7 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewUserRepository(db)
-		query = regexp.QuoteMeta(`SELECT promote_user_to_admin ($1);`)
+		query = regexp.QuoteMeta(`SELECT "users"."promote_to_admin" ($1);`)
 		res   bool
 		err   error
 	)
@@ -922,7 +922,7 @@ func TestUserRepository_PromoteToAdmin(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.PromoteToAdmin(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -945,7 +945,7 @@ func TestUserRepository_DegradeToUser(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewUserRepository(db)
-		query = regexp.QuoteMeta(`SELECT degrade_admin_to_user ($1);`)
+		query = regexp.QuoteMeta(`SELECT "users"."degrade_admin_to_user" ($1);`)
 		res   bool
 		err   error
 	)
@@ -976,7 +976,7 @@ func TestUserRepository_DegradeToUser(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.DegradeToUser(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 		assert.Equal(t, res, false)
@@ -999,7 +999,7 @@ func TestUserRepository_RemoveHardly(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewUserRepository(db)
-		query = regexp.QuoteMeta(`SELECT delete_user_hardly ($1);`)
+		query = regexp.QuoteMeta(`SELECT "users"."delete_hardly" ($1);`)
 		err   error
 	)
 
@@ -1018,7 +1018,7 @@ func TestUserRepository_RemoveHardly(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		err = r.RemoveHardly(userID)
 		assert.ErrorIs(t, err, failure.ErrUserNotFound)
 	})
@@ -1039,10 +1039,8 @@ func TestUserRepository_RemoveSoftly(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewUserRepository(db)
-		query = regexp.QuoteMeta(`
-		DELETE FROM "user"
-					WHERE "user_id" = $1;`)
-		err error
+		query = regexp.QuoteMeta(`SELECT "users"."delete_hardly" ($1);`)
+		err   error
 	)
 
 	t.Run("success", func(t *testing.T) {
