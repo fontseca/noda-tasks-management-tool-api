@@ -10,8 +10,8 @@ import (
 
 /* Labels and categorizes enhance organization and searchability.  */
 type Tag struct {
-	ID          uuid.UUID `json:"tag_uuid"`
-	OwnerID     uuid.UUID `json:"owner_uuid"`
+	UUID        uuid.UUID `json:"tag_uuid"`
+	OwnerUUID   uuid.UUID `json:"owner_uuid"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description"`
 	Color       string    `json:"color"`

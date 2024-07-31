@@ -197,16 +197,16 @@ func TestTaskService_FetchByID(t *testing.T) {
 		res  *model.Task
 		err  error
 		task = &model.Task{
-			ID:      uuid.New(),
-			OwnerID: uuid.New(),
-			ListID:  uuid.New(),
+			UUID:      uuid.New(),
+			OwnerUUID: uuid.New(),
+			ListUUID:  uuid.New(),
 		}
 	)
 
 	t.Run("success", func(t *testing.T) {
 		var r = mocks.NewTaskRepositoryMock()
-		r.On(routine, task.OwnerID.String(), task.ListID.String(), task.ID.String()).Return(task, nil)
-		res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, task.ID)
+		r.On(routine, task.OwnerUUID.String(), task.ListUUID.String(), task.UUID.String()).Return(task, nil)
+		res, err = NewTaskService(r).FetchByID(task.OwnerUUID, task.ListUUID, task.UUID)
 		assert.Equal(t, task, res)
 		assert.NoError(t, err)
 	})
@@ -215,7 +215,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 		t.Run("\"ownerID\" != uuid.Nil", func(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
-			res, err = NewTaskService(r).FetchByID(uuid.Nil, task.ListID, task.ID)
+			res, err = NewTaskService(r).FetchByID(uuid.Nil, task.ListUUID, task.UUID)
 			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "ownerID").Error())
 			assert.Nil(t, res)
 		})
@@ -223,7 +223,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 		t.Run("\"listID\" != uuid.Nil", func(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
-			res, err = NewTaskService(r).FetchByID(task.OwnerID, uuid.Nil, task.ID)
+			res, err = NewTaskService(r).FetchByID(task.OwnerUUID, uuid.Nil, task.UUID)
 			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "listID").Error())
 			assert.Nil(t, res)
 		})
@@ -231,7 +231,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 		t.Run("\"taskID\" != uuid.Nil", func(t *testing.T) {
 			var r = mocks.NewTaskRepositoryMock()
 			r.AssertNotCalled(t, routine)
-			res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, uuid.Nil)
+			res, err = NewTaskService(r).FetchByID(task.OwnerUUID, task.ListUUID, uuid.Nil)
 			assert.ErrorContains(t, err, failure.NewNilParameterError("FetchByID", "taskID").Error())
 			assert.Nil(t, res)
 		})
@@ -241,7 +241,7 @@ func TestTaskService_FetchByID(t *testing.T) {
 		var unexpected = errors.New("unexpected error")
 		var r = mocks.NewTaskRepositoryMock()
 		r.On(routine, mock.Anything, mock.Anything, mock.Anything).Return(nil, unexpected)
-		res, err = NewTaskService(r).FetchByID(task.OwnerID, task.ListID, task.ID)
+		res, err = NewTaskService(r).FetchByID(task.OwnerUUID, task.ListUUID, task.UUID)
 		assert.ErrorIs(t, err, unexpected)
 		assert.Nil(t, res)
 	})
@@ -260,9 +260,9 @@ func TestTaskService_Fetch(t *testing.T) {
 		sortExpr              = "-title"
 		pagination            = &types.Pagination{Page: 1, RPP: 10}
 		tasks                 = []*model.Task{
-			{ID: uuid.New(), OwnerID: ownerID, ListID: listID},
-			{ID: uuid.New(), OwnerID: ownerID, ListID: listID},
-			{ID: uuid.New(), OwnerID: ownerID, ListID: listID},
+			{UUID: uuid.New(), OwnerUUID: ownerID, ListUUID: listID},
+			{UUID: uuid.New(), OwnerUUID: ownerID, ListUUID: listID},
+			{UUID: uuid.New(), OwnerUUID: ownerID, ListUUID: listID},
 		}
 	)
 
@@ -356,9 +356,9 @@ func TestTaskService_FetchFromToday(t *testing.T) {
 		sortExpr         = "-title"
 		pagination       = &types.Pagination{Page: 1, RPP: 10}
 		tasks            = []*model.Task{
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
 		}
 	)
 
@@ -444,9 +444,9 @@ func TestTaskService_FetchFromTomorrow(t *testing.T) {
 		sortExpr         = "-title"
 		pagination       = &types.Pagination{Page: 1, RPP: 10}
 		tasks            = []*model.Task{
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
 		}
 	)
 
@@ -532,9 +532,9 @@ func TestTaskService_FetchFromDeferred(t *testing.T) {
 		sortExpr         = "-title"
 		pagination       = &types.Pagination{Page: 1, RPP: 10}
 		tasks            = []*model.Task{
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
-			{ID: uuid.New(), OwnerID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
+			{UUID: uuid.New(), OwnerUUID: ownerID},
 		}
 	)
 

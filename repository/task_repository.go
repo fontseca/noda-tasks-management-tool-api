@@ -107,9 +107,9 @@ func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	task = new(model.Task)
 	err = row.Scan(
-		&task.ID,
-		&task.OwnerID,
-		&task.ListID,
+		&task.UUID,
+		&task.OwnerUUID,
+		&task.ListUUID,
 		&task.PositionInList,
 		&task.Title,
 		&task.Headline,
@@ -170,9 +170,9 @@ func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, 
 	for rows.Next() {
 		var task = new(model.Task)
 		err = rows.Scan(
-			&task.ID,
-			&task.OwnerID,
-			&task.ListID,
+			&task.UUID,
+			&task.OwnerUUID,
+			&task.ListUUID,
 			&task.PositionInList,
 			&task.Title,
 			&task.Headline,
@@ -220,9 +220,9 @@ func (r *taskRepository) FetchFromToday(ownerID string, page, rpp int64, needle,
 	for rows.Next() {
 		var task = new(model.Task)
 		err = rows.Scan(
-			&task.ID,
-			&task.OwnerID,
-			&task.ListID,
+			&task.UUID,
+			&task.OwnerUUID,
+			&task.ListUUID,
 			&task.PositionInList,
 			&task.Title,
 			&task.Headline,
@@ -270,9 +270,9 @@ func (r *taskRepository) FetchFromTomorrow(ownerID string, page, rpp int64, need
 	for rows.Next() {
 		var task = new(model.Task)
 		err = rows.Scan(
-			&task.ID,
-			&task.OwnerID,
-			&task.ListID,
+			&task.UUID,
+			&task.OwnerUUID,
+			&task.ListUUID,
 			&task.PositionInList,
 			&task.Title,
 			&task.Headline,
@@ -320,9 +320,9 @@ func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, need
 	for rows.Next() {
 		var task = new(model.Task)
 		err = rows.Scan(
-			&task.ID,
-			&task.OwnerID,
-			&task.ListID,
+			&task.UUID,
+			&task.OwnerUUID,
+			&task.ListUUID,
 			&task.PositionInList,
 			&task.Title,
 			&task.Headline,

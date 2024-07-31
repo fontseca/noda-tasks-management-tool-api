@@ -11,9 +11,9 @@ import (
 
 /* Manages individual tasks, including titles, descriptions, statuses, etc.  */
 type Task struct {
-	ID             uuid.UUID          `json:"task_uuid"`
-	OwnerID        uuid.UUID          `json:"owner_uuid"`
-	ListID         uuid.UUID          `json:"list_id"`
+	UUID           uuid.UUID          `json:"task_uuid"`
+	OwnerUUID      uuid.UUID          `json:"owner_uuid"`
+	ListUUID       uuid.UUID          `json:"list_uuid"`
 	PositionInList types.Position     `json:"position_in_list"`
 	Title          string             `json:"title"`
 	Headline       string             `json:"headline"`

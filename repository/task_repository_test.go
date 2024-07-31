@@ -119,9 +119,9 @@ func TestTaskRepository_FetchByID(t *testing.T) {
 		res   *model.Task
 		err   error
 		task  = &model.Task{
-			ID:             uuid.MustParse(taskID),
-			OwnerID:        uuid.MustParse(userID),
-			ListID:         uuid.MustParse(listID),
+			UUID:           uuid.MustParse(taskID),
+			OwnerUUID:      uuid.MustParse(userID),
+			ListUUID:       uuid.MustParse(listID),
 			PositionInList: 1,
 			Title:          "task title",
 			Headline:       "task headline",
@@ -143,7 +143,7 @@ func TestTaskRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, listID, taskID).
 			WillReturnRows(sqlmock.
 				NewRows(taskTableColumns).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
 		res, err = r.FetchByID(userID, listID, taskID)
 		assert.Equal(t, task, res)
 		assert.NoError(t, err)
@@ -169,9 +169,9 @@ func TestTaskRepository_Fetch(t *testing.T) {
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
-			ID:             uuid.MustParse(taskID),
-			OwnerID:        uuid.MustParse(userID),
-			ListID:         uuid.MustParse(listID),
+			UUID:           uuid.MustParse(taskID),
+			OwnerUUID:      uuid.MustParse(userID),
+			ListUUID:       uuid.MustParse(listID),
 			PositionInList: 1,
 			Title:          "task title",
 			Headline:       "task headline",
@@ -194,9 +194,9 @@ func TestTaskRepository_Fetch(t *testing.T) {
 			WithArgs(userID, listID, 1, 10, "", "").
 			WillReturnRows(sqlmock.
 				NewRows(taskTableColumns).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
 		res, err = r.Fetch(userID, listID, 1, 10, "", "")
 		assert.Equal(t, tasks, res)
 		assert.NoError(t, err)
@@ -222,9 +222,9 @@ func TestTaskRepository_FetchFromToday(t *testing.T) {
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
-			ID:             uuid.MustParse(taskID),
-			OwnerID:        uuid.MustParse(userID),
-			ListID:         uuid.MustParse(listID),
+			UUID:           uuid.MustParse(taskID),
+			OwnerUUID:      uuid.MustParse(userID),
+			ListUUID:       uuid.MustParse(listID),
 			PositionInList: 1,
 			Title:          "task title",
 			Headline:       "task headline",
@@ -247,9 +247,9 @@ func TestTaskRepository_FetchFromToday(t *testing.T) {
 			WithArgs(userID, 1, 10, "", "").
 			WillReturnRows(sqlmock.
 				NewRows(taskTableColumns).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
 		res, err = r.FetchFromToday(userID, 1, 10, "", "")
 		assert.Equal(t, tasks, res)
 		assert.NoError(t, err)
@@ -275,9 +275,9 @@ func TestTaskRepository_FetchFromTomorrow(t *testing.T) {
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
-			ID:             uuid.MustParse(taskID),
-			OwnerID:        uuid.MustParse(userID),
-			ListID:         uuid.MustParse(listID),
+			UUID:           uuid.MustParse(taskID),
+			OwnerUUID:      uuid.MustParse(userID),
+			ListUUID:       uuid.MustParse(listID),
 			PositionInList: 1,
 			Title:          "task title",
 			Headline:       "task headline",
@@ -300,9 +300,9 @@ func TestTaskRepository_FetchFromTomorrow(t *testing.T) {
 			WithArgs(userID, 1, 10, "", "").
 			WillReturnRows(sqlmock.
 				NewRows(taskTableColumns).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
 		res, err = r.FetchFromTomorrow(userID, 1, 10, "", "")
 		assert.Equal(t, tasks, res)
 		assert.NoError(t, err)
@@ -328,9 +328,9 @@ func TestTaskRepository_FetchFromDeferred(t *testing.T) {
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
-			ID:             uuid.MustParse(taskID),
-			OwnerID:        uuid.MustParse(userID),
-			ListID:         uuid.MustParse(listID),
+			UUID:           uuid.MustParse(taskID),
+			OwnerUUID:      uuid.MustParse(userID),
+			ListUUID:       uuid.MustParse(listID),
 			PositionInList: 1,
 			Title:          "task title",
 			Headline:       "task headline",
@@ -353,9 +353,9 @@ func TestTaskRepository_FetchFromDeferred(t *testing.T) {
 			WithArgs(userID, 1, 10, "", "").
 			WillReturnRows(sqlmock.
 				NewRows(taskTableColumns).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
-				AddRow(task.ID, task.OwnerID, task.ListID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt).
+				AddRow(task.UUID, task.OwnerUUID, task.ListUUID, task.PositionInList, task.Title, task.Headline, task.Description, task.Priority, task.Status, task.IsPinned, task.DueDate, task.RemindAt, task.CompletedAt, task.CreatedAt, task.UpdatedAt))
 		res, err = r.FetchFromDeferred(userID, 1, 10, "", "")
 		assert.Equal(t, tasks, res)
 		assert.NoError(t, err)

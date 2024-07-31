@@ -10,8 +10,8 @@ import (
 
 /* Represents a logical steps to follow to complete a task.  */
 type Step struct {
-	ID          uuid.UUID  `json:"step_uuid"`
-	TaskID      uuid.UUID  `json:"task_uuid"`
+	UUID        uuid.UUID  `json:"step_uuid"`
+	TaskUUID    uuid.UUID  `json:"task_uuid"`
 	Order       uint64     `json:"order"`
 	Description string     `json:"description"`
 	CompletedAt *time.Time `json:"completed_at"`
