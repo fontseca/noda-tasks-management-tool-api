@@ -290,8 +290,8 @@ DONE 699 tests in 6.567s
 | Actor | HTTP Method | Endpoint                                          | Description                                      |
 |-------|-------------|---------------------------------------------------|--------------------------------------------------|
 | User  | `GET`       | `/me/tasks/{task_uuid}/attachments`                 | Retrieve all the attachments in a task (if any). |
-| User  | `GET`       | `/me/tasks/{task_uuid}/attachments/{attachment_id}` | Get an attachments in a task.                    |
-| User  | `DELETE`    | `/me/tasks/{task_uuid}/attachments/{attachment_id}` | Permanently remove an attachments in a task.     |
+| User  | `GET`       | `/me/tasks/{task_uuid}/attachments/{attachment_uuid}` | Get an attachments in a task.                    |
+| User  | `DELETE`    | `/me/tasks/{task_uuid}/attachments/{attachment_uuid}` | Permanently remove an attachments in a task.     |
 
 ## Recommendations
 
