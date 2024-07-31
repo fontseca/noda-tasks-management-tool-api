@@ -163,9 +163,9 @@ func TestListService_FetchByID(t *testing.T) {
 		err                      error
 		ownerID, groupID, listID = uuid.New(), uuid.New(), uuid.New()
 		actual                   = &model.List{
-			ID:          listID,
-			OwnerID:     ownerID,
-			GroupID:     groupID,
+			UUID:        listID,
+			OwnerUUID:   ownerID,
+			GroupUUID:   groupID,
 			Name:        "the list name (1)",
 			Description: "description",
 		}

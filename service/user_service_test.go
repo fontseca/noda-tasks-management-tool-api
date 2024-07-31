@@ -233,7 +233,7 @@ func TestUserService_FetchByID(t *testing.T) {
 		res    *transfer.User
 		err    error
 		userID = uuid.New()
-		user   = &transfer.User{ID: userID}
+		user   = &transfer.User{UUID: userID}
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -271,7 +271,7 @@ func TestUserService_FetchByEmail(t *testing.T) {
 	var (
 		res  *transfer.User
 		err  error
-		user = &transfer.User{ID: uuid.New(), Email: email}
+		user = &transfer.User{UUID: uuid.New(), Email: email}
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -318,7 +318,7 @@ func TestUserService_FetchRawUserByEmail(t *testing.T) {
 	var (
 		res  *model.User
 		err  error
-		user = &model.User{ID: uuid.New(), Email: email}
+		user = &model.User{UUID: uuid.New(), Email: email}
 	)
 
 	t.Run("success", func(t *testing.T) {

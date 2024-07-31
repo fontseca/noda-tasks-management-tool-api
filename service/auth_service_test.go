@@ -66,7 +66,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 		res  *types.TokenPayload
 		err  error
 		user = &model.User{
-			ID:       uuid.New(),
+			UUID:     uuid.New(),
 			Email:    email,
 			Password: string(hash),
 		}
@@ -112,7 +112,7 @@ func TestAuthenticationService_SignIn(t *testing.T) {
 			if assert.Equal(t, "authentication", sub) {
 				assert.Equal(t, sub, res.Subject)
 			}
-			assert.Equal(t, user.ID.String(), claims["user_id"])
+			assert.Equal(t, user.UUID.String(), claims["user_id"])
 			assert.Equal(t, user.Role, types.Role(claims["user_role"].(float64)))
 		}
 	})

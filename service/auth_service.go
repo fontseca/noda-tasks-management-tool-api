@@ -72,7 +72,7 @@ func (s *authenticationService) SignIn(credentials *transfer.UserCredentials) (p
 		"sub":       "authentication",
 		"iat":       jwt.NewNumericDate(time.Now()),
 		"exp":       jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-		"user_id":   user.ID,
+		"user_id":   user.UUID,
 		"user_role": user.Role,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
