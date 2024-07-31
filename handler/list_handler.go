@@ -44,7 +44,7 @@ func (h *ListHandler) doCreateList(t listType, w http.ResponseWriter, r *http.Re
 	var userID, _ = extractUserPayload(r)
 	var insertedID uuid.UUID
 	if grouped == t {
-		groupID := parseParameterToUUID(w, r, "group_id")
+		groupID := parseParameterToUUID(w, r, "group_uuid")
 		if didNotParse(groupID) {
 			return
 		}
@@ -84,7 +84,7 @@ func (h *ListHandler) doRetrieveListByID(t listType, w http.ResponseWriter, r *h
 		err       error
 	)
 	if grouped == t {
-		groupID = parseParameterToUUID(w, r, "group_id")
+		groupID = parseParameterToUUID(w, r, "group_uuid")
 		if didNotParse(groupID) {
 			return
 		}
@@ -117,7 +117,7 @@ func (h *ListHandler) HandleScatteredListRetrievalByID(w http.ResponseWriter, r 
 
 func (h *ListHandler) HandleGroupedListsRetrieval(w http.ResponseWriter, r *http.Request) {
 	var ownerID, _ = extractUserPayload(r)
-	groupID := parseParameterToUUID(w, r, "group_id")
+	groupID := parseParameterToUUID(w, r, "group_uuid")
 	if didNotParse(groupID) {
 		return
 	}
@@ -189,7 +189,7 @@ func (h *ListHandler) doUpdateList(t listType, w http.ResponseWriter, r *http.Re
 		return
 	}
 	if grouped == t {
-		groupID = parseParameterToUUID(w, r, "group_id")
+		groupID = parseParameterToUUID(w, r, "group_uuid")
 		if didNotParse(groupID) {
 			return
 		}
@@ -232,7 +232,7 @@ func (h *ListHandler) doDeleteList(t listType, w http.ResponseWriter, r *http.Re
 		groupID   = uuid.Nil
 	)
 	if grouped == t {
-		groupID = parseParameterToUUID(w, r, "group_id")
+		groupID = parseParameterToUUID(w, r, "group_uuid")
 		if didNotParse(groupID) {
 			return
 		}

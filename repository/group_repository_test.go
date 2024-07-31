@@ -285,7 +285,7 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
-				NewRows([]string{"group_id", "owner_id", "name", "description", "created_at", "updated_at"}).
+				NewRows([]string{"group_uuid", "owner_id", "name", "description", "created_at", "updated_at"}).
 				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.Error(t, err)

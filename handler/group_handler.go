@@ -47,7 +47,7 @@ func (h *GroupHandler) HandleGroupCreation(w http.ResponseWriter, r *http.Reques
 
 func (h *GroupHandler) HandleRetrieveGroupByID(w http.ResponseWriter, r *http.Request) {
 	userID, _ := extractUserPayload(r)
-	var groupID = parseParameterToUUID(w, r, "group_id")
+	var groupID = parseParameterToUUID(w, r, "group_uuid")
 	if didNotParse(groupID) {
 		return
 	}
@@ -91,7 +91,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	userID, _ := extractUserPayload(r)
-	var groupID = parseParameterToUUID(w, r, "group_id")
+	var groupID = parseParameterToUUID(w, r, "group_uuid")
 	if didNotParse(groupID) {
 		return
 	}
@@ -107,7 +107,7 @@ func (h *GroupHandler) HandleGroupUpdate(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *GroupHandler) HandleGroupDeletion(w http.ResponseWriter, r *http.Request) {
-	var groupID = parseParameterToUUID(w, r, "group_id")
+	var groupID = parseParameterToUUID(w, r, "group_uuid")
 	if didNotParse(groupID) {
 		return
 	}

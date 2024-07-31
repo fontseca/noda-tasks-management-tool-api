@@ -383,9 +383,9 @@ func main() {
 
 	mux.Handle("GET /me/groups", withAuthorization(groupHandler.HandleGroupsRetrieval))
 	mux.Handle("POST /me/groups", withAuthorization(groupHandler.HandleGroupCreation))
-	mux.Handle("GET /me/groups/{group_id}", withAuthorization(groupHandler.HandleRetrieveGroupByID))
-	mux.Handle("PATCH /me/groups/{group_id}", withAuthorization(groupHandler.HandleGroupUpdate))
-	mux.Handle("DELETE /me/groups/{group_id}", withAuthorization(groupHandler.HandleGroupDeletion))
+	mux.Handle("GET /me/groups/{group_uuid}", withAuthorization(groupHandler.HandleRetrieveGroupByID))
+	mux.Handle("PATCH /me/groups/{group_uuid}", withAuthorization(groupHandler.HandleGroupUpdate))
+	mux.Handle("DELETE /me/groups/{group_uuid}", withAuthorization(groupHandler.HandleGroupDeletion))
 
 	var (
 		listRepository = repository.NewListRepository(db)
@@ -398,11 +398,11 @@ func main() {
 	mux.Handle("GET /me/lists/{list_id}", withAuthorization(listHandler.HandleScatteredListRetrievalByID))
 	mux.Handle("PATCH /me/lists/{list_id}", withAuthorization(listHandler.HandlePartialUpdateOfScatteredList))
 	mux.Handle("DELETE /me/lists/{list_id}", withAuthorization(listHandler.HandleScatteredListDeletion))
-	mux.Handle("POST /me/groups/{group_id}/lists", withAuthorization(listHandler.HandleGroupedListCreation))
-	mux.Handle("GET /me/groups/{group_id}/lists", withAuthorization(listHandler.HandleGroupedListsRetrieval))
-	mux.Handle("GET /me/groups/{group_id}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListRetrievalByID))
-	mux.Handle("PATCH /me/groups/{group_id}/lists/{list_id}", withAuthorization(listHandler.HandlePartialUpdateOfGroupedList))
-	mux.Handle("DELETE /me/groups/{group_id}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListDeletion))
+	mux.Handle("POST /me/groups/{group_uuid}/lists", withAuthorization(listHandler.HandleGroupedListCreation))
+	mux.Handle("GET /me/groups/{group_uuid}/lists", withAuthorization(listHandler.HandleGroupedListsRetrieval))
+	mux.Handle("GET /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListRetrievalByID))
+	mux.Handle("PATCH /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandlePartialUpdateOfGroupedList))
+	mux.Handle("DELETE /me/groups/{group_uuid}/lists/{list_id}", withAuthorization(listHandler.HandleGroupedListDeletion))
 
 	serverLogFile, err := os.OpenFile("server.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if nil != err {
