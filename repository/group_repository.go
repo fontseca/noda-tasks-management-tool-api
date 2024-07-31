@@ -33,7 +33,7 @@ func NewGroupRepository(db *sql.DB) GroupRepository {
 func (r *groupRepository) Save(ownerID string, newGroup *transfer.GroupCreation) (insertedID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	result := r.db.QueryRowContext(ctx, "SELECT make_group ($1, $2, $3);",
+	result := r.db.QueryRowContext(ctx, `SELECT "groups"."make" ($1, $2, $3);`,
 		ownerID, newGroup.Name, newGroup.Description)
 	err = result.Scan(&insertedID)
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *groupRepository) Save(ownerID string, newGroup *transfer.GroupCreation)
 func (r *groupRepository) FetchByID(ownerID, groupID string) (group *model.Group, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT * FROM fetch_group_by_id ($1, $2);`
+	query := `SELECT * FROM "groups"."fetch_by_id" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, groupID)
 	err = result.Err()
 	if err != nil {
@@ -81,7 +81,7 @@ func (r *groupRepository) FetchByID(ownerID, groupID string) (group *model.Group
 		return
 	}
 	group = &model.Group{}
-	result.Scan(&group.ID, &group.OwnerID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
+	result.Scan(&group.UUID, &group.OwnerUUID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
 	return
 }
 
@@ -89,13 +89,13 @@ func (r *groupRepository) Fetch(ownerID string, page, rpp int64, needle, sortBy 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
-	SELECT "group_id" AS "id",
-         "owner_id",
+	SELECT "group_uuid" AS "uuid",
+         "owner_uuid",
          "name",
          "description",
          "created_at",
          "updated_at"
-	  FROM fetch_groups ($1, $2, $3, $4, $5);`
+	  FROM "groups"."fetch" ($1, $2, $3, $4, $5);`
 	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortBy)
 	if err != nil {
 		var pqerr *pq.Error
@@ -127,7 +127,7 @@ func (r *groupRepository) Fetch(ownerID string, page, rpp int64, needle, sortBy 
 func (r *groupRepository) Update(ownerID, groupID string, up *transfer.GroupUpdate) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT update_group ($1, $2, $3, $4);`
+	query := `SELECT "groups"."update" ($1, $2, $3, $4);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, groupID, up.Name, up.Description)
 	err = result.Scan(&ok)
 	if err != nil {
@@ -154,7 +154,7 @@ func (r *groupRepository) Update(ownerID, groupID string, up *transfer.GroupUpda
 func (r *groupRepository) Remove(ownerID, groupID string) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT delete_group ($1, $2);`
+	query := `SELECT "groups"."delete" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, groupID)
 	err = result.Scan(&ok)
 	if err != nil {

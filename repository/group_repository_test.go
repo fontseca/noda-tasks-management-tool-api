@@ -21,7 +21,7 @@ func TestGroupRepository_Save(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
-		query = regexp.QuoteMeta(`SELECT make_group ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "groups"."make" ($1, $2, $3);`)
 		res   string
 		err   error
 		next  = &transfer.GroupCreation{Name: "name", Description: "desc"}
@@ -43,7 +43,7 @@ func TestGroupRepository_Save(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, next.Name, next.Description).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Save(userID, next)
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Equal(t, "", res)
@@ -66,18 +66,18 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
-		query = regexp.QuoteMeta(`SELECT * FROM fetch_group_by_id ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT * FROM "groups"."fetch_by_id" ($1, $2);`)
 		res   *model.Group
 		err   error
 		group = &model.Group{
-			ID:          uuid.MustParse(groupID),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.MustParse(groupID),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   nil,
 			UpdatedAt:   nil,
 		}
-		columns = []string{"id", "owner_id", "name", "description", "created_at", "updated_at"}
+		columns = []string{"uuid", "owner_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	t.Run("success", func(t *testing.T) {
@@ -86,7 +86,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 			WithArgs(userID, groupID).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.FetchByID(userID, groupID)
 		assert.NoError(t, err)
 		assert.Equal(t, group, res)
@@ -96,7 +96,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Nil(t, res)
@@ -106,7 +106,7 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.Nil(t, res)
@@ -141,27 +141,27 @@ func TestGroupRepository_Fetch(t *testing.T) {
 	var (
 		r     = NewGroupRepository(db)
 		query = regexp.QuoteMeta(`
-		SELECT "group_id" AS "id",
-					 "owner_id",
+		SELECT "group_uuid" AS "uuid",
+					 "owner_uuid",
 					 "name",
 					 "description",
 					 "created_at",
 					 "updated_at"
-			FROM fetch_groups ($1, $2, $3, $4, $5);`)
+			FROM "groups"."fetch" ($1, $2, $3, $4, $5);`)
 		res       []*model.Group
 		err       error
 		page, rpp int64
 		needle    = "name"
 		sortBy    = "+name"
 		group     = model.Group{
-			ID:          uuid.New(),
-			OwnerID:     uuid.MustParse(userID),
+			UUID:        uuid.New(),
+			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
 			Description: "desc",
 			CreatedAt:   nil,
 			UpdatedAt:   nil,
 		}
-		columns = []string{"id", "owner_id", "name", "description", "created_at", "updated_at"}
+		columns = []string{"uuid", "owner_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
 	t.Run("success with 2 records", func(t *testing.T) {
@@ -171,8 +171,8 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
@@ -185,16 +185,16 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy) /* Should set 'rpp' to 10.  */
 		assert.NoError(t, err)
 		assert.Len(t, res, 10)
@@ -207,11 +207,11 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 5)
@@ -224,13 +224,13 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.NoError(t, err)
 		assert.Len(t, res, 7)
@@ -253,7 +253,7 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.Nil(t, res)
@@ -286,7 +286,7 @@ func TestGroupRepository_Fetch(t *testing.T) {
 			WithArgs(userID, page, rpp, needle, sortBy).
 			WillReturnRows(sqlmock.
 				NewRows([]string{"group_id", "owner_id", "name", "description", "created_at", "updated_at"}).
-				AddRow(group.ID, group.OwnerID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
+				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
 		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
 		assert.Error(t, err)
 		assert.Nil(t, res)
@@ -299,7 +299,7 @@ func TestGroupRepository_Update(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
-		query = regexp.QuoteMeta(`SELECT update_group ($1, $2, $3, $4);`)
+		query = regexp.QuoteMeta(`SELECT "groups"."update" ($1, $2, $3, $4);`)
 		res   bool
 		err   error
 		up    = &transfer.GroupUpdate{}
@@ -333,7 +333,7 @@ func TestGroupRepository_Update(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Update(userID, groupID, up)
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.False(t, res)
@@ -343,7 +343,7 @@ func TestGroupRepository_Update(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID, up.Name, up.Description).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 		res, err = r.Update(userID, groupID, up)
 		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.False(t, res)
@@ -376,7 +376,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
-		query = regexp.QuoteMeta(`SELECT delete_group ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT "groups"."delete" ($1, $2);`)
 		res   bool
 		err   error
 	)
@@ -409,7 +409,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
 		res, err = r.Remove(userID, groupID)
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
 		assert.False(t, res)
@@ -419,7 +419,7 @@ func TestGroupRepository_Remove(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with ID"})
+			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
 		res, err = r.Remove(userID, groupID)
 		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
 		assert.False(t, res)
