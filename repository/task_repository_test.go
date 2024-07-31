@@ -22,7 +22,7 @@ func TestTaskRepository_Save(t *testing.T) {
 	defer db.Close()
 	var (
 		r        = NewTaskRepository(db)
-		query    = regexp.QuoteMeta(`SELECT make_task ($1, $2, $3);`)
+		query    = regexp.QuoteMeta(`SELECT "tasks"."make" ($1, $2, $3);`)
 		creation = &transfer.TaskCreation{
 			Title:       "task title",
 			Description: "task description",
@@ -64,7 +64,7 @@ func TestTaskRepository_Duplicate(t *testing.T) {
 	defer db.Close()
 	var (
 		r         = NewTaskRepository(db)
-		query     = regexp.QuoteMeta(`SELECT duplicate_task ($1, $2);`)
+		query     = regexp.QuoteMeta(`SELECT "tasks"."duplicate" ($1, $2);`)
 		res       string
 		err       error
 		replicaID = uuid.New().String()
@@ -94,7 +94,7 @@ func TestTaskRepository_Duplicate(t *testing.T) {
 
 var taskTableColumns = []string{
 	"task_uuid",
-	"owner_id",
+	"owner_uuid",
 	"list_uuid",
 	"position_in_list",
 	"title",
@@ -115,7 +115,7 @@ func TestTaskRepository_FetchByID(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT fetch_task_by_id ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."fetch_by_uuid" ($1, $2, $3);`)
 		res   *model.Task
 		err   error
 		task  = &model.Task{
@@ -165,7 +165,7 @@ func TestTaskRepository_Fetch(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT fetch_tasks ($1, $2, $3, $4, $5, $6);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."fetch" ($1, $2, $3, $4, $5, $6);`)
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
@@ -218,7 +218,7 @@ func TestTaskRepository_FetchFromToday(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT fetch_tasks_from_today_list ($1, $2, $3, $4, $5);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."fetch_from_today_list" ($1, $2, $3, $4, $5);`)
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
@@ -271,7 +271,7 @@ func TestTaskRepository_FetchFromTomorrow(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT fetch_tasks_from_tomorrow_list ($1, $2, $3, $4, $5);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."fetch_from_tomorrow_list" ($1, $2, $3, $4, $5);`)
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
@@ -324,7 +324,7 @@ func TestTaskRepository_FetchFromDeferred(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT fetch_tasks_from_deferred_list ($1, $2, $3, $4, $5);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."fetch_from_deferred_list" ($1, $2, $3, $4, $5);`)
 		res   []*model.Task
 		err   error
 		task  = &model.Task{
@@ -377,7 +377,7 @@ func TestTaskRepository_Update(t *testing.T) {
 	defer db.Close()
 	var (
 		r        = NewTaskRepository(db)
-		query    = regexp.QuoteMeta(`SELECT update_task ($1, $2, $3, $4);`)
+		query    = regexp.QuoteMeta(`SELECT "tasks"."update" ($1, $2, $3, $4);`)
 		creation = &transfer.TaskUpdate{
 			Title:       "task title",
 			Description: "task description",
@@ -417,7 +417,7 @@ func TestTaskRepository_Reorder(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT reorder_task_in_list ($1, $2, $3, $4);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."reorder_task_in_list" ($1, $2, $3, $4);`)
 		res   bool
 		err   error
 	)
@@ -450,7 +450,7 @@ func TestTaskRepository_SetReminder(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT set_task_reminder_date ($1, $2, $3, $4);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."set_reminder_date" ($1, $2, $3, $4);`)
 		res   bool
 		err   error
 		tm    = time.Now().Add(5 * time.Hour)
@@ -484,7 +484,7 @@ func TestTaskRepository_SetPriority(t *testing.T) {
 	defer db.Close()
 	var (
 		r        = NewTaskRepository(db)
-		query    = regexp.QuoteMeta(`SELECT set_task_priority ($1, $2, $3, $4);`)
+		query    = regexp.QuoteMeta(`SELECT "tasks"."set_priority" ($1, $2, $3, $4);`)
 		res      bool
 		err      error
 		priority = types.TaskPriorityHigh
@@ -518,7 +518,7 @@ func TestTaskRepository_SetDueDate(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT set_task_due_date ($1, $2, $3, $4);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."set_due_date" ($1, $2, $3, $4);`)
 		res   bool
 		err   error
 		tm    = time.Now().Add(5 * time.Hour)
@@ -552,7 +552,7 @@ func TestTaskRepository_Complete(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT set_task_as_completed ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."set_as_completed" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -585,7 +585,7 @@ func TestTaskRepository_Resume(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT set_task_as_uncompleted ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."set_as_uncompleted" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -618,7 +618,7 @@ func TestTaskRepository_Pin(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT pin_task ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."pin" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -651,7 +651,7 @@ func TestTaskRepository_Unpin(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT unpin_task ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."unpin" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -684,7 +684,7 @@ func TestTaskRepository_Move(t *testing.T) {
 	defer db.Close()
 	var (
 		r            = NewTaskRepository(db)
-		query        = regexp.QuoteMeta(`SELECT move_task_from_list ($1, $2, $3);`)
+		query        = regexp.QuoteMeta(`SELECT "tasks"."move_one_from_list" ($1, $2, $3);`)
 		res          bool
 		err          error
 		targetListID = uuid.New().String()
@@ -718,7 +718,7 @@ func TestTaskRepository_Today(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT move_task_to_today_list ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."move_one_to_today_list" ($1, $2);`)
 		res   bool
 		err   error
 	)
@@ -751,7 +751,7 @@ func TestTaskRepository_Tomorrow(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT move_task_to_tomorrow_list ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."move_one_to_tomorrow_list" ($1, $2);`)
 		res   bool
 		err   error
 	)
@@ -784,7 +784,7 @@ func TestTaskRepository_Defer(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT move_task_to_deferred_list ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."move_one_to_deferred_list" ($1, $2);`)
 		res   bool
 		err   error
 	)
@@ -817,7 +817,7 @@ func TestTaskRepository_Trash(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT trash_task ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."trash" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -850,7 +850,7 @@ func TestTaskRepository_RestoreFromTrash(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT restore_task_from_trash ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."restore_from_trash" ($1, $2, $3);`)
 		res   bool
 		err   error
 	)
@@ -883,7 +883,7 @@ func TestTaskRepository_Delete(t *testing.T) {
 	defer db.Close()
 	var (
 		r     = NewTaskRepository(db)
-		query = regexp.QuoteMeta(`SELECT delete_task ($1, $2, $3);`)
+		query = regexp.QuoteMeta(`SELECT "tasks"."delete" ($1, $2, $3);`)
 		err   error
 	)
 

@@ -51,7 +51,7 @@ func NewTaskRepository(db *sql.DB) TaskRepository {
 func (r *taskRepository) Save(ownerID, listID string, creation *transfer.TaskCreation) (insertedID string, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT make_task ($1, $2, $3);`
+	var query = `SELECT "tasks"."make" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID,
 		fmt.Sprintf("ROW('%s', '%s', '%s', '%s', '%s', %s, %s)",
 			creation.Title, creation.Headline, creation.Description, creation.Priority, creation.Status, "NULL", "NULL"))
@@ -78,7 +78,7 @@ func (r *taskRepository) Save(ownerID, listID string, creation *transfer.TaskCre
 func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT duplicate_task ($1, $2);`
+	var query = `SELECT "tasks"."duplicate" ($1, $2);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID)
 	err = row.Scan(&replicaID)
 	if nil != err {
@@ -103,7 +103,7 @@ func (r *taskRepository) Duplicate(ownerID, taskID string) (replicaID string, er
 func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.Task, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT fetch_task_by_id ($1, $2, $3);`
+	var query = `SELECT "tasks"."fetch_by_uuid" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	task = new(model.Task)
 	err = row.Scan(
@@ -146,7 +146,7 @@ func (r *taskRepository) FetchByID(ownerID, listID, taskID string) (task *model.
 func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT fetch_tasks ($1, $2, $3, $4, $5, $6);`
+	var query = `SELECT "tasks"."fetch" ($1, $2, $3, $4, $5, $6);`
 	rows, err := r.db.QueryContext(ctx, query, ownerID, listID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
@@ -196,7 +196,7 @@ func (r *taskRepository) Fetch(ownerID, listID string, page, rpp int64, needle, 
 func (r *taskRepository) FetchFromToday(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT fetch_tasks_from_today_list ($1, $2, $3, $4, $5);`
+	var query = `SELECT "tasks"."fetch_from_today_list" ($1, $2, $3, $4, $5);`
 	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
@@ -246,7 +246,7 @@ func (r *taskRepository) FetchFromToday(ownerID string, page, rpp int64, needle,
 func (r *taskRepository) FetchFromTomorrow(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT fetch_tasks_from_tomorrow_list ($1, $2, $3, $4, $5);`
+	var query = `SELECT "tasks"."fetch_from_tomorrow_list" ($1, $2, $3, $4, $5);`
 	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
@@ -296,7 +296,7 @@ func (r *taskRepository) FetchFromTomorrow(ownerID string, page, rpp int64, need
 func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, needle, sortExpr string) (tasks []*model.Task, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT fetch_tasks_from_deferred_list ($1, $2, $3, $4, $5);`
+	var query = `SELECT "tasks"."fetch_from_deferred_list" ($1, $2, $3, $4, $5);`
 	rows, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
 	if nil != err {
 		var pqerr *pq.Error
@@ -346,7 +346,7 @@ func (r *taskRepository) FetchFromDeferred(ownerID string, page, rpp int64, need
 func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer.TaskUpdate) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT update_task ($1, $2, $3, $4);`
+	var query = `SELECT "tasks"."update" ($1, $2, $3, $4);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID,
 		fmt.Sprintf("ROW('%s', '%s', '%s')", update.Title, update.Headline, update.Description))
 	err = row.Scan(&ok)
@@ -374,7 +374,7 @@ func (r *taskRepository) Update(ownerID, listID, taskID string, update *transfer
 func (r *taskRepository) Reorder(ownerID, listID, taskID string, position uint64) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT reorder_task_in_list ($1, $2, $3, $4);`
+	var query = `SELECT "tasks"."reorder_task_in_list" ($1, $2, $3, $4);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, position)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -401,7 +401,7 @@ func (r *taskRepository) Reorder(ownerID, listID, taskID string, position uint64
 func (r *taskRepository) SetReminder(ownerID, listID, taskID string, remindAt time.Time) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT set_task_reminder_date ($1, $2, $3, $4);`
+	var query = `SELECT "tasks"."set_reminder_date" ($1, $2, $3, $4);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, remindAt)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -428,7 +428,7 @@ func (r *taskRepository) SetReminder(ownerID, listID, taskID string, remindAt ti
 func (r *taskRepository) SetPriority(ownerID, listID, taskID string, priority types.TaskPriority) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT set_task_priority ($1, $2, $3, $4);`
+	var query = `SELECT "tasks"."set_priority" ($1, $2, $3, $4);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, priority)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -455,7 +455,7 @@ func (r *taskRepository) SetPriority(ownerID, listID, taskID string, priority ty
 func (r *taskRepository) SetDueDate(ownerID, listID, taskID string, dueDate time.Time) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT set_task_due_date ($1, $2, $3, $4);`
+	var query = `SELECT "tasks"."set_due_date" ($1, $2, $3, $4);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID, dueDate)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -482,7 +482,7 @@ func (r *taskRepository) SetDueDate(ownerID, listID, taskID string, dueDate time
 func (r *taskRepository) Complete(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT set_task_as_completed ($1, $2, $3);`
+	var query = `SELECT "tasks"."set_as_completed" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -509,7 +509,7 @@ func (r *taskRepository) Complete(ownerID, listID, taskID string) (ok bool, err 
 func (r *taskRepository) Resume(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT set_task_as_uncompleted ($1, $2, $3);`
+	var query = `SELECT "tasks"."set_as_uncompleted" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -536,7 +536,7 @@ func (r *taskRepository) Resume(ownerID, listID, taskID string) (ok bool, err er
 func (r *taskRepository) Pin(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT pin_task ($1, $2, $3);`
+	var query = `SELECT "tasks"."pin" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -563,7 +563,7 @@ func (r *taskRepository) Pin(ownerID, listID, taskID string) (ok bool, err error
 func (r *taskRepository) Unpin(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT unpin_task ($1, $2, $3);`
+	var query = `SELECT "tasks"."unpin" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -590,7 +590,7 @@ func (r *taskRepository) Unpin(ownerID, listID, taskID string) (ok bool, err err
 func (r *taskRepository) Move(ownerID, taskID, targetListID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT move_task_from_list ($1, $2, $3);`
+	var query = `SELECT "tasks"."move_one_from_list" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID, targetListID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -617,7 +617,7 @@ func (r *taskRepository) Move(ownerID, taskID, targetListID string) (ok bool, er
 func (r *taskRepository) Today(ownerID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT move_task_to_today_list ($1, $2);`
+	var query = `SELECT "tasks"."move_one_to_today_list" ($1, $2);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -642,7 +642,7 @@ func (r *taskRepository) Today(ownerID, taskID string) (ok bool, err error) {
 func (r *taskRepository) Tomorrow(ownerID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT move_task_to_tomorrow_list ($1, $2);`
+	var query = `SELECT "tasks"."move_one_to_tomorrow_list" ($1, $2);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -667,7 +667,7 @@ func (r *taskRepository) Tomorrow(ownerID, taskID string) (ok bool, err error) {
 func (r *taskRepository) Defer(ownerID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT move_task_to_deferred_list ($1, $2);`
+	var query = `SELECT "tasks"."move_one_to_deferred_list" ($1, $2);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -692,7 +692,7 @@ func (r *taskRepository) Defer(ownerID, taskID string) (ok bool, err error) {
 func (r *taskRepository) Trash(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT trash_task ($1, $2, $3);`
+	var query = `SELECT "tasks"."trash" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -719,7 +719,7 @@ func (r *taskRepository) Trash(ownerID, listID, taskID string) (ok bool, err err
 func (r *taskRepository) RestoreFromTrash(ownerID, listID, taskID string) (ok bool, err error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT restore_task_from_trash ($1, $2, $3);`
+	var query = `SELECT "tasks"."restore_from_trash" ($1, $2, $3);`
 	var row = r.db.QueryRowContext(ctx, query, ownerID, listID, taskID)
 	err = row.Scan(&ok)
 	if nil != err {
@@ -746,7 +746,7 @@ func (r *taskRepository) RestoreFromTrash(ownerID, listID, taskID string) (ok bo
 func (r *taskRepository) Delete(ownerID, listID, taskID string) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var query = `SELECT delete_task ($1, $2, $3);`
+	var query = `SELECT "tasks"."delete" ($1, $2, $3);`
 	_, err := r.db.ExecContext(ctx, query, ownerID, listID, taskID)
 	if nil != err {
 		var pqerr *pq.Error
