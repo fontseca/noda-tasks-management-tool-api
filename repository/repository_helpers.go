@@ -8,22 +8,22 @@ import (
 
 func isNonexistentUserError(err *pq.Error) bool {
 	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent user with ID")
+		strings.Contains(err.Message, "nonexistent user with UUID")
 }
 
 func isNonexistentGroupError(err *pq.Error) bool {
 	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent group with ID")
+		strings.Contains(err.Message, "nonexistent group with UUID")
 }
 
 func isNonexistentListError(err *pq.Error) bool {
 	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent list with ID")
+		strings.Contains(err.Message, "nonexistent list with UUID")
 }
 
 func isNonexistentTaskError(err *pq.Error) bool {
 	return err.Code == "P0001" &&
-		strings.Contains(err.Message, "nonexistent list with ID")
+		strings.Contains(err.Message, "nonexistent list with UUID")
 }
 
 func isContextDeadlineError(err error) bool {
