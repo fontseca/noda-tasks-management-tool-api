@@ -282,8 +282,8 @@ DONE 699 tests in 6.567s
 |-------|-------------|---------------------|---------------------------------------|
 | User  | `GET`       | `/me/tags`          | Retrieve the steps to achieve a task. |
 | User  | `POST`      | `/me/tags`          | Create a new tag.                     |
-| User  | `PATCH`     | `/me/tags/{tag_id}` | Partially update a tag.               |
-| User  | `DELETE`    | `/me/tags/{tag_id}` | Permanently remove a tag.             |
+| User  | `PATCH`     | `/me/tags/{tag_uuid}` | Partially update a tag.               |
+| User  | `DELETE`    | `/me/tags/{tag_uuid}` | Permanently remove a tag.             |
 
 ### Attachments management
 
