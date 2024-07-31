@@ -10,8 +10,8 @@ import (
 
 /* Represents system users with their personal information and account details.  */
 type UserSetting struct {
-	ID        uuid.UUID `json:"user_setting_id"`
-	UserID    uuid.UUID `json:"user_id"`
+	ID        uuid.UUID `json:"user_setting_uuid"`
+	UserID    uuid.UUID `json:"user_uuid"`
 	Key       string    `json:"key"`
 	Value     any       `json:"value"`
 	CreatedAt time.Time `json:"created_at"`

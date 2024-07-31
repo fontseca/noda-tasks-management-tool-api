@@ -35,8 +35,8 @@ func (u *UserUpdate) Validate() error {
 
 /* Transfers a user response without a password.  A raw user.   */
 type User struct {
-	ID         uuid.UUID  `json:"user_id"`
-	Role       types.Role `json:"role"`
+	UUID       uuid.UUID  `json:"user_uuid"`
+	Role       types.Role `json:"role_id"`
 	FirstName  string     `json:"first_name"`
 	MiddleName string     `json:"middle_name"`
 	LastName   string     `json:"last_name"`

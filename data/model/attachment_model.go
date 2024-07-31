@@ -10,9 +10,9 @@ import (
 
 /* Abstracts a file attached to a task.  */
 type Attachment struct {
-	ID        uuid.UUID `json:"attachment_id"`
-	OwnerID   uuid.UUID `json:"owner_id"`
-	TaskID    uuid.UUID `json:"task_id"`
+	UUID      uuid.UUID `json:"attachment_uuid"`
+	OwnerUUID uuid.UUID `json:"owner_uuid"`
+	TaskUUID  uuid.UUID `json:"task_uuid"`
 	FileName  string    `json:"file_name"`
 	FileURL   string    `json:"file_url"`
 	CreatedAt time.Time `json:"created_at"`

@@ -10,8 +10,8 @@ import (
 
 /* Gathers together one or more lists.  */
 type Group struct {
-	ID          uuid.UUID  `json:"group_id"`
-	OwnerID     uuid.UUID  `json:"owner_id"`
+	UUID        uuid.UUID  `json:"group_uuid"`
+	OwnerUUID   uuid.UUID  `json:"owner_uuid"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	CreatedAt   *time.Time `json:"created_at"`

@@ -10,9 +10,9 @@ import (
 
 /* Organizes tasks under a single unit.  */
 type List struct {
-	ID          uuid.UUID `json:"list_id"`
-	OwnerID     uuid.UUID `json:"owner_id"`
-	GroupID     uuid.UUID `json:"group_id"`
+	UUID        uuid.UUID `json:"list_uuid"`
+	OwnerUUID   uuid.UUID `json:"owner_uuid"`
+	GroupUUID   uuid.UUID `json:"group_uuid"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
