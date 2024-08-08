@@ -19,24 +19,20 @@ const (
 type TaskPriority string
 
 const (
-	// TaskPriorityHigh represents a high-priority task.
-	TaskPriorityHigh TaskPriority = "high"
-	// TaskPriorityMedium represents a medium-priority task.
+	TaskPriorityUrgent TaskPriority = "urgent"
+	TaskPriorityHigh   TaskPriority = "high"
 	TaskPriorityMedium TaskPriority = "medium"
-	// TaskPriorityLow represents a low-priority task.
-	TaskPriorityLow TaskPriority = "low"
+	TaskPriorityNormal TaskPriority = "normal"
+	TaskPriorityLow    TaskPriority = "low"
 )
 
 // TaskStatus represents the status of a task.
 type TaskStatus string
 
 const (
-	// TaskStatusIncomplete represents an incomplete task.
-	TaskStatusIncomplete TaskStatus = "incomplete"
-	// TaskStatusComplete represents a complete task.
-	TaskStatusComplete TaskStatus = "complete"
-	// TaskStatusDeferred represents a deferred task.
-	TaskStatusDeferred TaskStatus = "deferred"
+	TaskStatusIncomplete TaskStatus = "in progress"
+	TaskStatusComplete   TaskStatus = "finished"
+	TaskStatusDeferred   TaskStatus = "decayed"
 )
 
 // Position represents a position in a sequence.
