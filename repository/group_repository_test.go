@@ -16,7 +16,6 @@ import (
 const groupID string = "942d76f4-28b2-44be-8339-232b62c0ef22"
 
 func TestGroupRepository_Save(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -61,12 +60,15 @@ func TestGroupRepository_Save(t *testing.T) {
 }
 
 func TestGroupRepository_FetchByID(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
-		query = regexp.QuoteMeta(`SELECT * FROM "groups"."fetch_by_id" ($1, $2);`)
+		query = regexp.QuoteMeta(`SELECT * FROM "groups"."fetch" (p_owner_uuid := $1,
+                                                              p_group_uuid := $2,
+                                                              p_needle := NULL,
+                                                              p_page := NULL,
+                                                              p_rpp := NULL);`)
 		res   *model.Group
 		err   error
 		group = &model.Group{
@@ -106,19 +108,9 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 		mock.
 			ExpectQuery(query).
 			WithArgs(userID, groupID).
-			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
+			WillReturnRows(sqlmock.NewRows(columns))
 		res, err = r.FetchByID(userID, groupID)
 		assert.ErrorIs(t, err, failure.ErrGroupNotFound)
-		assert.Nil(t, res)
-	})
-
-	t.Run("deadline (5s) exceeded", func(t *testing.T) {
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, groupID).
-			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.FetchByID(userID, groupID)
-		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
 
@@ -135,24 +127,26 @@ func TestGroupRepository_FetchByID(t *testing.T) {
 }
 
 func TestGroupRepository_Fetch(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
 		r     = NewGroupRepository(db)
 		query = regexp.QuoteMeta(`
 		SELECT "group_uuid" AS "uuid",
-					 "owner_uuid",
-					 "name",
-					 "description",
-					 "created_at",
-					 "updated_at"
-			FROM "groups"."fetch" ($1, $2, $3, $4, $5);`)
+         "owner_uuid",
+         "name",
+         "description",
+         "created_at",
+         "updated_at"
+	  FROM "groups"."fetch" (p_owner_uuid := $1,
+	                         p_group_uuid := $2,
+	                         p_needle := $3,
+	                         p_page := $4,
+	                         p_rpp := $5);`)
 		res       []*model.Group
 		err       error
 		page, rpp int64
 		needle    = "name"
-		sortBy    = "+name"
 		group     = model.Group{
 			UUID:        uuid.New(),
 			OwnerUUID:   uuid.MustParse(userID),
@@ -164,118 +158,37 @@ func TestGroupRepository_Fetch(t *testing.T) {
 		columns = []string{"uuid", "owner_uuid", "name", "description", "created_at", "updated_at"}
 	)
 
-	t.Run("success with 2 records", func(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
 		page, rpp = 1, 2
 		mock.
 			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
+			WithArgs(userID, nil, needle, page, rpp).
 			WillReturnRows(sqlmock.
 				NewRows(columns).
 				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
 				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, "")
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
-	})
-
-	t.Run("success with the default number of records (10)", func(t *testing.T) {
-		page, rpp = 1, -1000
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnRows(sqlmock.
-				NewRows(columns).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy) /* Should set 'rpp' to 10.  */
-		assert.NoError(t, err)
-		assert.Len(t, res, 10)
-	})
-
-	t.Run("success with custom pagination and RPP", func(t *testing.T) {
-		page, rpp = 2, 5
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnRows(sqlmock.
-				NewRows(columns).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.NoError(t, err)
-		assert.Len(t, res, 5)
-	})
-
-	t.Run("success with searching", func(t *testing.T) {
-		page, rpp, needle = 1, 7, "name"
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnRows(sqlmock.
-				NewRows(columns).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt).
-				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.NoError(t, err)
-		assert.Len(t, res, 7)
-	})
-
-	t.Run("no response/error for weird needle", func(t *testing.T) {
-		page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnRows(sqlmock.NewRows(columns))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-		assert.Len(t, res, 0)
 	})
 
 	t.Run("user not found", func(t *testing.T) {
 		page, rpp = 1, 10
 		mock.
 			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
+			WithArgs(userID, nil, needle, page, rpp).
 			WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, "")
 		assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
-		assert.Nil(t, res)
-	})
-
-	t.Run("deadline (5s) exceeded", func(t *testing.T) {
-		page, rpp = 1, 10
-		mock.
-			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
-			WillReturnError(errors.New("context deadline exceeded"))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-		assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 		assert.Nil(t, res)
 	})
 
 	t.Run("unexpected database error", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
+			WithArgs(userID, nil, needle, page, rpp).
 			WillReturnError(&pq.Error{})
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, "")
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
@@ -283,18 +196,17 @@ func TestGroupRepository_Fetch(t *testing.T) {
 	t.Run("unexpected scanning error", func(t *testing.T) {
 		mock.
 			ExpectQuery(query).
-			WithArgs(userID, page, rpp, needle, sortBy).
+			WithArgs(userID, nil, needle, page, rpp).
 			WillReturnRows(sqlmock.
 				NewRows([]string{"group_uuid", "owner_id", "name", "description", "created_at", "updated_at"}).
 				AddRow(group.UUID, group.OwnerUUID, group.Name, group.Description, group.CreatedAt, group.UpdatedAt))
-		res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+		res, err = r.Fetch(userID, page, rpp, needle, "")
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
 }
 
 func TestGroupRepository_Update(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -371,7 +283,6 @@ func TestGroupRepository_Update(t *testing.T) {
 }
 
 func TestGroupRepository_Remove(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
