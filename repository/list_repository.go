@@ -59,9 +59,6 @@ func (r *listRepository) Save(ownerID, groupID string, creation *transfer.ListCr
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -70,40 +67,40 @@ func (r *listRepository) Save(ownerID, groupID string, creation *transfer.ListCr
 }
 
 func (r *listRepository) FetchByID(ownerID, groupID, listID string) (list *model.List, err error) {
+	query := `SELECT * FROM "lists"."fetch" (p_owner_uuid := $1,
+                                           p_group_uuid := $2,
+                                           p_list_uuid := $3,
+                                           p_needle := NULL,
+                                           p_page := NULL,
+                                           p_rpp := NULL);`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT * FROM "lists"."fetch_by_uuid" ($1, $2, $3);`
-	var result *sql.Row
-	if strings.Trim(groupID, " ") != "" {
-		result = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID)
-	} else {
-		result = r.db.QueryRowContext(ctx, query, ownerID, nil, listID)
-	}
+	result := r.db.QueryRowContext(ctx, query, ownerID, groupID, listID)
 	list = &model.List{}
 	err = result.Scan(
 		&list.UUID, &list.OwnerUUID, &list.GroupUUID, &list.Name, &list.Description, &list.CreatedAt, &list.UpdatedAt)
 	if err != nil {
-		var pqerr *pq.Error
-		if errors.As(err, &pqerr) {
-			switch {
-			default:
-				log.Println(failure.PQErrorToString(pqerr))
-			case isNonexistentUserError(pqerr):
-				err = failure.ErrUserNoLongerExists
-			case isNonexistentGroupError(pqerr):
-				err = failure.ErrGroupNotFound
-			case isNonexistentListError(pqerr):
-				err = failure.ErrListNotFound
-			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
+		if errors.Is(err, sql.ErrNoRows) {
+			err = failure.ErrListNotFound
 		} else {
-			log.Println(err)
+			var pqerr *pq.Error
+			if errors.As(err, &pqerr) {
+				switch {
+				default:
+					log.Println(failure.PQErrorToString(pqerr))
+				case isNonexistentUserError(pqerr):
+					err = failure.ErrUserNoLongerExists
+				case isNonexistentGroupError(pqerr):
+					err = failure.ErrGroupNotFound
+				case isNonexistentListError(pqerr):
+				}
+			} else {
+				log.Println(err)
+			}
 		}
 		return nil, err
 	}
-	return
+	return list, nil
 }
 
 func (r *listRepository) GetTodayListID(ownerID string) (listID string, err error) {
@@ -121,9 +118,6 @@ func (r *listRepository) GetTodayListID(ownerID string) (listID string, err erro
 			case isNonexistentUserError(pqerr):
 				err = failure.ErrUserNoLongerExists
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		}
 	} else {
 		log.Println(err)
@@ -146,9 +140,6 @@ func (r *listRepository) GetTomorrowListID(ownerID string) (listID string, err e
 			case isNonexistentUserError(pqerr):
 				err = failure.ErrUserNoLongerExists
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		}
 	} else {
 		log.Println(err)
@@ -161,17 +152,22 @@ func (r *listRepository) Fetch(
 	page, rpp int64,
 	needle, sortExpr string,
 ) (lists []*model.List, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	query := `SELECT "list_uuid" AS "uuid",
 		               "owner_uuid",
 		               "group_uuid",
 		               "name",
-		               "description",
+		               coalesce ("description", '') AS "description",
 		               "created_at",
 		               "updated_at"
-              FROM "lists"."fetch" ($1, $2, $3, $4, $5);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
+              FROM "lists"."fetch" (p_owner_uuid := $1,
+                                    p_group_uuid := NULL,
+                                    p_list_uuid := NULL,
+                                    p_needle := $3,
+                                    p_page := $4,
+                                    p_rpp := $5);`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	result, err := r.db.QueryContext(ctx, query, ownerID, needle, page, rpp)
 	if err != nil {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -181,9 +177,6 @@ func (r *listRepository) Fetch(
 			case isNonexistentUserError(pqerr):
 				err = failure.ErrUserNoLongerExists
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -211,11 +204,16 @@ func (r *listRepository) FetchGrouped(
            "owner_uuid",
            "group_uuid",
 		       "name",
-		       "description",
+		       coalesce ("description", '') AS "description",
 		       "created_at",
 		       "updated_at"
-      FROM "lists"."fetch_grouped" ($1, $2, $3, $4, $5, $6);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, page, rpp, needle, sortExpr)
+      FROM "lists"."fetch" (p_owner_uuid := $1,
+                            p_group_uuid := $2,
+                            p_list_uuid := NULL,
+                            p_needle := $3,
+                            p_page := $4,
+                            p_rpp := $5);`
+	result, err := r.db.QueryContext(ctx, query, ownerID, groupID, needle, page, rpp)
 	if err != nil {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -227,9 +225,6 @@ func (r *listRepository) FetchGrouped(
 			case isNonexistentGroupError(pqerr):
 				err = failure.ErrGroupNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -250,18 +245,23 @@ func (r *listRepository) FetchScattered(
 	page, rpp int64,
 	needle, sortExpr string,
 ) (lists []*model.List, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	query := `
 	SELECT "list_uuid" AS "uuid",
          "owner_uuid",
          "group_uuid",
 		     "name",
-		     "description",
+		     coalesce ("description", '') AS "description",
 		     "created_at",
 		     "updated_at"
-    FROM "lists"."fetch_scattered" ($1, $2, $3, $4, $5);`
-	result, err := r.db.QueryContext(ctx, query, ownerID, page, rpp, needle, sortExpr)
+    FROM "lists"."fetch" (p_owner_uuid := $1,
+                          p_group_uuid := NULL,
+                          p_list_uuid := NULL,
+                          p_needle := $2,
+                          p_page := $3,
+                          p_rpp := $4);`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	result, err := r.db.QueryContext(ctx, query, ownerID, needle, page, rpp)
 	if nil != err {
 		var pqerr *pq.Error
 		if errors.As(err, &pqerr) {
@@ -271,9 +271,6 @@ func (r *listRepository) FetchScattered(
 			case isNonexistentUserError(pqerr):
 				err = failure.ErrUserNoLongerExists
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -290,10 +287,10 @@ func (r *listRepository) FetchScattered(
 }
 
 func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	query := `SELECT "lists"."delete" ($1, $2, $3);`
 	var result *sql.Row
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if "" == strings.Trim(groupID, " ") {
 		result = r.db.QueryRowContext(ctx, query, ownerID, nil, listID)
 	} else {
@@ -313,9 +310,6 @@ func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err e
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -324,9 +318,9 @@ func (r *listRepository) Remove(ownerID, groupID, listID string) (ok bool, err e
 }
 
 func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, err error) {
+	query := `SELECT "lists"."duplicate" ($1, $2);`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT "lists"."duplicate" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID)
 	err = result.Scan(&replicaID)
 	if err != nil {
@@ -342,9 +336,6 @@ func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, er
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -353,9 +344,9 @@ func (r *listRepository) Duplicate(ownerID, listID string) (replicaID string, er
 }
 
 func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
+	query := `SELECT "lists"."convert_to_scattered_list" ($1, $2);`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT "lists"."convert_to_scattered_list" ($1, $2);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID)
 	err = result.Scan(&ok)
 	if err != nil {
@@ -369,9 +360,6 @@ func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -380,9 +368,9 @@ func (r *listRepository) Scatter(ownerID, listID string) (ok bool, err error) {
 }
 
 func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, err error) {
+	query := `SELECT "lists"."move" ($1, $2, $3);`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT "lists"."move" ($1, $2, $3);`
 	result := r.db.QueryRowContext(ctx, query, ownerID, listID, targetGroupID)
 	err = result.Scan(&ok)
 	if err != nil {
@@ -398,9 +386,6 @@ func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, e
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}
@@ -409,9 +394,9 @@ func (r *listRepository) Move(ownerID, listID, targetGroupID string) (ok bool, e
 }
 
 func (r *listRepository) Update(ownerID, groupID, listID string, update *transfer.ListUpdate) (ok bool, err error) {
+	query := `SELECT "lists"."update" ($1, $2, $3, $4, $5);`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT "lists"."update" ($1, $2, $3, $4, $5);`
 	var row *sql.Row
 	if "" != strings.Trim(groupID, " ") {
 		row = r.db.QueryRowContext(ctx, query, ownerID, groupID, listID, update.Name, update.Description)
@@ -432,9 +417,6 @@ func (r *listRepository) Update(ownerID, groupID, listID string, update *transfe
 			case isNonexistentListError(pqerr):
 				err = failure.ErrListNotFound
 			}
-		} else if isContextDeadlineError(err) {
-			log.Println(err)
-			err = failure.ErrDeadlineExceeded
 		} else {
 			log.Println(err)
 		}

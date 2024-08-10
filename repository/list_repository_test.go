@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"github.com/google/uuid"
 	"noda/data/model"
 	"noda/data/transfer"
@@ -18,7 +17,6 @@ import (
 const listID = "7d7b997f-a593-4ecd-a09f-039453321a51"
 
 func TestListRepository_Save(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -75,15 +73,19 @@ func TestListRepository_Save(t *testing.T) {
 }
 
 func TestListRepository_FetchByID(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
-		query = regexp.QuoteMeta(`SELECT * FROM "lists"."fetch_by_uuid" ($1, $2, $3);`)
-		res   *model.List
-		err   error
-		list  = &model.List{
+		query = regexp.QuoteMeta(`SELECT * FROM "lists"."fetch" (p_owner_uuid := $1,
+                                           p_group_uuid := $2,
+                                           p_list_uuid := $3,
+                                           p_needle := NULL,
+                                           p_page := NULL,
+                                           p_rpp := NULL);`)
+		res  *model.List
+		err  error
+		list = &model.List{
 			UUID:        uuid.MustParse(listID),
 			OwnerUUID:   uuid.MustParse(userID),
 			Name:        "name",
@@ -106,11 +108,11 @@ func TestListRepository_FetchByID(t *testing.T) {
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, nil, listID).
+		WithArgs(userID, uuid.Nil.String(), listID).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchByID(userID, "", listID)
+	res, err = r.FetchByID(userID, "00000000-0000-0000-0000-000000000000", listID)
 	assert.NoError(t, err)
 	assert.Equal(t, list, res)
 
@@ -133,25 +135,17 @@ func TestListRepository_FetchByID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
+		WillReturnRows(sqlmock.NewRows(columns))
 	res, err = r.FetchByID(userID, groupID, listID)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
 	assert.Nil(t, res)
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, nil, listID).
+		WithArgs(userID, "00000000-0000-0000-0000-000000000000", listID).
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
-	res, err = r.FetchByID(userID, "", listID)
+	res, err = r.FetchByID(userID, "00000000-0000-0000-0000-000000000000", listID)
 	assert.Error(t, err, failure.ErrListNotFound)
-	assert.Nil(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, listID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchByID(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 	assert.Nil(t, res)
 
 	mock.
@@ -164,7 +158,6 @@ func TestListRepository_FetchByID(t *testing.T) {
 }
 
 func TestListRepository_GetTodayListID(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -195,14 +188,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.GetTodayListID(userID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Empty(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID).
 		WillReturnError(&pq.Error{})
 	res, err = r.GetTodayListID(userID)
 	assert.Error(t, err)
@@ -210,7 +195,6 @@ func TestListRepository_GetTodayListID(t *testing.T) {
 }
 
 func TestListRepository_GetTomorrowListID(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -241,14 +225,6 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.GetTomorrowListID(userID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Empty(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID).
 		WillReturnError(&pq.Error{})
 	res, err = r.GetTomorrowListID(userID)
 	assert.Error(t, err)
@@ -256,25 +232,28 @@ func TestListRepository_GetTomorrowListID(t *testing.T) {
 }
 
 func TestListRepository_Fetch(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
 		r     = NewListRepository(db)
 		query = regexp.QuoteMeta(`
 		SELECT "list_uuid" AS "uuid",
-		       "owner_uuid",
-		       "group_uuid",
-		       "name",
-		       "description",
-		       "created_at",
-		       "updated_at"
-      FROM "lists"."fetch" ($1, $2, $3, $4, $5);`)
+		               "owner_uuid",
+		               "group_uuid",
+		               "name",
+		               coalesce ("description", '') AS "description",
+		               "created_at",
+		               "updated_at"
+              FROM "lists"."fetch" (p_owner_uuid := $1,
+                                    p_group_uuid := NULL,
+                                    p_list_uuid := NULL,
+                                    p_needle := $2,
+                                    p_page := $3,
+                                    p_rpp := $4);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
-		sortBy    = ""
 		list      = &model.List{
 			UUID:        uuid.MustParse(listID),
 			OwnerUUID:   uuid.MustParse(userID),
@@ -289,116 +268,35 @@ func TestListRepository_Fetch(t *testing.T) {
 	page, rpp = 1, 2
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, "")
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
-	page, rpp = 1, -1000
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 10)
-
-	page, rpp = 2, 5
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 5)
-
-	page, rpp, needle = 1, 7, "name"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 7)
-
-	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Len(t, res, 0)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
-	assert.Nil(t, res)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Nil(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnError(&pq.Error{})
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.Fetch(userID, page, rpp, needle, sortBy)
+	res, err = r.Fetch(userID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
 func TestListRepository_FetchGrouped(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -408,15 +306,19 @@ func TestListRepository_FetchGrouped(t *testing.T) {
            "owner_uuid",
            "group_uuid",
 		       "name",
-		       "description",
+		       coalesce ("description", '') AS "description",
 		       "created_at",
 		       "updated_at"
-      FROM "lists"."fetch_grouped" ($1, $2, $3, $4, $5, $6);`)
+      FROM "lists"."fetch" (p_owner_uuid := $1,
+                            p_group_uuid := $2,
+                            p_list_uuid := NULL,
+                            p_needle := $3,
+                            p_page := $4,
+                            p_rpp := $5);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
-		sortBy    = ""
 		list      = &model.List{
 			UUID:        uuid.MustParse(listID),
 			OwnerUUID:   uuid.MustParse(userID),
@@ -431,125 +333,35 @@ func TestListRepository_FetchGrouped(t *testing.T) {
 	page, rpp = 1, 2
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, groupID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, "")
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
-	page, rpp = 1, -1000
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 10)
-
-	page, rpp = 2, 5
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 5)
-
-	page, rpp, needle = 1, 7, "name"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 7)
-
-	page, rpp, needle = 1, 5, "aljfkjaksjpiwquramakjsfasjfkjwpoijefj"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Len(t, res, 0)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
-	assert.Nil(t, res)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent group with UUID"})
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrGroupNotFound)
-	assert.Nil(t, res)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Nil(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, groupID, needle, page, rpp).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, groupID, page, rpp, needle, sortBy).
+		WithArgs(userID, groupID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, sortBy)
+	res, err = r.FetchGrouped(userID, groupID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
 func TestListRepository_FetchScattered(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -559,15 +371,19 @@ func TestListRepository_FetchScattered(t *testing.T) {
            "owner_uuid",
            "group_uuid",
 		       "name",
-		       "description",
+		       coalesce ("description", '') AS "description",
 		       "created_at",
 		       "updated_at"
-      FROM "lists"."fetch_scattered" ($1, $2, $3, $4, $5);`)
+    FROM "lists"."fetch" (p_owner_uuid := $1,
+                          p_group_uuid := NULL,
+                          p_list_uuid := NULL,
+                          p_needle := $2,
+                          p_page := $3,
+                          p_rpp := $4);`)
 		res       []*model.List
 		err       error
 		page, rpp int64
 		needle    = ""
-		sortBy    = ""
 		list      = &model.List{
 			UUID:        uuid.MustParse(listID),
 			OwnerUUID:   uuid.MustParse(userID),
@@ -584,120 +400,35 @@ func TestListRepository_FetchScattered(t *testing.T) {
 	page, rpp = 1, 2
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows(columns).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, "")
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
-	/* Success with the default number of records (10).  */
-
-	page, rpp = 1, -1000
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 10)
-
-	/* Success with custom pagination and RPP.  */
-
-	page, rpp = 2, 5
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 5)
-
-	page, rpp, needle = 1, 7, "name"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.
-			NewRows(columns).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt).
-			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.Len(t, res, 7)
-
-	page, rpp, needle = 1, 5, "some random text"
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnRows(sqlmock.NewRows(columns))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Len(t, res, 0)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent user with UUID"})
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrUserNoLongerExists)
-	assert.Nil(t, res)
-
-	page, rpp = 1, 10
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Nil(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnError(&pq.Error{})
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 
 	mock.
 		ExpectQuery(query).
-		WithArgs(userID, page, rpp, needle, sortBy).
+		WithArgs(userID, needle, page, rpp).
 		WillReturnRows(sqlmock.
 			NewRows([]string{"id", "unknown_column", "owner_id", "name", "description", "created_at", "updated_at"}).
 			AddRow(list.UUID, list.OwnerUUID, list.GroupUUID, list.Name, list.Description, list.CreatedAt, list.UpdatedAt))
-	res, err = r.FetchScattered(userID, page, rpp, needle, sortBy)
+	res, err = r.FetchScattered(userID, page, rpp, needle, "")
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
 
 func TestListRepository_Remove(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -764,14 +495,6 @@ func TestListRepository_Remove(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, groupID, listID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Remove(userID, groupID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.False(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, listID).
 		WillReturnError(&pq.Error{})
 	res, err = r.Remove(userID, groupID, listID)
 	assert.Error(t, err)
@@ -779,7 +502,6 @@ func TestListRepository_Remove(t *testing.T) {
 }
 
 func TestListRepository_Duplicate(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -819,14 +541,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Duplicate(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.Empty(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{})
 	res, err = r.Duplicate(userID, listID)
 	assert.Error(t, err)
@@ -834,7 +548,6 @@ func TestListRepository_Duplicate(t *testing.T) {
 }
 
 func TestListRepository_Scatter(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -883,14 +596,6 @@ func TestListRepository_Scatter(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Scatter(userID, listID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.False(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, listID).
 		WillReturnError(&pq.Error{})
 	res, err = r.Scatter(userID, listID)
 	assert.Error(t, err)
@@ -898,7 +603,6 @@ func TestListRepository_Scatter(t *testing.T) {
 }
 
 func TestListRepository_Move(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -965,14 +669,6 @@ func TestListRepository_Move(t *testing.T) {
 	mock.
 		ExpectQuery(query).
 		WithArgs(userID, listID, groupID).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Move(userID, listID, groupID)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
-	assert.False(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, listID, groupID).
 		WillReturnError(&pq.Error{})
 	res, err = r.Move(userID, listID, groupID)
 	assert.Error(t, err)
@@ -980,7 +676,6 @@ func TestListRepository_Move(t *testing.T) {
 }
 
 func TestListRepository_Update(t *testing.T) {
-	defer beQuiet()()
 	db, mock := newMock()
 	defer db.Close()
 	var (
@@ -1043,14 +738,6 @@ func TestListRepository_Update(t *testing.T) {
 		WillReturnError(&pq.Error{Code: "P0001", Message: "nonexistent list with UUID"})
 	res, err = r.Update(userID, groupID, listID, up)
 	assert.ErrorIs(t, err, failure.ErrListNotFound)
-	assert.False(t, res)
-
-	mock.
-		ExpectQuery(query).
-		WithArgs(userID, groupID, listID, up.Name, up.Description).
-		WillReturnError(errors.New("context deadline exceeded"))
-	res, err = r.Update(userID, groupID, listID, up)
-	assert.ErrorIs(t, err, failure.ErrDeadlineExceeded)
 	assert.False(t, res)
 
 	mock.

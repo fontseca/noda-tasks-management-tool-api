@@ -183,7 +183,7 @@ func TestListService_FetchByID(t *testing.T) {
 
 	t.Run("success for scattered list", func(t *testing.T) {
 		var m = mocks.NewListRepositoryMock()
-		m.On("FetchByID", ownerID.String(), "", listID.String()).
+		m.On("FetchByID", ownerID.String(), uuid.Nil.String(), listID.String()).
 			Return(actual, nil)
 		s = NewListService(m)
 		res, err = s.FetchByID(ownerID, uuid.Nil, listID)

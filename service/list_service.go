@@ -66,7 +66,6 @@ func (s *listService) Save(ownerID, groupID uuid.UUID, creation *transfer.ListCr
 }
 
 func (s *listService) FetchByID(ownerID, groupID, listID uuid.UUID) (list *model.List, err error) {
-	var groupIDStr = ""
 	switch {
 	case uuid.Nil == ownerID:
 		err = failure.NewNilParameterError("FetchByID", "ownerID")
@@ -77,10 +76,7 @@ func (s *listService) FetchByID(ownerID, groupID, listID uuid.UUID) (list *model
 		log.Println(err)
 		return nil, err
 	}
-	if uuid.Nil != groupID {
-		groupIDStr = groupID.String()
-	}
-	return s.r.FetchByID(ownerID.String(), groupIDStr, listID.String())
+	return s.r.FetchByID(ownerID.String(), groupID.String(), listID.String())
 }
 
 func (s *listService) GetTodayListID(ownerID uuid.UUID) (listID uuid.UUID, err error) {
