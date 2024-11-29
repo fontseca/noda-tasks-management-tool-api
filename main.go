@@ -321,17 +321,11 @@ func main() {
 	log.SetOutput(io.MultiWriter(os.Stderr, failLogFile))
 
 	var (
-		serverPort = mustGetEnv("SERVER_PORT")
-		dbUser     = mustGetEnv("PG_USER")
-		dbPassword = mustGetEnv("PG_PASSWORD")
-		dbHost     = mustGetEnv("PG_HOST")
-		dbPort     = mustGetEnv("PG_PORT")
-		dbName     = mustGetEnv("PG_NAME")
+		serverPort   = mustGetEnv("SERVER_PORT")
+		dbConnString = mustGetEnv("DB_CONN_STRING")
 	)
 
-	dataSourceName := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-		dbUser, dbPassword, dbHost, dbPort, dbName)
-	db, err := sql.Open("postgres", dataSourceName)
+	db, err := sql.Open("postgres", dbConnString)
 	if nil != err {
 		log.Fatalf("could not connect to database: %v", err)
 	}
